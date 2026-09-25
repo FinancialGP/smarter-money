@@ -1,0 +1,2846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SMARTER $ — NZ Financial Literacy Game (v4)</title>
+<style>
+:root {
+  --bg: #0f172a; --surface: #1e293b; --surface2: #334155; --text: #f1f5f9; --muted: #94a3b8;
+  --accent: #22c55e; --accent-dim: #16a34a; --warn: #f59e0b; --danger: #ef4444; --info: #38bdf8;
+  --opp: #22c55e; --spend: #f97316; --life: #a78bfa; --market: #22d3ee; --radius: 12px;
+  --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.45; min-height: 100vh; }
+button { font-family: inherit; cursor: pointer; border: none; border-radius: 8px; padding: 0.65rem 1.2rem; font-size: 1rem; font-weight: 600; transition: transform 0.1s, background 0.15s, opacity 0.15s; }
+button:hover:not(:disabled) { transform: translateY(-1px); }
+button:active:not(:disabled) { transform: translateY(0); }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+button:focus-visible { outline: 3px solid var(--info); outline-offset: 2px; }
+.btn-primary { background: var(--accent); color: #052e16; }
+.btn-primary:hover:not(:disabled) { background: var(--accent-dim); color: #fff; }
+.btn-secondary { background: var(--surface2); color: var(--text); }
+.btn-secondary:hover:not(:disabled) { background: #475569; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--surface2); }
+.btn-market { background: #0e7490; color: #ecfeff; }
+.btn-warn { background: #b45309; color: #fffbeb; }
+.btn-sm { padding: 0.35rem 0.7rem; font-size: 0.85rem; }
+.screen { display: none; min-height: 100vh; padding: 1.5rem; max-width: 1280px; margin: 0 auto; }
+.screen.active { display: flex; flex-direction: column; gap: 1.25rem; }
+h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); letter-spacing: -0.02em; }
+h2 { font-size: 1.35rem; }
+h3 { font-size: 1.1rem; color: var(--muted); font-weight: 600; }
+.subtitle { color: var(--muted); font-size: 1.05rem; max-width: 40rem; }
+.logo-dollar { display: inline-block; background: linear-gradient(135deg, #22c55e, #38bdf8); -webkit-background-clip: text; background-clip: text; color: transparent; font-weight: 800; }
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.75rem; }
+.choice-card { background: var(--surface); border: 2px solid var(--surface2); border-radius: var(--radius); padding: 1rem; text-align: left; color: var(--text); width: 100%; }
+.choice-card:hover:not(:disabled) { border-color: var(--accent); background: #1a2744; }
+.choice-card.selected { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(34,197,94,0.35); }
+.choice-card .rate { color: var(--accent); font-weight: 700; font-size: 1.15rem; }
+.choice-card .guide { color: var(--muted); font-size: 0.8rem; margin-top: 0.25rem; }
+.choice-card .name { font-weight: 700; margin-bottom: 0.35rem; }
+.diff-card { text-align: center; padding: 1.25rem; }
+.diff-card .diff-label { font-size: 1.25rem; font-weight: 800; }
+.diff-card .diff-desc { color: var(--muted); font-size: 0.9rem; margin-top: 0.4rem; }
+.diff-easy { border-color: #4ade80; }
+.diff-normal { border-color: var(--warn); }
+.diff-hard { border-color: var(--danger); }
+.hud { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 0.55rem; }
+.hud-item { background: var(--surface); border-radius: 10px; padding: 0.65rem 0.75rem; border: 1px solid var(--surface2); }
+.hud-item .label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+.hud-item .value { font-size: 1.05rem; font-weight: 700; margin-top: 0.12rem; }
+.hud-item .value.good { color: var(--accent); }
+.hud-item .value.bad { color: var(--danger); }
+.hud-item .value.warn { color: var(--warn); }
+.hud-item.highlight { border-color: var(--accent); background: #132a1f; }
+.index-strip { display: flex; flex-wrap: wrap; gap: 0.45rem; background: var(--surface); border: 1px solid var(--surface2); border-radius: 10px; padding: 0.55rem 0.75rem; font-size: 0.82rem; }
+.index-strip span { color: var(--muted); }
+.index-strip strong { color: var(--text); margin-right: 0.15rem; }
+.index-up { color: var(--accent); }
+.index-down { color: var(--danger); }
+.play-layout { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 1rem; }
+@media (max-width: 860px) { .play-layout { grid-template-columns: 1fr; } }
+.panel { background: var(--surface); border-radius: var(--radius); padding: 1rem; border: 1px solid var(--surface2); }
+.panel h3 { margin-bottom: 0.6rem; }
+.breakdown { list-style: none; font-size: 0.92rem; }
+.breakdown li { display: flex; justify-content: space-between; gap: 0.5rem; padding: 0.32rem 0; border-bottom: 1px solid rgba(148,163,184,0.15); }
+.breakdown li:last-child { border-bottom: none; font-weight: 700; }
+.bs-wrap { width: 100%; min-width: 320px; overflow-x: auto; }
+.bs-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  width: 100%;
+  align-items: stretch;
+}
+.bs-col {
+  background: var(--bg); border-radius: 10px; padding: 0.75rem;
+  border: 1px solid var(--surface2); min-height: 180px; min-width: 0;
+  display: flex; flex-direction: column; width: 100%;
+}
+.bs-col h4 { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 0.4rem; text-align: center; flex-shrink: 0; }
+.bs-col .breakdown { flex: 1; display: flex; flex-direction: column; }
+.bs-col .breakdown li:last-child { margin-top: auto; }
+.bs-net { margin-top: 0.65rem; text-align: center; padding: 0.65rem; background: #0c1a2e; border: 1px solid #38bdf8; border-radius: 10px; font-weight: 800; font-size: 1.1rem; grid-column: 1 / -1; color: #e0f2fe; }
+.bs-net.bankrupt { border-color: var(--danger); background: rgba(239,68,68,0.18); color: #fecaca; }
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(15,23,42,0.72); z-index: 200;
+  display: none; align-items: center; justify-content: center; padding: 1rem;
+}
+.modal-overlay.show { display: flex; }
+.modal-panel {
+  background: var(--surface); border: 1px solid var(--surface2); border-radius: var(--radius);
+  padding: 1.25rem; width: min(420px, 100%); box-shadow: 0 20px 50px rgba(0,0,0,0.45);
+}
+.modal-panel h3 { color: var(--text); margin-bottom: 0.75rem; }
+.modal-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin: 0.55rem 0; }
+.modal-row label { color: var(--muted); font-size: 0.85rem; min-width: 5rem; }
+.modal-amt {
+  font-size: 1.45rem; font-weight: 800; min-width: 7rem; text-align: center;
+  background: var(--bg); border: 1px solid var(--surface2); border-radius: 8px; padding: 0.35rem 0.6rem;
+}
+.modal-hint { color: var(--muted); font-size: 0.82rem; margin-top: 0.35rem; }
+.modal-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; justify-content: flex-end; }
+select.modal-select {
+  flex: 1; min-width: 10rem; background: var(--bg); color: var(--text);
+  border: 1px solid var(--surface2); border-radius: 8px; padding: 0.5rem 0.65rem; font-size: 0.95rem;
+}
+.event-card { background: var(--bg); border-radius: var(--radius); padding: 1.25rem; border: 3px solid var(--surface2); min-height: 240px; display: flex; flex-direction: column; gap: 0.5rem; }
+.event-card.type-opportunity { border-color: var(--opp); }
+.event-card.type-spending { border-color: var(--spend); }
+.event-card.type-life { border-color: var(--life); }
+.event-card.type-market { border-color: var(--market); }
+.event-type { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; font-weight: 700; }
+.type-opportunity .event-type { color: var(--opp); }
+.type-spending .event-type { color: var(--spend); }
+.type-life .event-type { color: var(--life); }
+.type-market .event-type { color: var(--market); }
+.event-title { font-size: 1.25rem; font-weight: 800; }
+.event-amount { font-size: 1.85rem; font-weight: 900; line-height: 1.15; letter-spacing: -0.02em; }
+.type-opportunity .event-amount { color: var(--opp); }
+.type-spending .event-amount { color: var(--spend); }
+.type-life .event-amount { color: var(--life); }
+.type-market .event-amount { color: var(--market); }
+.event-copy { color: var(--muted); font-size: 0.95rem; flex: 1; }
+.event-finance { font-size: 1.05rem; font-weight: 700; color: #fbbf24; line-height: 1.4; margin: 0.15rem 0 0.35rem; }
+.event-finance span { color: var(--muted); font-weight: 600; }
+.event-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; align-items: center; }
+.controls { display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: center; }
+.month-bar { height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+.month-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--info)); transition: width 0.3s; }
+.warning-banner { background: rgba(245,158,11,0.15); border: 1px solid var(--warn); color: #fcd34d; padding: 0.7rem 1rem; border-radius: 8px; font-size: 0.95rem; display: none; }
+.warning-banner.show { display: block; }
+.warning-banner.offwork { background: rgba(239,68,68,0.18); border-color: var(--danger); color: #fca5a5; }
+.warning-banner.hi-loan { background: rgba(239,68,68,0.22); border-color: #f87171; color: #fecaca; font-weight: 600; }
+.toast { visibility: hidden; position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(120%); background: var(--surface); border: 1px solid var(--surface2); padding: 0.75rem 1.25rem; border-radius: 8px; z-index: 100; transition: transform 0.25s; max-width: 90vw; text-align: center; }
+.toast.show { visibility: visible; transform: translateX(-50%) translateY(0); }
+.toast.error { border-color: var(--danger); color: #fca5a5; }
+.toast.ok { border-color: var(--accent); color: #86efac; }
+.summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0.75rem; }
+.summary-stat { background: var(--surface); border-radius: 10px; padding: 1rem; border: 1px solid var(--surface2); text-align: center; }
+.summary-stat .big { font-size: 1.45rem; font-weight: 800; }
+.summary-stat .lbl { color: var(--muted); font-size: 0.85rem; margin-top: 0.25rem; }
+.reflection { background: var(--surface); border-radius: var(--radius); padding: 1.25rem; border-left: 4px solid var(--info); }
+.reflection ol { margin: 0.75rem 0 0 1.25rem; color: var(--muted); }
+.reflection li { margin-bottom: 0.5rem; }
+.win-badge { display: inline-block; padding: 0.35rem 0.85rem; border-radius: 999px; font-weight: 700; font-size: 0.9rem; }
+.win-badge.pass { background: rgba(34,197,94,0.2); color: var(--accent); }
+.win-badge.fail { background: rgba(239,68,68,0.2); color: #fca5a5; }
+.footer-note { color: var(--muted); font-size: 0.8rem; margin-top: auto; padding-top: 1rem; }
+.assets-list { font-size: 0.88rem; color: var(--muted); max-height: 180px; overflow-y: auto; list-style: none; }
+.assets-list li { padding: 0.35rem 0; border-bottom: 1px solid rgba(148,163,184,0.12); display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.center-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.5rem; }
+.title-hero { text-align: center; padding: 2rem 0 1rem; display: flex; flex-direction: column; align-items: center; gap: 0.75rem; }
+.title-hero p { max-width: 36rem; color: var(--muted); }
+.pill { display: inline-block; font-size: 0.7rem; padding: 0.15rem 0.45rem; border-radius: 999px; background: var(--surface2); color: var(--muted); margin-left: 0.25rem; }
+.pill.growth { background: rgba(34,211,238,0.2); color: var(--market); }
+.pill.cashflow { background: rgba(34,197,94,0.2); color: var(--accent); }
+.pill.property { background: rgba(167,139,250,0.25); color: #c4b5fd; }
+.pill.business { background: rgba(251,146,60,0.25); color: #fdba74; }
+.trade-box { background: rgba(14,116,144,0.2); border: 1px solid var(--market); border-radius: 8px; padding: 0.75rem; margin-top: 0.5rem; }
+.hi-label { color: #fecaca; font-size: 0.82rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; }
+
+.value.cash-gold, .val-cash { color: #fbbf24 !important; }
+.value.nw-blue, .val-nw { color: #38bdf8 !important; }
+.value.cost-red, .val-cost, .event-amount.cost-red { color: #ef4444 !important; }
+.hud-item .value.cash-gold { color: #fbbf24; }
+.hud-item .value.nw-blue { color: #38bdf8; }
+.hud-item .value.cost-red { color: #ef4444; }
+.breakdown .val-cash { color: #fbbf24; font-weight: 700; }
+.breakdown .val-nw { color: #38bdf8; font-weight: 700; }
+.breakdown .val-cost { color: #ef4444; font-weight: 700; }
+.type-spending .event-amount { color: #ef4444; }
+.custom-tooltip {
+  position: fixed; z-index: 9999; max-width: 260px; padding: 0.45rem 0.7rem;
+  background: #0b1220; color: #f1f5f9; border: 1px solid #475569; border-radius: 8px;
+  font-size: 0.8rem; line-height: 1.3; pointer-events: none; box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+  opacity: 0; transition: opacity 0.12s;
+}
+.custom-tooltip.show { opacity: 1; }
+
+/* ===== Play screen: compact classroom dashboard ===== */
+#screen-play.active {
+  min-height: auto;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  padding: 0.5rem 0.75rem;
+  gap: 0.35rem;
+  max-width: 1400px;
+}
+#screen-play .play-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.6rem;
+  flex-shrink: 0;
+}
+#screen-play .play-top h2 {
+  font-size: 1.05rem;
+  line-height: 1.2;
+}
+#screen-play .play-top h3 {
+  font-size: 0.8rem;
+  margin-top: 0.05rem;
+  font-weight: 600;
+}
+#screen-play .play-top .controls {
+  gap: 0.3rem;
+}
+#screen-play .month-bar {
+  height: 5px;
+  flex-shrink: 0;
+  border-radius: 3px;
+}
+#screen-play .warning-banner {
+  padding: 0.32rem 0.6rem;
+  font-size: 0.8rem;
+  border-radius: 6px;
+  flex-shrink: 0;
+  line-height: 1.3;
+}
+#screen-play .hud {
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: 0.28rem;
+  flex-shrink: 0;
+}
+#screen-play .hud-item {
+  padding: 0.32rem 0.42rem;
+  border-radius: 8px;
+}
+#screen-play .hud-item .label {
+  font-size: 0.58rem;
+  letter-spacing: 0.03em;
+}
+#screen-play .hud-item .value {
+  font-size: 0.9rem;
+  margin-top: 0.04rem;
+}
+#screen-play .index-strip {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.35rem;
+  padding: 0.28rem 0.5rem;
+  font-size: 0.74rem;
+  border-radius: 8px;
+  flex-shrink: 0;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+#screen-play .play-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr) minmax(0, 1.1fr);
+  gap: 0.5rem;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  align-items: stretch;
+}
+#screen-play .panel {
+  padding: 0.5rem 0.65rem;
+  min-height: 0;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+#screen-play .panel > h3,
+#screen-play .play-side-section > h3 {
+  font-size: 0.92rem;
+  margin-bottom: 0.25rem;
+}
+#screen-play .play-event-panel { overflow: hidden; }
+#screen-play .play-event-panel .event-card {
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 0.65rem 0.75rem;
+  gap: 0.3rem;
+  border-width: 2px;
+}
+#screen-play .event-title { font-size: 1.08rem; }
+#screen-play .event-amount { font-size: 1.45rem; }
+#screen-play .event-copy { font-size: 0.88rem; }
+#screen-play .event-finance { font-size: 0.95rem; margin: 0.1rem 0 0.25rem; }
+#screen-play .event-actions { margin-top: 0.35rem; gap: 0.4rem; }
+#screen-play .event-actions-bar {
+  flex: 0 0 auto;
+  padding-top: 0.55rem;
+}
+#screen-play .event-actions-bar:empty { display: none; }
+#screen-play .event-actions-bar .event-actions { margin-top: 0; }
+#screen-play .event-actions-bar .event-copy { font-size: 0.82rem; margin-top: 0.25rem; }
+#screen-play .event-actions-bar .trade-box { margin-top: 0; }
+#screen-play .play-holdings-panel .assets-list { flex: 1 1 auto; min-height: 0; max-height: none; }
+#screen-play .breakdown { font-size: 0.84rem; }
+#screen-play .breakdown li { padding: 0.16rem 0; }
+#screen-play .bs-wrap { min-width: 0; }
+#screen-play .bs-grid {
+  gap: 0.4rem;
+  margin-top: 0.25rem;
+}
+#screen-play .bs-col {
+  min-height: 0;
+  padding: 0.4rem 0.5rem;
+}
+#screen-play .bs-col h4 {
+  font-size: 0.7rem;
+  margin-bottom: 0.25rem;
+}
+#screen-play .bs-net {
+  margin-top: 0.35rem;
+  padding: 0.4rem;
+  font-size: 0.98rem;
+  border-radius: 8px;
+}
+#screen-play .assets-list {
+  max-height: none;
+  font-size: 0.82rem;
+  overflow-y: auto;
+}
+#screen-play .assets-list li {
+  padding: 0.22rem 0;
+}
+#screen-play .trade-box {
+  padding: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+@media (max-width: 860px) {
+  #screen-play.active {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+    padding: 0.75rem;
+    gap: 0.6rem;
+  }
+  #screen-play .play-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: none;
+    overflow: visible;
+    flex: none;
+  }
+  #screen-play .play-event-panel { order: -1; overflow: visible; }
+  #screen-play .play-event-panel .event-card { overflow: visible; }
+  #screen-play .panel {
+    overflow: visible;
+  }
+  #screen-play .index-strip {
+    flex-wrap: wrap;
+    white-space: normal;
+  }
+  #screen-play .play-event-panel .event-card {
+    min-height: 160px;
+  }
+  #screen-play .assets-list {
+    max-height: 220px;
+  }
+}
+/* HUD: 7 per row on mid widths, one row of 13 on wide screens */
+@media (min-width: 861px) { #screen-play .hud { grid-template-columns: repeat(7, minmax(0, 1fr)); } }
+@media (min-width: 1100px) { #screen-play .hud { grid-template-columns: repeat(13, minmax(0, 1fr)); } }
+#screen-play .hud-item .value, #screen-play .hud-item .label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (min-width: 1100px) and (max-width: 1300px) { #screen-play .hud-item .value { font-size: 0.8rem; } }
+@media (min-width: 861px) and (max-height: 860px) {
+  #screen-play .breakdown li { padding: 0.1rem 0; }
+  #screen-play .panel { padding: 0.4rem 0.6rem; }
+}
+/* Very short screens (iPad landscape with Safari bars ~690px): the HUD keeps only items that are
+   NOT already listed in the Income & Expenses panel (which is always visible top-left). */
+@media (min-width: 861px) and (max-height: 760px) {
+  #screen-play .hud { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  #screen-play .hud-pay, #screen-play .hud-passive, #screen-play .hud-tax, #screen-play .hud-living,
+  #screen-play .hud-bankint, #screen-play .hud-ccint, #screen-play .hud-hiint, #screen-play .hud-totexp { display: none; }
+  #screen-play .play-layout { grid-template-rows: auto minmax(0, 1fr); }
+  #screen-play .play-ie-panel, #screen-play .play-bs-panel { overflow: visible; }
+  #screen-play .hud-item { padding: 0.22rem 0.4rem; }
+  #screen-play .hud-item .value { font-size: 0.84rem; }
+  #screen-play .breakdown li { padding: 0.08rem 0; }
+  #screen-play .breakdown { font-size: 0.8rem; }
+  #screen-play .panel > h3 { font-size: 0.85rem; margin-bottom: 0.1rem; }
+  #screen-play .bs-net { margin-top: 0.25rem; padding: 0.25rem; font-size: 0.9rem; }
+  #screen-play .event-title { font-size: 1rem; }
+  #screen-play .event-amount { font-size: 1.25rem; }
+}
+/* Space / Enter default-action hint */
+.space-default { position: relative; box-shadow: 0 0 0 3px #fde047, 0 0 14px rgba(253,224,71,0.45) !important; }
+.space-default::after {
+  content: "Space"; position: absolute; top: -9px; right: -7px; background: #fde047; color: #1e293b;
+  font-size: 0.58rem; font-weight: 800; line-height: 1; padding: 2px 5px; border-radius: 6px;
+  letter-spacing: 0.03em; pointer-events: none; text-transform: none;
+}
+@media (hover: none) and (pointer: coarse) { .space-default::after { display: none; } }
+/* Save slot picker */
+#confirm-modal { z-index: 300; }
+#slot-modal .modal-panel { width: min(580px, 100%); max-height: 92vh; display: flex; flex-direction: column; }
+.slot-list { display: flex; flex-direction: column; gap: 0.45rem; overflow-y: auto; min-height: 0; }
+.slot-btn { text-align: left; background: var(--bg); border: 1px solid var(--surface2); color: var(--text); padding: 0.6rem 0.8rem; border-radius: 10px; width: 100%; font-weight: 600; }
+.slot-btn:hover:not(:disabled) { border-color: var(--accent); }
+.slot-btn .slot-name { font-weight: 800; font-size: 0.98rem; }
+.slot-btn .slot-meta { color: var(--muted); font-size: 0.84rem; font-weight: 500; margin-top: 0.1rem; }
+.slot-btn.empty .slot-meta { font-style: italic; }
+.slot-btn.auto { border-color: #38bdf8; }
+.slot-btn.legacy .slot-name::after { content: " · from old save"; color: #fbbf24; font-weight: 600; font-size: 0.8rem; }
+</style>
+</head>
+<body>
+
+<section id="screen-title" class="screen active" aria-label="Title">
+  <div class="title-hero">
+    <h1>SMARTER <span class="logo-dollar">$</span></h1>
+    <p>A New Zealand classroom game about income, tax, expenses, markets, debt, and building passive income — over <strong>10 years</strong> (120 months).</p>
+    <p><strong>Win goal:</strong> Highest Passive Income ÷ Total Expenses after 120 months.</p>
+    <div class="center-actions" style="justify-content:center;flex-wrap:wrap">
+      <button type="button" class="btn-primary" id="btn-start" data-tip="Choose difficulty, then career">Start Game</button>
+      <button type="button" class="btn-secondary" id="btn-continue" data-tip="Resume the latest auto-save" hidden>Continue</button>
+      <button type="button" class="btn-secondary" id="btn-load-title" data-tip="Choose a save slot (1–5) or the Auto save">Load game</button>
+      <button type="button" class="btn-ghost" id="btn-load-file" data-tip="Load a SMARTER save JSON file">Load file</button>
+    </div>
+    <p id="continue-meta" class="subtitle" style="margin-top:0.5rem;display:none"></p>
+    <p id="storage-note" class="subtitle" style="margin-top:0.5rem;display:none">On OneDrive preview, use Save to download a file — or download this HTML and open in Chrome for auto-save.</p>
+    <p style="margin-top:0.85rem"><a href="index-debt.html" style="color:#38bdf8;font-size:0.9rem;text-decoration:none;border-bottom:1px dotted #38bdf8">Debt Paydown edition →</a></p>
+  </div>
+  <p class="footer-note">NZD · PAYE + ACC simplified · Offline Cashflow-style demo · v4 · 5 save slots + auto-save · Space = next step</p>
+</section>
+
+<section id="screen-difficulty" class="screen" aria-label="Choose difficulty">
+  <h2>Choose Difficulty</h2>
+  <p class="subtitle">Harder decks weight more spending &amp; life events. Market cards are common and often move prices you can trade.</p>
+  <div class="card-grid" id="difficulty-grid" role="group" aria-label="Difficulty options"></div>
+  <div class="center-actions">
+    <button type="button" class="btn-ghost" id="btn-diff-back">Back</button>
+    <button type="button" class="btn-primary" id="btn-diff-next" disabled>Next: Choose Career</button>
+  </div>
+</section>
+
+<section id="screen-career" class="screen" aria-label="Choose career">
+  <h2>Choose Your Career</h2>
+  <p class="subtitle">Default hours: 40 per week. Rates are NZ-flavoured classroom guides (NZD). Pay is shown monthly.</p>
+  <div class="card-grid" id="career-grid" role="group" aria-label="Career options"></div>
+  <div class="center-actions">
+    <button type="button" class="btn-ghost" id="btn-career-back">Back</button>
+    <button type="button" class="btn-primary" id="btn-career-start" disabled>Start 10 Years</button>
+  </div>
+</section>
+
+<section id="screen-play" class="screen" aria-label="Play">
+  <div class="play-top">
+    <div>
+      <h2 id="play-career-title">Career</h2>
+      <h3 id="play-month-label">Month 1 of 120 · Year 1 · Month 1</h3>
+    </div>
+    <div class="controls">
+      <button type="button" class="btn-secondary btn-sm" id="btn-pay-bank" data-tip="Repay bank loan in $1,000 steps">Pay Bank</button>
+      <button type="button" class="btn-warn btn-sm" id="btn-pay-hi" data-tip="Repay high-interest loan (120%) in $1,000 steps">Pay HI</button>
+      <button type="button" class="btn-secondary btn-sm" id="btn-pay-cc" data-tip="Repay credit card (24% p.a.) in $1,000 steps">Pay CC</button>
+      <button type="button" class="btn-secondary btn-sm" id="btn-skip3" data-tip="Auto-resolve the next 3 months quickly">Skip 3</button>
+      <button type="button" class="btn-secondary btn-sm" id="btn-prev-month" data-tip="Undo last month advance (can go back to month 1)" disabled>Previous Month (B)</button>
+      <button type="button" class="btn-primary" id="btn-next" data-tip="Settle this month and advance (hotkey N). Space/Enter = highlighted next step. A = Accept/Buy.">Next Month</button>
+      <button type="button" class="btn-secondary btn-sm" id="btn-save" data-tip="Save to one of 5 slots (hotkey S). Downloads a file if browser storage is blocked.">Save</button>
+      <button type="button" class="btn-secondary btn-sm" id="btn-load" data-tip="Choose a save slot (or Auto) to load — overwrites current run">Load</button>
+      <button type="button" class="btn-ghost btn-sm" id="btn-load-file-play" data-tip="Load a SMARTER save JSON file (overwrites current run)">Load file</button>
+      <button type="button" class="btn-ghost btn-sm" id="btn-restart" data-tip="Return to title and lose progress">Restart</button>
+    </div>
+  </div>
+  <div class="month-bar" aria-hidden="true"><div class="month-bar-fill" id="month-bar-fill" style="width:0%"></div></div>
+  <div class="warning-banner offwork" id="offwork-banner" role="alert"></div>
+  <div class="warning-banner hi-loan" id="hi-loan-banner" role="alert">High-interest loan active — 120% p.a. (classroom teaching point). Pay it down ASAP.</div>
+  <div class="warning-banner" id="cash-warning" role="alert">Cash is very low. Shortfalls use Credit Card (up to $20k limit) first, then HI loan at 120% p.a. (ceil to $1,000). Repay anytime with Pay Bank / Pay HI / Pay CC.</div>
+  <div class="hud" id="hud" aria-live="polite"></div>
+  <div class="index-strip" id="index-strip" aria-label="Asset price indices"></div>
+  <div class="play-layout">
+    <div class="panel play-ie-panel">
+      <h3>Income &amp; Expenses (monthly)</h3>
+      <ul class="breakdown" id="expense-breakdown"></ul>
+    </div>
+    <div class="panel play-bs-panel">
+      <h3>Balance Sheet</h3>
+      <div class="bs-wrap">
+        <div class="bs-grid" id="bs-grid-play">
+          <div class="bs-col" id="bs-col-assets">
+            <h4>Assets</h4>
+            <ul class="breakdown" id="bs-assets"></ul>
+          </div>
+          <div class="bs-col" id="bs-col-liabilities">
+            <h4>Liabilities</h4>
+            <ul class="breakdown" id="bs-liabilities"></ul>
+          </div>
+        </div>
+        <div class="bs-net" id="bs-net">Net Worth —</div>
+      </div>
+    </div>
+    <div class="panel play-event-panel">
+      <h3>This Month&rsquo;s Event</h3>
+      <div id="event-area" class="event-card type-life">
+        <div class="event-type">Life</div>
+        <div class="event-title">Getting started…</div>
+        <div class="event-amount">—</div>
+        <div class="event-copy">Pay arrives. Expenses leave. Events shape your ten years.</div>
+      </div>
+      <div id="event-actions" class="event-actions-bar"></div>
+    </div>
+    <div class="panel play-holdings-panel">
+      <h3>Holdings</h3>
+      <ul class="assets-list" id="assets-list"><li>None yet</li></ul>
+    </div>
+  </div>
+</section>
+
+<section id="screen-summary" class="screen" aria-label="End summary">
+  <h2 id="summary-heading">10-Year Summary</h2>
+  <p id="summary-reason" class="subtitle" style="display:none;color:#fecaca;font-weight:700"></p>
+  <p id="summary-career" class="subtitle"></p>
+  <div id="summary-badge" style="margin-bottom:0.5rem"></div>
+  <div class="summary-grid" id="summary-grid"></div>
+  <div class="panel" style="margin-top:0.5rem">
+    <h3>Final Balance Sheet</h3>
+    <div class="bs-wrap">
+      <div class="bs-grid" id="bs-grid-summary">
+        <div class="bs-col">
+          <h4>Assets</h4>
+          <ul class="breakdown" id="summary-bs-assets"></ul>
+        </div>
+        <div class="bs-col">
+          <h4>Liabilities</h4>
+          <ul class="breakdown" id="summary-bs-liab"></ul>
+        </div>
+      </div>
+      <div class="bs-net" id="summary-bs-net">Net Worth —</div>
+    </div>
+  </div>
+  <div class="reflection">
+    <h3 style="color:var(--info)">Reflection prompts (discuss as a class)</h3>
+    <ol>
+      <li>Did job income cover living costs, kids, tax, and interest — or did you need assets?</li>
+      <li>How did bank loans (for property/business) compare with the 120% high-interest loan?</li>
+      <li>When markets moved, did you buy the dip, sell, or hold? What happened to your net worth?</li>
+      <li>How did time off work (paid leave vs unpaid rest) change your cash buffer?</li>
+      <li>What Passive ÷ Expenses ratio would feel “safe” after five years — and why?</li>
+    </ol>
+  </div>
+  <div class="center-actions">
+    <button type="button" class="btn-primary" id="btn-play-again" data-tip="Replay with same career and difficulty">Play Again</button>
+    <button type="button" class="btn-secondary" id="btn-change-career" data-tip="Pick a different career">Change Career</button>
+  </div>
+</section>
+
+<div class="modal-overlay" id="repay-modal" role="dialog" aria-modal="true" aria-labelledby="repay-title" hidden>
+  <div class="modal-panel">
+    <h3 id="repay-title">Repay liability</h3>
+    <div class="modal-row">
+      <label for="repay-kind">Liability</label>
+      <select id="repay-kind" class="modal-select">
+        <option value="bank">Bank loan</option>
+        <option value="hi">High-interest loan (120%)</option>
+      </select>
+    </div>
+    <div class="modal-row">
+      <label>Amount</label>
+      <button type="button" class="btn-secondary btn-sm" id="repay-minus" aria-label="Decrease by $1000">−$1000</button>
+      <div class="modal-amt" id="repay-amount">$0</div>
+      <button type="button" class="btn-secondary btn-sm" id="repay-plus" aria-label="Increase by $1000">+$1000</button>
+    </div>
+    <p class="modal-hint" id="repay-hint">Steps of $1,000. Max is the lower of cash (floored to $1,000) and the selected balance.</p>
+    <div class="modal-actions">
+      <button type="button" class="btn-ghost" id="repay-cancel">Cancel</button>
+      <button type="button" class="btn-primary" id="repay-confirm">Confirm repay</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="slot-modal" role="dialog" aria-modal="true" aria-labelledby="slot-title" hidden>
+  <div class="modal-panel">
+    <h3 id="slot-title">Save game</h3>
+    <p class="modal-hint" id="slot-hint" style="margin:0 0 0.6rem"></p>
+    <div class="slot-list" id="slot-list"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn-ghost" id="slot-file">Download file</button>
+      <button type="button" class="btn-secondary" id="slot-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title" hidden>
+  <div class="modal-panel">
+    <h3 id="confirm-title">Confirm</h3>
+    <p class="modal-hint" id="confirm-message" style="color:var(--text);font-size:0.95rem;margin:0.5rem 0 0"></p>
+    <div class="modal-actions">
+      <button type="button" class="btn-ghost" id="confirm-cancel">Cancel</button>
+      <button type="button" class="btn-primary" id="confirm-ok">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="save-file-input" accept="application/json,.json" hidden>
+<div class="custom-tooltip" id="tip-box" hidden></div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var HOURS = 40;
+  var TOTAL_MONTHS = 120;
+  var WEEKS_PER_YEAR = 52;
+  var MONTHS_PER_YEAR = 12;
+  var HI_APR = 1.20;
+  var CC_APR = 0.24;
+  var CC_LIMIT = 20000;
+  var BANK_APR_DEFAULT = 0.07;
+  var STEP = 1000;
+  var CHILD_COST_MIN = 400;
+  var CHILD_COST_MAX = 600;
+  var DECLINE_PROCEDURE_FEE = 2000;
+  var MIN_MONTHS_BETWEEN_BIRTHS = 10;
+  var MIN_MONTHS_BETWEEN_ILLNESS = 12;
+
+  var CAREERS = [
+    { id: 1, name: "Café Worker", rate: 25, guide: "$23–$30" },
+    { id: 2, name: "Health Care Assistant", rate: 30, guide: "$23–$34" },
+    { id: 3, name: "Bus Driver", rate: 30, guide: "$27–$30" },
+    { id: 4, name: "Earthmoving Machine Operator", rate: 35, guide: "$25–$40" },
+    { id: 5, name: "Chef", rate: 38, guide: "$29–$38 band" },
+    { id: 6, name: "Electrician", rate: 45, guide: "$31–$51" },
+    { id: 7, name: "Plumber / Gasfitter", rate: 48, guide: "$24–$53" },
+    { id: 8, name: "Train Driver", rate: 55, guide: "$47–$58" },
+    { id: 9, name: "Software Developer", rate: 65, guide: "classroom rate" },
+    { id: 10, name: "Specialist Trades Contractor", rate: 100, guide: "high-skill contract rate" }
+  ];
+
+  var DIFFICULTIES = [
+    { id: "easy", label: "Easy", desc: "More opportunities. Markets still common.",
+      weights: { opportunity: 0.18, spending: 0.22, life: 0.20, market: 0.40 }, cls: "diff-easy" },
+    { id: "normal", label: "Normal", desc: "Balanced mix. Opportunities rarer.",
+      weights: { opportunity: 0.12, spending: 0.28, life: 0.22, market: 0.38 }, cls: "diff-normal" },
+    { id: "hard", label: "Hard", desc: "Heavy spending & life. Few deals.",
+      weights: { opportunity: 0.08, spending: 0.35, life: 0.25, market: 0.32 }, cls: "diff-hard" }
+  ];
+
+  var BASE_UNIT = { metals: 3000, bitcoin: 8000, usindex: 6000 };
+  var GROWTH_KEYS = ["metals", "bitcoin", "usindex"];
+  var INDEX_KEYS = ["metals", "bitcoin", "usindex", "property", "business"];
+  var ASSET_LABELS = {
+    metals: "Gold/Silver", bitcoin: "Bitcoin", usindex: "US Index",
+    property: "Property", business: "Business"
+  };
+
+  var OPPORTUNITY = [
+    { id: "o1", type: "opportunity", kind: "cashflow", title: "Term Deposit Slice", copy: "NZ bank term deposit (~4% p.a.).", cost: 8000, passive: 27, label: "+$27/mo" },
+    { id: "o2", type: "opportunity", kind: "cashflow", title: "Dividend ETF Nibble", copy: "NZ/AU dividend ETF (~5% cash yield).", cost: 12000, passive: 50, label: "+$50/mo" },
+    { id: "o3", type: "opportunity", kind: "cashflow", title: "Online Course Pack", copy: "Record once, royalty drip.", cost: 5000, passive: 42, label: "+$42/mo" },
+    { id: "o4", type: "opportunity", kind: "cashflow", title: "Side Hustle Gear", copy: "Tools for weekend gigs.", cost: 6500, passive: 45, label: "+$45/mo" },
+    { id: "o5", type: "opportunity", kind: "cashflow", title: "Parking Spot Share", copy: "CBD park sublet (~8%).", cost: 18000, passive: 120, label: "+$120/mo" },
+    { id: "o6", type: "opportunity", kind: "cashflow", title: "Vending Route Share", copy: "Snack machine stake (~7%).", cost: 25000, passive: 146, label: "+$146/mo" },
+    { id: "o7", type: "opportunity", kind: "cashflow", title: "Laundry Card Biz", copy: "Coin laundry in a student block (~6%).", cost: 35000, passive: 175, label: "+$175/mo" },
+    { id: "o8", type: "opportunity", kind: "cashflow", title: "Storage Unit Slice", copy: "Lease a unit, rent shelves (~7%).", cost: 28000, passive: 163, label: "+$163/mo" },
+    { id: "o9", type: "opportunity", kind: "cashflow", title: "Solar Co-op Buy-In", copy: "Community solar credits (~5%).", cost: 40000, passive: 167, label: "+$167/mo" },
+    { id: "o10", type: "opportunity", kind: "cashflow", title: "E-Bike Fleet Slice", copy: "Campus e-bike share (~6%).", cost: 30000, passive: 150, label: "+$150/mo" },
+    { id: "og1", type: "opportunity", kind: "growth", title: "Gold/Silver Bullion", copy: "Physical gold/silver unit. No passive — market value only.", cost: 3000, assetKey: "metals", units: 1, label: "Growth" },
+    { id: "og2", type: "opportunity", kind: "growth", title: "Gold/Silver Coins", copy: "Bullion coins lot. Market price only.", cost: 3000, assetKey: "metals", units: 1, label: "Growth" },
+    { id: "og3", type: "opportunity", kind: "growth", title: "Bitcoin (classroom unit)", copy: "Simplified BTC. Zero passive until sold.", cost: 8000, assetKey: "bitcoin", units: 1, label: "Growth" },
+    { id: "og4", type: "opportunity", kind: "growth", title: "US Index Fund", copy: "Fund tracking a US share index — capital gains vibe.", cost: 6000, assetKey: "usindex", units: 1, label: "Growth" },
+    { id: "og5", type: "opportunity", kind: "growth", title: "Extra Gold/Silver Lot", copy: "Another bullion tranche.", cost: 6000, assetKey: "metals", units: 2, label: "Growth ×2" },
+    { id: "og6", type: "opportunity", kind: "growth", title: "US Index Top-Up", copy: "Add to your US Index holding.", cost: 15000, assetKey: "usindex", units: 2, label: "Growth ×2" },
+    { id: "op1", type: "opportunity", kind: "property", title: "Starter Rental Flat", copy: "Provincial flat. Down payment from cash/CC/HI; rest is a bank loan. Rent scales with property index.", price: 320000, downPayment: 32000, passive: 450, label: "Property" },
+    { id: "op2", type: "opportunity", kind: "property", title: "Townhouse Rental", copy: "Two-bed townhouse. Bank finances after down payment.", price: 480000, downPayment: 48000, passive: 720, label: "Property" },
+    { id: "op3", type: "opportunity", kind: "property", title: "City Unit Slice", copy: "Apartment share. Higher rent, bigger loan.", price: 550000, downPayment: 55000, passive: 850, label: "Property" },
+    { id: "op4", type: "opportunity", kind: "property", title: "Duplex Opportunity", copy: "Duplex — stronger cashflow if you can fund the deposit.", price: 620000, downPayment: 62000, passive: 1100, label: "Property" },
+    { id: "ob1", type: "opportunity", kind: "business", title: "Café Franchise Slice", copy: "Small café stake. Down payment + bank loan. Draw scales with business index.", price: 180000, downPayment: 36000, passive: 600, label: "Business" },
+    { id: "ob2", type: "opportunity", kind: "business", title: "Lawn & Garden Crew", copy: "Buy into a local crew. Equipment financed.", price: 95000, downPayment: 20000, passive: 380, label: "Business" },
+    { id: "ob3", type: "opportunity", kind: "business", title: "Mobile Mechanic Van", copy: "Fitted van + tools. Deposit then bank loan.", price: 120000, downPayment: 25000, passive: 520, label: "Business" },
+    { id: "ob4", type: "opportunity", kind: "business", title: "Online Store Stake", copy: "Inventory + ads. Deposit $20k+, bank for the rest.", price: 80000, downPayment: 20000, passive: 340, label: "Business" }
+  ];
+
+  var SPENDING = [
+    { id: "s1", type: "spending", title: "Flat Bond Top-Up", copy: "Bond rose. Landlord wants the difference today.", cost: 800, label: "−$800" },
+    { id: "s2", type: "spending", title: "WOF + Rego", copy: "Car check failed a bulb — plus rego due.", cost: 350, label: "−$350" },
+    { id: "s3", type: "spending", title: "Phone Upgrade FOMO", copy: "New phone — cash out now.", cost: 600, label: "−$600" },
+    { id: "s4", type: "spending", title: "Festival Weekend", copy: "Tickets, rides, and overpriced chips.", cost: 280, label: "−$280" },
+    { id: "s5", type: "spending", title: "Vet Bill", copy: "Dog ate a sock. Clinic saved the day.", cost: 450, label: "−$450" },
+    { id: "s6", type: "spending", title: "Broken Laptop", copy: "Screen crack. Need it for work.", cost: 900, label: "−$900" },
+    { id: "s7", type: "spending", title: "Power Spike", copy: "Cold snap — heater non-stop.", expenseDelta: 80, label: "+$80/mo" },
+    { id: "s8", type: "spending", title: "Uber Habit", copy: "Late shifts = rides home.", expenseDelta: 70, label: "+$70/mo" },
+    { id: "s9", type: "spending", title: "Takeaways Creep", copy: "Too tired to cook. Again.", expenseDelta: 100, label: "+$100/mo" },
+    { id: "s10", type: "spending", title: "Gym Annual", copy: "Membership paid upfront.", cost: 500, label: "−$500" },
+    { id: "s11", type: "spending", title: "Mate's Wedding Koha", copy: "Big koha + outfit.", cost: 400, label: "−$400" },
+    { id: "s12", type: "spending", title: "Stolen Bike", copy: "U-lock wasn't enough.", cost: 350, expenseDelta: 50, label: "−$350 & +$50/mo" },
+    { id: "s13", type: "spending", title: "Insurance Excess", copy: "Claim approved — excess still hurts.", cost: 550, label: "−$550" },
+    { id: "s14", type: "spending", title: "Streaming Stack", copy: "Four apps. One couch.", expenseDelta: 40, label: "+$40/mo" },
+    { id: "s15", type: "spending", title: "Impulse Online Cart", copy: "Late-night checkout.", cost: 220, label: "−$220" }
+  ];
+
+  var LIFE = [
+    { id: "l1", type: "life", title: "Overtime Month", copy: "Short-staffed — extra hours.", cashDelta: 600, label: "+$600" },
+    { id: "l2", type: "life", title: "IRD Tax Refund", copy: "Small PAYE wash-up lands.", cashDelta: 320, label: "+$320" },
+    { id: "l3", type: "life", title: "Flatmate Moves Out", copy: "Rent share jumps.", expenseDelta: 150, label: "+$150/mo" },
+    { id: "l4", type: "life", title: "Win on Lotto Scratchie", copy: "Not life-changing — but nice.", cashDelta: 50, label: "+$50" },
+    { id: "l5", type: "life", title: "Whanau Koha In", copy: "Family chips in for a hard month.", cashDelta: 250, label: "+$250" },
+    { id: "l6", type: "life", title: "Parking Fine", copy: "P-meter ran out.", cashDelta: -80, label: "−$80" },
+    { id: "l7", type: "life", title: "Community Market Stall", copy: "Sold baking at the market.", cashDelta: 180, label: "+$180" },
+    { id: "l8", type: "life", title: "Rent Review", copy: "Landlord: rent up from next month.", expenseDelta: 120, label: "+$120/mo" },
+    { id: "l9", type: "life", title: "Work Bonus", copy: "Spot bonus for covering roster.", cashDelta: 500, label: "+$500" },
+    { id: "l10", type: "life", title: "Flooded Laundry", copy: "Hose burst — replace gear.", cashDelta: -300, label: "−$300" },
+    { id: "l11", type: "life", title: "Scholarship / Grant", copy: "Study or training grant hits.", cashDelta: 600, label: "+$600" },
+    { id: "l12", type: "life", title: "Public Transport Strike", copy: "More fuel / rides this month.", cashDelta: -200, label: "−$200" },
+    { id: "l13", type: "life", title: "Neighbour Pays for Help", copy: "Mowed lawns — cash in hand.", cashDelta: 150, label: "+$150" },
+    { id: "li1", type: "life", title: "Workplace Injury", copy: "ACC vibe: you need rest. Duration rolled 1–3 months. First month may use your yearly paid leave.", offWork: true, label: "Off work 1–3 mo" },
+    { id: "li2", type: "life", title: "Serious Illness", copy: "Doctor orders rest. Duration 1–3 months. Paid leave (1 mo/year) covers the first month if still available.", offWork: true, label: "Off work 1–3 mo" },
+    { id: "li3", type: "life", title: "Accident Recovery", copy: "Crash / fall — recovery time. Rest 1–3 months; expenses continue.", offWork: true, label: "Off work 1–3 mo" },
+    { id: "lc1", type: "life", title: "Having a Child", copy: "New family member! One-time costs plus permanent living increase (~$400–$600/mo per child).", birth: true, label: "New child" }
+  ];
+
+  var MARKET = [
+    { id: "mg1", type: "market", title: "Gold/Silver Rallies", copy: "Safe-haven buying.", effect: "price", assetKey: "metals", pct: 0.12, label: "Gold/Silver +12%", trade: true },
+    { id: "mg2", type: "market", title: "Gold/Silver Softens", copy: "Profit-taking.", effect: "price", assetKey: "metals", pct: -0.08, label: "Gold/Silver −8%", trade: true },
+    { id: "mg3", type: "market", title: "Gold/Silver Surge", copy: "Industrial demand for silver lifts precious metals.", effect: "price", assetKey: "metals", pct: 0.15, label: "Gold/Silver +15%", trade: true },
+    { id: "mg4", type: "market", title: "Gold/Silver Slips", copy: "Correction.", effect: "price", assetKey: "metals", pct: -0.10, label: "Gold/Silver −10%", trade: true },
+    { id: "mg5", type: "market", title: "Bitcoin Rally", copy: "Risk-on mood.", effect: "price", assetKey: "bitcoin", pct: 0.25, label: "BTC +25%", trade: true },
+    { id: "mg6", type: "market", title: "Bitcoin Crash", copy: "Volatility reminder.", effect: "price", assetKey: "bitcoin", pct: -0.30, label: "BTC −30%", trade: true },
+    { id: "mg7", type: "market", title: "US Index Bounces", copy: "US share index lifts.", effect: "price", assetKey: "usindex", pct: 0.15, label: "US Index +15%", trade: true },
+    { id: "mg8", type: "market", title: "US Index Sell-Off", copy: "Risk-off week on Wall Street.", effect: "price", assetKey: "usindex", pct: -0.20, label: "US Index −20%", trade: true },
+    { id: "mp1", type: "market", title: "Property Boom", copy: "Listings heat up. Property index rises.", effect: "price", assetKey: "property", pct: 0.08, label: "Property +8%", trade: true },
+    { id: "mp2", type: "market", title: "Property Soft Patch", copy: "Values ease.", effect: "price", assetKey: "property", pct: -0.06, label: "Property −6%", trade: true },
+    { id: "mb1", type: "market", title: "Small Business Confidence Up", copy: "Buyers optimistic. Business values mark up.", effect: "price", assetKey: "business", pct: 0.10, label: "Business +10%", trade: true },
+    { id: "mb2", type: "market", title: "Business Sentiment Soft", copy: "Margins squeezed. Values ease.", effect: "price", assetKey: "business", pct: -0.08, label: "Business −8%", trade: true },
+    { id: "mt1", type: "market", title: "IRD Catch-Up Bill", copy: "Unexpected tax wash-up due now (one-time expense).", effect: "tax_bill", amount: 1200, label: "−$1,200" },
+    { id: "mt2", type: "market", title: "IRD Catch-Up (Larger)", copy: "Bigger wash-up from prior year.", effect: "tax_bill", amount: 2500, label: "−$2,500" },
+    { id: "mi1", type: "market", title: "RBNZ Hikes OCR", copy: "Bank loan rate +1% p.a. High-interest loan stays 120% p.a.", effect: "rate", bankDelta: 0.01, label: "Bank rate +1%" },
+    { id: "mi2", type: "market", title: "RBNZ Cuts OCR", copy: "Bank loan rate −1% p.a. (floor 5%). HI stays 120%.", effect: "rate", bankDelta: -0.01, label: "Bank rate −1%" },
+    { id: "mr1", type: "market", title: "Rental Vacancy Spike", copy: "If you own rental property, lose one month of that rent as a cash hit (passive stays for future months).", effect: "rental_vacancy", label: "Vacancy" },
+    { id: "mr2", type: "market", title: "Rental Boom", copy: "If you own property, collect a one-month rent bonus in cash (passive unchanged).", effect: "rental_boom", label: "Rent boom" },
+    { id: "mw1", type: "market", title: "Wage Freeze", copy: "Rare: morale hit to cash; paycheck rate unchanged.", effect: "wage_note", cashDelta: -100, label: "Wage freeze" },
+    { id: "mw2", type: "market", title: "Rare Spot Bonus", copy: "Employer surprise bonus.", effect: "wage_note", cashDelta: 800, label: "+$800 bonus" },
+    { id: "mf1", type: "market", title: "All Blacks Win Weekend", copy: "Nation smiles. Merch sales spike — not yours.", effect: "noop", label: "Flavour" },
+    { id: "mf2", type: "market", title: "Farmers Market Thrives", copy: "Local produce flying off tables.", effect: "noop", label: "Flavour" },
+    { id: "mf3", type: "market", title: "Wellington Cycleway Opens", copy: "Commute vibes improve for some.", effect: "noop", label: "Flavour" }
+  ];
+
+  var DECKS = { opportunity: OPPORTUNITY, spending: SPENDING, life: LIFE, market: MARKET };
+
+  var state = {
+    screen: "title", difficulty: null, career: null, month: 1,
+    cash: 0, baseGross: 0, jobIncome: 0, passiveIncome: 0, tax: 0,
+    livingBase: 0, livingExpenses: 0, children: 0, childMonthlyTotal: 0,
+    birthThisYear: false, paidLeaveAvailable: true, restQueue: [],
+    offWork: false, offWorkPaid: false,
+    bankLoan: 0, hiLoan: 0, ccBalance: 0, bankApr: BANK_APR_DEFAULT,
+    bankInterestThisMonth: 0, hiInterestThisMonth: 0, ccInterestThisMonth: 0,
+    priceIndex: { metals: 1, bitcoin: 1, usindex: 1, property: 1, business: 1 },
+    growthUnits: { metals: 0, bitcoin: 0, usindex: 0 },
+    assets: [], properties: [], businesses: [],
+    lastBirthMonth: null,
+    lastIllnessMonth: null,
+    pendingEvent: null, eventResolved: true, tradePending: false,
+    marketNote: "", history: [], bankrupt: false, endReason: ""
+  };
+
+  function $(id) { return document.getElementById(id); }
+  function fmt(n) {
+    var sign = n < 0 ? "\u2212" : "";
+    return sign + "$" + Math.abs(Math.round(n)).toLocaleString("en-NZ");
+  }
+  function annualizedRoiPct(passivePerMonth, basis) {
+    if (!basis || basis <= 0) return 0;
+    return (passivePerMonth * 12 / basis) * 100;
+  }
+  function fmtRoi(pct) { return pct.toFixed(1) + "% p.a."; }
+  function round10(n) { return Math.round(n / 10) * 10; }
+  function floor1000(n) { return Math.floor(Math.max(0, n) / STEP) * STEP; }
+  function ceil1000(n) {
+    n = Math.max(0, n);
+    if (n === 0) return 0;
+    return Math.ceil(n / STEP) * STEP;
+  }
+  function yearOf(month) { return Math.ceil(month / MONTHS_PER_YEAR); }
+  function monthInYear(month) { return ((month - 1) % MONTHS_PER_YEAR) + 1; }
+  function monthlyGrossFromRate(hourly) { return hourly * HOURS * WEEKS_PER_YEAR / MONTHS_PER_YEAR; }
+  function effectiveTaxRate(annualGross) {
+    if (annualGross < 48000) return 0.18;
+    if (annualGross < 70000) return 0.24;
+    if (annualGross < 120000) return 0.30;
+    return 0.35;
+  }
+  function monthlyTaxFromGross(monthlyGross) {
+    if (monthlyGross <= 0) return 0;
+    return round10(monthlyGross * effectiveTaxRate(monthlyGross * MONTHS_PER_YEAR));
+  }
+  function livingFromIncome(monthlyGross) { return Math.max(780, round10(monthlyGross * 0.42)); }
+  function startingCash(monthlyNet) {
+    return round10(Math.max(800, monthlyNet * (0.75 + Math.random() * 0.75)));
+  }
+
+  function growthValue(key) {
+    return Math.round(state.growthUnits[key] * BASE_UNIT[key] * state.priceIndex[key]);
+  }
+  function totalGrowthValue() {
+    var t = 0;
+    GROWTH_KEYS.forEach(function (k) { t += growthValue(k); });
+    return t;
+  }
+  function propertyMarketValue() {
+    var t = 0;
+    state.properties.forEach(function (p) { t += Math.round(p.costBasis * state.priceIndex.property); });
+    return t;
+  }
+  function businessMarketValue() {
+    var t = 0;
+    state.businesses.forEach(function (b) { t += Math.round(b.costBasis * state.priceIndex.business); });
+    return t;
+  }
+  function cashflowBookValue() {
+    var t = 0;
+    state.assets.forEach(function (a) { t += a.cost; });
+    return t;
+  }
+  function totalAssets() {
+    return Math.round(state.cash + totalGrowthValue() + cashflowBookValue() + propertyMarketValue() + businessMarketValue());
+  }
+  function totalLiabilities() {
+    return Math.round(state.bankLoan + state.hiLoan + state.ccBalance);
+  }
+  function ccAvailable() { return Math.max(0, CC_LIMIT - state.ccBalance); }
+  function netWorth() { return totalAssets() - totalLiabilities(); }
+  function bankInterest() { return Math.round(state.bankLoan * (state.bankApr / 12)); }
+  function hiInterest() { return Math.round(state.hiLoan * (HI_APR / 12)); }
+  function ccInterest() { return Math.round(state.ccBalance * (CC_APR / 12)); }
+  function scaledPropertyPassive(p) { return Math.round(p.passive * state.priceIndex.property); }
+  function scaledBusinessPassive(b) { return Math.round(b.passive * state.priceIndex.business); }
+  function recomputePassive() {
+    var p = 0;
+    state.assets.forEach(function (a) { p += a.passive; });
+    state.properties.forEach(function (a) { p += scaledPropertyPassive(a); });
+    state.businesses.forEach(function (a) { p += scaledBusinessPassive(a); });
+    state.passiveIncome = p;
+  }
+  function recomputeLiving() { state.livingExpenses = state.livingBase + state.childMonthlyTotal; }
+  function applyPayStatus() {
+    if (state.offWork && !state.offWorkPaid) {
+      state.jobIncome = 0;
+      state.tax = 0;
+    } else {
+      state.jobIncome = state.baseGross;
+      state.tax = monthlyTaxFromGross(state.baseGross);
+    }
+  }
+  function refreshInterestPreview() {
+    state.bankInterestThisMonth = bankInterest();
+    state.hiInterestThisMonth = hiInterest();
+    state.ccInterestThisMonth = ccInterest();
+  }
+  function totalExpenses() {
+    refreshInterestPreview();
+    return state.tax + state.livingExpenses + state.bankInterestThisMonth + state.hiInterestThisMonth + state.ccInterestThisMonth;
+  }
+  function cashflow() { return state.jobIncome + state.passiveIncome - totalExpenses(); }
+  function ratio() {
+    var te = totalExpenses();
+    return te <= 0 ? 0 : state.passiveIncome / te;
+  }
+  function showToast(msg, kind) {
+    var t = $("toast");
+    t.textContent = msg;
+    t.className = "toast show " + (kind || "");
+    clearTimeout(showToast._timer);
+    showToast._timer = setTimeout(function () { t.classList.remove("show"); }, 2800);
+  }
+  function showScreen(name) {
+    ["title", "difficulty", "career", "play", "summary"].forEach(function (s) {
+      $("screen-" + s).classList.toggle("active", s === name);
+    });
+    state.screen = name;
+    if (name === "title") refreshContinueUI();
+    refreshSpaceHint();
+  }
+  function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+  var SAVE_KEY = "smarter-dollar-save-v1";
+  var SAVE_VERSION = 1;
+  var STORAGE_PROBE_KEY = SAVE_KEY + "-probe";
+  var storageAvailable = null;
+  var autoSaveWarningShown = false;
+
+  function deepCloneState(obj) {
+    return JSON.parse(JSON.stringify(obj));
+  }
+
+  /* Undo stack: deep-cloned playable states. Persisted in save JSON (capped). In-memory also OK if save strip fails. */
+  var UNDO_CAP = 120;
+  var undoStack = [];
+  var confirmCallback = null;
+
+  function pushUndoSnapshot() {
+    try {
+      undoStack.push(deepCloneState(state));
+      if (undoStack.length > UNDO_CAP) undoStack.shift();
+    } catch (err) { /* ignore clone failures */ }
+    updateUndoBtn();
+  }
+
+  function clearUndoStack() {
+    undoStack = [];
+    updateUndoBtn();
+  }
+
+  function updateUndoBtn() {
+    var btn = $("btn-prev-month");
+    if (!btn) return;
+    var can = state.screen === "play" && !state.bankrupt && undoStack.length > 0;
+    btn.disabled = !can;
+  }
+
+  function previousMonth() {
+    if (state.screen !== "play" || state.bankrupt) return;
+    if (!undoStack.length) {
+      showToast("Nothing to undo — already at earliest month.", "error");
+      updateUndoBtn();
+      return;
+    }
+    var snap = undoStack.pop();
+    applyLoadedState(snap);
+    if (state.bankrupt || state.screen === "summary") {
+      endGame(!!state.bankrupt);
+    } else {
+      state.screen = "play";
+      showScreen("play");
+      restorePlayUI();
+    }
+    autoSave();
+    updateUndoBtn();
+    showToast("Restored previous month (Month " + (state.month || 1) + ").", "ok");
+  }
+
+  function isConfirmModalOpen() {
+    var m = $("confirm-modal");
+    return !!(m && m.classList.contains("show") && !m.hidden);
+  }
+  function isRepayModalOpen() {
+    var m = $("repay-modal");
+    return !!(m && m.classList.contains("show") && !m.hidden);
+  }
+  function isSlotModalOpen() {
+    var m = $("slot-modal");
+    return !!(m && m.classList.contains("show") && !m.hidden);
+  }
+  function isAnyModalOpen() {
+    return isConfirmModalOpen() || isRepayModalOpen() || isSlotModalOpen();
+  }
+
+  /* ---- Space / Enter = default next step ---- */
+  function usable(el) { return !!(el && !el.disabled && !el.hidden && el.offsetParent !== null); }
+  function spaceTarget() {
+    if (isConfirmModalOpen()) return $("confirm-ok");
+    if (isRepayModalOpen()) { var rc = $("repay-confirm"); return usable(rc) ? rc : null; }
+    if (isSlotModalOpen()) return null;
+    var scr = state.screen;
+    if (scr === "title") return usable($("btn-start")) ? $("btn-start") : null;
+    if (scr === "difficulty") return usable($("btn-diff-next")) ? $("btn-diff-next") : null;
+    if (scr === "career") return usable($("btn-career-start")) ? $("btn-career-start") : null;
+    if (scr !== "play" || state.bankrupt) return null;
+    if (state.eventResolved || !state.pendingEvent) return usable($("btn-next")) ? $("btn-next") : null;
+    /* Pending event: primary action. Buy only when cash covers it; if the only buy option is
+       CC/HI borrowing, the default is Skip (never auto-borrow at 24% / 120%). */
+    var order = ["btn-buy", "btn-trade-done", "btn-birth-accept", "btn-resolve", "btn-skip-event"];
+    for (var i = 0; i < order.length; i++) {
+      var el = $(order[i]);
+      if (usable(el)) return el;
+    }
+    return null;
+  }
+  var spaceHintQueued = false;
+  function refreshSpaceHint() {
+    if (spaceHintQueued) return;
+    spaceHintQueued = true;
+    setTimeout(function () {
+      spaceHintQueued = false;
+      document.querySelectorAll(".space-default").forEach(function (el) { el.classList.remove("space-default"); });
+      var t = spaceTarget();
+      if (t) t.classList.add("space-default");
+    }, 0);
+  }
+  function pressSpaceDefault() {
+    var t = spaceTarget();
+    if (t) t.click();
+  }
+
+  function showConfirm(message, onConfirm, opts) {
+    opts = opts || {};
+    var title = $("confirm-title");
+    var msg = $("confirm-message");
+    var okBtn = $("confirm-ok");
+    if (title) title.textContent = opts.title || "Confirm";
+    if (msg) msg.textContent = message;
+    if (okBtn) okBtn.textContent = opts.okLabel || "Confirm";
+    confirmCallback = typeof onConfirm === "function" ? onConfirm : null;
+    var modal = $("confirm-modal");
+    if (!modal) {
+      if (confirmCallback) confirmCallback();
+      return;
+    }
+    modal.hidden = false;
+    modal.classList.add("show");
+    if (okBtn) okBtn.focus();
+    refreshSpaceHint();
+  }
+  function closeConfirm(accepted) {
+    var modal = $("confirm-modal");
+    if (modal) {
+      modal.classList.remove("show");
+      modal.hidden = true;
+    }
+    var cb = confirmCallback;
+    confirmCallback = null;
+    if (accepted && cb) cb();
+    refreshSpaceHint();
+  }
+
+  var SLOT_COUNT = 5;
+  var SLOT_PREFIX = "smarter-dollar-slot-";
+  var MIGRATE_FLAG = "smarter-dollar-slots-migrated-v1";
+  var slotMode = "save";
+  var legacyMigratedNow = false;
+
+  function currentSaveMeta() {
+    var nw = 0;
+    try { nw = netWorth(); } catch (e) { nw = state.cash || 0; }
+    return {
+      career: (state.career && state.career.name) || "",
+      difficulty: state.difficulty || "",
+      month: state.month || 1,
+      netWorth: nw,
+      bankrupt: !!state.bankrupt,
+      finished: state.screen === "summary",
+      savedAt: new Date().toISOString()
+    };
+  }
+
+  /* Undo snapshots are saved WITHOUT their history arrays (rebuilt on load from the main
+     history: a snapshot taken at month m had history for months < m). Keeps 5 slots + Auto
+     well inside browser storage limits. In-memory undo behaviour is unchanged. */
+  function buildSavePayload() {
+    return {
+      version: SAVE_VERSION,
+      game: "SMARTER$ full",
+      savedAt: new Date().toISOString(),
+      meta: currentSaveMeta(),
+      state: deepCloneState(state),
+      undoHistoryStripped: true,
+      undoStack: undoStack.slice(-UNDO_CAP).map(function (snap) {
+        var c = Object.assign({}, snap);
+        delete c.history;
+        return c;
+      })
+    };
+  }
+  function rebuildUndoStack(data) {
+    if (!Array.isArray(data.undoStack)) return [];
+    var hist = (data.state && Array.isArray(data.state.history)) ? data.state.history : [];
+    return data.undoStack.slice(-UNDO_CAP).map(function (snap) {
+      var c = deepCloneState(snap);
+      if (data.undoHistoryStripped || !Array.isArray(c.history)) {
+        var m = c.month || 1;
+        c.history = deepCloneState(hist.filter(function (h) { return h.month < m; }));
+      }
+      return c;
+    });
+  }
+  function slotKey(n) { return SLOT_PREFIX + n; }
+  function isQuotaError(err) {
+    return !!err && (err.name === "QuotaExceededError" || err.code === 22 || err.code === 1014 || /quota/i.test(String(err.message || "")));
+  }
+  /* Returns "ok", "trimmed" (undo history shortened to fit), or false. */
+  function storePayload(key, payload) {
+    try {
+      localStorage.setItem(key, JSON.stringify(payload));
+      return "ok";
+    } catch (err) {
+      if (isQuotaError(err) && payload.undoStack && payload.undoStack.length > 12) {
+        payload.undoStack = payload.undoStack.slice(-12);
+        payload.undoTrimmed = true;
+        try { localStorage.setItem(key, JSON.stringify(payload)); return "trimmed"; } catch (e2) {}
+      }
+      return false;
+    }
+  }
+  function readSlot(n) {
+    try {
+      var raw = localStorage.getItem(slotKey(n));
+      return raw ? parseSavePayload(raw) : null;
+    } catch (err) { return null; }
+  }
+  function readAutoSave() {
+    try {
+      var raw = localStorage.getItem(SAVE_KEY);
+      return raw ? parseSavePayload(raw) : null;
+    } catch (err) { return null; }
+  }
+  function metaOf(data) {
+    if (data && data.meta) return data.meta;
+    var st = (data && data.state) || {};
+    var hist = Array.isArray(st.history) ? st.history : [];
+    return {
+      career: (st.career && st.career.name) || "",
+      difficulty: st.difficulty || "",
+      month: st.month || 1,
+      netWorth: hist.length ? hist[hist.length - 1].netWorth : (st.cash || 0),
+      bankrupt: !!st.bankrupt,
+      finished: st.screen === "summary",
+      savedAt: data && data.savedAt
+    };
+  }
+  function fmtSavedAt(iso) {
+    if (!iso) return "date unknown";
+    var d = new Date(iso);
+    if (isNaN(d.getTime())) return "date unknown";
+    try {
+      return d.toLocaleString("en-NZ", { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit" });
+    } catch (e) { return d.toISOString().slice(0, 16).replace("T", " "); }
+  }
+  function metaLine(meta) {
+    var m = meta.month || 1;
+    var parts = [
+      (meta.career || "Career") + (meta.difficulty ? " (" + capitalize(String(meta.difficulty)) + ")" : ""),
+      "Month " + m + " · Year " + yearOf(m) + " · Month " + monthInYear(m),
+      "Net worth " + fmt(meta.netWorth || 0)
+    ];
+    if (meta.bankrupt) parts.push("Bankrupt");
+    else if (meta.finished) parts.push("Finished");
+    return parts.join(" · ") + "<br>Saved " + fmtSavedAt(meta.savedAt);
+  }
+  /* One-time: copy the old single save (v3 key) into Slot 1 so nothing is lost.
+     The old key keeps working as the "Auto" save. */
+  function migrateLegacySave() {
+    try {
+      if (localStorage.getItem(MIGRATE_FLAG)) return;
+      var raw = localStorage.getItem(SAVE_KEY);
+      if (raw && !localStorage.getItem(slotKey(1))) {
+        var data = parseSavePayload(raw);
+        data.migratedFromLegacy = true;
+        if (!data.meta) data.meta = metaOf(data);
+        localStorage.setItem(slotKey(1), JSON.stringify(data));
+        legacyMigratedNow = true;
+      }
+      localStorage.setItem(MIGRATE_FLAG, "1");
+    } catch (err) { /* storage blocked — nothing to migrate */ }
+  }
+  function openSlotModal(mode) {
+    if (mode === "save" && state.screen !== "play" && state.screen !== "summary") {
+      showToast("Nothing to save yet.", "error");
+      return;
+    }
+    slotMode = mode;
+    renderSlotList();
+    var modal = $("slot-modal");
+    modal.hidden = false;
+    modal.classList.add("show");
+    var first = $("slot-list").querySelector("button:not(:disabled)");
+    if (first) first.focus();
+    refreshSpaceHint();
+  }
+  function closeSlotModal() {
+    var modal = $("slot-modal");
+    modal.classList.remove("show");
+    modal.hidden = true;
+    refreshSpaceHint();
+  }
+  function slotButton(label, data, cls, onClick, disabled) {
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "slot-btn " + (cls || "");
+    var meta = data ? metaLine(metaOf(data)) : (slotMode === "save" ? "Empty — tap to save here" : "Empty");
+    btn.innerHTML = '<div class="slot-name">' + label + '</div><div class="slot-meta">' + meta + "</div>";
+    if (disabled) btn.disabled = true;
+    btn.addEventListener("click", onClick);
+    return btn;
+  }
+  function renderSlotList() {
+    var list = $("slot-list");
+    list.innerHTML = "";
+    var storageOk = probeStorage();
+    $("slot-title").textContent = slotMode === "save" ? "Save game — choose a slot" : "Load game — choose a save";
+    $("slot-file").textContent = slotMode === "save" ? "Download file" : "Load from file…";
+    $("slot-hint").textContent = storageOk
+      ? (slotMode === "save" ? "Pick a slot (1–5). Saving over a used slot asks first. Auto-save runs every month separately."
+                              : "Pick a slot to load. \u201cAuto\u201d is the latest automatic save (every month).")
+      : "Browser storage is blocked here (e.g. file preview). " + (slotMode === "save"
+          ? "Choosing a slot will DOWNLOAD a save file instead." : "Use \u201cLoad from file\u2026\u201d to open a downloaded save.");
+    if (slotMode === "load") {
+      var auto = readAutoSave();
+      list.appendChild(slotButton("Auto (latest)", auto, "auto" + (auto ? "" : " empty"), function () { chooseLoad(auto, "Auto save"); }, !auto));
+    }
+    for (var n = 1; n <= SLOT_COUNT; n++) {
+      (function (n) {
+        var data = readSlot(n);
+        var cls = (data ? "" : "empty") + (data && data.migratedFromLegacy ? " legacy" : "");
+        list.appendChild(slotButton("Slot " + n, data, cls, function () {
+          if (slotMode === "save") chooseSave(n, data);
+          else chooseLoad(data, "Slot " + n);
+        }, slotMode === "load" && !data));
+      })(n);
+    }
+  }
+  function saveToSlot(n) {
+    var payload = buildSavePayload();
+    payload.slot = n;
+    var res = probeStorage() ? storePayload(slotKey(n), payload) : false;
+    if (res === "ok") showToast("Saved to Slot " + n + ".", "ok");
+    else if (res === "trimmed") showToast("Saved to Slot " + n + " (storage nearly full — undo history shortened).", "ok");
+    else if (downloadSaveFile(payload, "SMARTER-dollar-slot" + n + "-month" + (state.month || 1) + ".json")) {
+      showToast("Browser storage unavailable — downloaded a save file for Slot " + n + " instead.", "ok");
+    } else showToast("Could not save.", "error");
+    closeSlotModal();
+  }
+  function chooseSave(n, existing) {
+    if (existing) {
+      showConfirm("Overwrite Slot " + n + "? It has: " + metaLine(metaOf(existing)).replace("<br>", " · "), function () {
+        saveToSlot(n);
+      }, { title: "Overwrite save?", okLabel: "Overwrite" });
+    } else saveToSlot(n);
+  }
+  function chooseLoad(data, label) {
+    if (!data) return;
+    var doLoad = function () { closeSlotModal(); loadGame({ data: data, label: label }); };
+    if (state.screen === "play" && !state.bankrupt) {
+      showConfirm("Load " + label + "? Current progress will be overwritten.", doLoad, { title: "Load game?", okLabel: "Load" });
+    } else doLoad();
+  }
+
+  function refreshStorageNote() {
+    var note = $("storage-note");
+    if (note) note.style.display = storageAvailable === false ? "block" : "none";
+  }
+
+  function probeStorage() {
+    try {
+      localStorage.setItem(STORAGE_PROBE_KEY, "1");
+      localStorage.removeItem(STORAGE_PROBE_KEY);
+      storageAvailable = true;
+    } catch (err) {
+      storageAvailable = false;
+    }
+    refreshStorageNote();
+    return storageAvailable;
+  }
+
+  function downloadSaveFile(payload, filename) {
+    try {
+      var blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      var url = URL.createObjectURL(blob);
+      var link = document.createElement("a");
+      link.href = url;
+      link.download = filename || ("SMARTER-dollar-save-month" + ((payload.state && payload.state.month) || 1) + ".json");
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+      setTimeout(function () {
+        URL.revokeObjectURL(url);
+        if (link.parentNode) link.parentNode.removeChild(link);
+      }, 0);
+      return true;
+    } catch (err) {
+      return false;
+    }
+  }
+
+  function writeSave(silent) {
+    var payload = buildSavePayload();
+    payload.auto = true;
+    try {
+      if (!storePayload(SAVE_KEY, payload)) throw new Error("store failed");
+      storageAvailable = true;
+      refreshStorageNote();
+      if (!silent) showToast("Game saved.", "ok");
+      refreshContinueUI();
+      return true;
+    } catch (err) {
+      storageAvailable = false;
+      refreshStorageNote();
+      if (silent) {
+        if (!autoSaveWarningShown) {
+          autoSaveWarningShown = true;
+          showToast("Auto-save unavailable in this browser — use Save to download a file.", "error");
+        }
+        return false;
+      }
+      if (downloadSaveFile(payload)) {
+        showToast("Browser blocked storage — downloaded save file instead.", "ok");
+      } else {
+        showToast("Could not download save file.", "error");
+      }
+      return false;
+    }
+  }
+
+  function parseSavePayload(raw) {
+    var data = typeof raw === "string" ? JSON.parse(raw) : raw;
+    if (!data || typeof data !== "object" || !data.state || typeof data.state !== "object") {
+      throw new Error("invalid shape");
+    }
+    return data;
+  }
+
+  function readSaveRaw() {
+    var raw;
+    try {
+      raw = localStorage.getItem(SAVE_KEY);
+    } catch (err) {
+      storageAvailable = false;
+      refreshStorageNote();
+      return null;
+    }
+    if (!raw) return null;
+    try {
+      return parseSavePayload(raw);
+    } catch (err) {
+      showToast("Save data corrupt — cleared.", "error");
+      try { localStorage.removeItem(SAVE_KEY); } catch (e2) {}
+      refreshContinueUI();
+      return null;
+    }
+  }
+
+  function hasSave() {
+    try {
+      var present = !!localStorage.getItem(SAVE_KEY);
+      if (storageAvailable !== false) storageAvailable = true;
+      refreshStorageNote();
+      return present;
+    } catch (err) {
+      storageAvailable = false;
+      refreshStorageNote();
+      return false;
+    }
+  }
+
+  function saveMetaLine(data) {
+    if (!data || !data.state) return "";
+    var st = data.state;
+    var month = st.month || 1;
+    var career = (st.career && st.career.name) ? st.career.name : "Career";
+    var diff = st.difficulty ? capitalize(String(st.difficulty)) : "Difficulty";
+    var status = "";
+    if (st.bankrupt) status = " · Bankrupt";
+    else if (st.screen === "summary" || (st.month >= TOTAL_MONTHS && st.eventResolved)) status = " · Finished";
+    return "Month " + month + " · " + career + " · " + diff + status;
+  }
+
+  function refreshContinueUI() {
+    var btn = $("btn-continue");
+    var meta = $("continue-meta");
+    refreshStorageNote();
+    if (!btn) return;
+    var data = null;
+    try {
+      var raw = localStorage.getItem(SAVE_KEY);
+      if (raw) data = parseSavePayload(raw);
+    } catch (err) {
+      data = null;
+    }
+    var ok = !!(data && data.state && typeof data.state === "object");
+    btn.hidden = !ok;
+    if (meta) {
+      if (ok) {
+        meta.style.display = "block";
+        meta.textContent = saveMetaLine(data);
+      } else {
+        meta.style.display = "none";
+        meta.textContent = "";
+      }
+    }
+  }
+
+  function restorePlayUI() {
+    if (state.career) {
+      $("play-career-title").textContent =
+        state.career.name + " · " + fmt(state.career.rate) + "/hr · " + fmt(state.baseGross) + "/mo gross";
+    }
+    recomputePassive();
+    recomputeLiving();
+    applyPayStatus();
+    refreshInterestPreview();
+    renderHud();
+    renderEvent();
+    updateUndoBtn();
+  }
+
+  function fmtUnits(u) {
+    return Math.abs(u - Math.round(u)) < 0.005 ? String(Math.round(u)) : u.toFixed(2);
+  }
+  function findCardById(id) {
+    var all = OPPORTUNITY.concat(SPENDING, LIFE, MARKET);
+    for (var i = 0; i < all.length; i++) if (all[i].id === id) return all[i];
+    return null;
+  }
+  /* v3 → v4 asset migration: Gold + Silver merged into "metals" (Gold/Silver, base $3,000/unit);
+     "stocks" renamed "usindex" (US Index, same $6,000 base). Market value is preserved exactly
+     (units may become fractional). Works on any state object (saves and undo snapshots). */
+  function migrateAssetState(st) {
+    if (!st || typeof st !== "object") return st;
+    var pi = st.priceIndex || (st.priceIndex = {});
+    var gu = st.growthUnits || (st.growthUnits = {});
+    if (pi.metals == null || gu.metals == null) {
+      var gI = pi.gold != null ? pi.gold : 1, sI = pi.silver != null ? pi.silver : 1;
+      var gU = gu.gold || 0, sU = gu.silver || 0;
+      var basis = gU * 4500 + sU * 1200;
+      var val = gU * 4500 * gI + sU * 1200 * sI;
+      if (pi.metals == null) pi.metals = basis > 0 ? +(val / basis).toFixed(4) : +((gI * 0.8) + (sI * 0.2)).toFixed(4);
+      if (gu.metals == null) gu.metals = basis > 0 ? +(basis / BASE_UNIT.metals).toFixed(4) : 0;
+    }
+    if (pi.usindex == null) pi.usindex = pi.stocks != null ? pi.stocks : 1;
+    if (gu.usindex == null) gu.usindex = gu.stocks || 0;
+    ["gold", "silver", "stocks"].forEach(function (k) { delete pi[k]; delete gu[k]; });
+    INDEX_KEYS.forEach(function (k) { if (pi[k] == null) pi[k] = 1; });
+    GROWTH_KEYS.forEach(function (k) { if (gu[k] == null) gu[k] = 0; });
+    if (st.pendingEvent && st.pendingEvent.id) {
+      var fresh = findCardById(st.pendingEvent.id);
+      if (fresh) st.pendingEvent = Object.assign({}, fresh);
+    }
+    return st;
+  }
+
+  function applyLoadedState(savedState) {
+    var payloadState = savedState && savedState.state && typeof savedState.state === "object" ? savedState.state : savedState;
+    var clone = deepCloneState(payloadState);
+    Object.keys(state).forEach(function (k) { delete state[k]; });
+    Object.keys(clone).forEach(function (k) { state[k] = clone[k]; });
+    // Ensure required nested objects exist
+    if (!state.priceIndex) state.priceIndex = { metals: 1, bitcoin: 1, usindex: 1, property: 1, business: 1 };
+    if (!state.growthUnits) state.growthUnits = { metals: 0, bitcoin: 0, usindex: 0 };
+    migrateAssetState(state);
+    if (!state.assets) state.assets = [];
+    if (!state.properties) state.properties = [];
+    if (!state.businesses) state.businesses = [];
+    if (!state.history) state.history = [];
+    if (!state.restQueue) state.restQueue = [];
+  }
+
+  function loadGame(opts) {
+    opts = opts || {};
+    var data;
+    if (opts.data) {
+      try {
+        data = parseSavePayload(opts.data);
+      } catch (err) {
+        showToast("Save file is invalid or corrupt.", "error");
+        return false;
+      }
+    } else {
+      data = readSaveRaw();
+    }
+    if (!data) {
+      if (!opts.quietMissing) showToast("No save found.", "error");
+      return false;
+    }
+    applyLoadedState(data);
+    if (Array.isArray(data.undoStack)) {
+      undoStack = rebuildUndoStack(data);
+    } else {
+      clearUndoStack();
+    }
+    var screen = state.screen || "play";
+    if (state.bankrupt || screen === "summary") {
+      endGame(!!state.bankrupt);
+      // endGame already auto-saves; avoid double toast noise
+      showToast("Loaded finished game.", "ok");
+      refreshContinueUI();
+      updateUndoBtn();
+      return true;
+    }
+    showScreen("play");
+    restorePlayUI();
+    updateUndoBtn();
+    showToast((opts.label ? opts.label + " loaded" : "Game loaded") + " — Month " + (state.month || 1) + ".", "ok");
+    refreshContinueUI();
+    return true;
+  }
+
+  function manualSave() {
+    openSlotModal("save");
+  }
+
+  function autoSave() {
+    writeSave(true);
+  }
+
+  function openSaveFilePicker() {
+    var input = $("save-file-input");
+    if (!input) return;
+    input.value = "";
+    input.click();
+  }
+
+  function handleSaveFileSelected(event) {
+    var input = event.target;
+    var file = input.files && input.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      loadGame({ data: reader.result });
+    };
+    reader.onerror = function () {
+      showToast("Could not read save file.", "error");
+    };
+    reader.readAsText(file);
+  }
+
+  function confirmLoadDuringPlay() {
+    openSlotModal("load");
+  }
+  function pickWeightedType(weights) {
+    var r = Math.random(), acc = 0;
+    var order = ["opportunity", "spending", "life", "market"];
+    for (var i = 0; i < order.length; i++) {
+      acc += weights[order[i]];
+      if (r <= acc) return order[i];
+    }
+    return "market";
+  }
+  function maybeResetYearFlags() {
+    if (monthInYear(state.month) === 1) {
+      state.paidLeaveAvailable = true;
+      state.birthThisYear = false;
+    }
+  }
+  function monthsSinceLastChild() {
+    if (state.lastBirthMonth == null) return Infinity;
+    return state.month - state.lastBirthMonth;
+  }
+  function canHaveChild() {
+    if (state.children === 0) return true;
+    return monthsSinceLastChild() >= MIN_MONTHS_BETWEEN_BIRTHS;
+  }
+  function monthsSinceLastIllness() {
+    if (state.lastIllnessMonth == null) return Infinity;
+    return state.month - state.lastIllnessMonth;
+  }
+  function canDrawIllness() {
+    if (state.offWork) return false;
+    if (state.lastIllnessMonth == null) return true;
+    return monthsSinceLastIllness() >= MIN_MONTHS_BETWEEN_ILLNESS;
+  }
+  function drawEvent() {
+    var diff = DIFFICULTIES.find(function (d) { return d.id === state.difficulty; });
+    var type = pickWeightedType(diff.weights);
+    var deck = DECKS[type].slice();
+    if (type === "life" && !canHaveChild()) deck = deck.filter(function (c) { return !c.birth; });
+    if (type === "life" && !canDrawIllness()) deck = deck.filter(function (c) { return !c.offWork; });
+    if (!deck.length) {
+      deck = DECKS[type].filter(function (c) {
+        if (type !== "life") return true;
+        if (c.birth && !canHaveChild()) return false;
+        if (c.offWork && !canDrawIllness()) return false;
+        return true;
+      });
+      if (!deck.length) deck = DECKS.market.slice();
+    }
+    var card = Object.assign({}, deck[Math.floor(Math.random() * deck.length)]);
+    if (canHaveChild() && !card.birth && !state.offWork && Math.random() < (1 / 12)) {
+      var birthCard = LIFE.find(function (c) { return c.birth; });
+      if (birthCard) card = Object.assign({}, birthCard);
+    }
+    return card;
+  }
+  function coverShortfall() {
+    if (state.cash >= 0) return null;
+    var shortfall = -state.cash;
+    var used = "";
+    var ccRoom = ccAvailable();
+    var fromCc = Math.min(shortfall, ccRoom);
+    if (fromCc > 0) {
+      state.ccBalance += fromCc;
+      state.cash += fromCc;
+      shortfall -= fromCc;
+      used = "cc";
+    }
+    if (shortfall > 0) {
+      var hiAmt = ceil1000(shortfall);
+      state.hiLoan += hiAmt;
+      state.cash += hiAmt;
+      used = used ? "cc+hi" : "hi";
+    }
+    return used || null;
+  }
+  function settleMonthCashflow() {
+    applyPayStatus();
+    refreshInterestPreview();
+    state.cash += state.jobIncome + state.passiveIncome - totalExpenses();
+    coverShortfall();
+  }
+  function advanceRestAfterSettle() {
+    if (!state.restQueue.length) {
+      state.offWork = false;
+      state.offWorkPaid = false;
+      return;
+    }
+    state.restQueue.shift();
+    if (state.restQueue.length) {
+      state.offWork = true;
+      state.offWorkPaid = !!state.restQueue[0].paid;
+    } else {
+      state.offWork = false;
+      state.offWorkPaid = false;
+    }
+  }
+  function startRest(duration) {
+    var queue = [];
+    for (var i = 0; i < duration; i++) {
+      if (i === 0 && state.paidLeaveAvailable) {
+        queue.push({ paid: true });
+        state.paidLeaveAvailable = false;
+      } else {
+        queue.push({ paid: false });
+      }
+    }
+    state.restQueue = queue;
+    state.offWork = true;
+    state.offWorkPaid = !!queue[0].paid;
+    state.lastIllnessMonth = state.month;
+    applyPayStatus();
+  }
+  function hudItem(label, value, extra) {
+    var cls = extra === "highlight" ? "hud-item highlight" : "hud-item";
+    var vcls = extra && extra !== "highlight" ? " value " + extra : " value";
+    return '<div class="' + cls + '"><div class="label">' + label + '</div><div class="' + vcls.trim() + '">' + value + "</div></div>";
+  }
+  function indexPct(key) { return Math.round(state.priceIndex[key] * 100); }
+  function indexClass(key) {
+    var p = state.priceIndex[key];
+    if (p > 1.001) return "index-up";
+    if (p < 0.999) return "index-down";
+    return "";
+  }
+  function renderIndexStrip() {
+    var keys = INDEX_KEYS;
+    $("index-strip").innerHTML = keys.map(function (k) {
+      return "<span><strong>" + ASSET_LABELS[k] + "</strong> <span class='" + indexClass(k) + "'>" + indexPct(k) + "%</span></span>";
+    }).join(" · ");
+  }
+
+
+  var tipTimer = null;
+  function bindTooltips() {
+    var box = $("tip-box");
+    if (!box) return;
+    document.querySelectorAll("[data-tip]").forEach(function (el) {
+      if (el._tipBound) return;
+      el._tipBound = true;
+      el.addEventListener("mouseenter", function (e) {
+        clearTimeout(tipTimer);
+        var msg = el.getAttribute("data-tip");
+        if (!msg) return;
+        tipTimer = setTimeout(function () {
+          box.textContent = msg;
+          box.hidden = false;
+          box.classList.add("show");
+          var r = el.getBoundingClientRect();
+          var x = Math.min(window.innerWidth - 280, Math.max(8, r.left));
+          var y = r.bottom + 8;
+          if (y + 60 > window.innerHeight) y = r.top - 40;
+          box.style.left = x + "px";
+          box.style.top = y + "px";
+        }, 1000);
+      });
+      el.addEventListener("mouseleave", function () {
+        clearTimeout(tipTimer);
+        box.classList.remove("show");
+        box.hidden = true;
+      });
+    });
+  }
+
+  function checkBankruptcy(from) {
+    if (state.bankrupt || state.screen !== "play") return false;
+    recomputePassive();
+    if (netWorth() < 0) {
+      state.bankrupt = true;
+      state.endReason = "Bankrupt — Net Worth below $0";
+      endGame(true);
+      return true;
+    }
+    return false;
+  }
+
+  function renderHud() {
+    if (state.bankrupt) return;
+    applyPayStatus();
+    recomputePassive();
+    refreshInterestPreview();
+    if (checkBankruptcy("hud")) return;
+    var te = totalExpenses();
+    var cf = cashflow();
+    var r = ratio();
+    var cashClass = "cash-gold";
+    var cfClass = "cash-gold";
+    var compactHud = window.innerHeight < 900 || window.innerWidth <= 1366;
+    $("hud").innerHTML =
+      hudItem("Cash", fmt(state.cash), cashClass) +
+      hudItem(compactHud ? "Paycheck" : "Active Income (Paycheck)", fmt(state.jobIncome) + "/mo", state.offWork && !state.offWorkPaid ? "bad" : "cash-gold") +
+      hudItem(compactHud ? "Passive" : "Passive Income", fmt(state.passiveIncome) + "/mo", "cash-gold") +
+      hudItem("Tax", fmt(state.tax) + "/mo", "") +
+      hudItem(compactHud ? "Living" : "Living (+kids)", fmt(state.livingExpenses) + "/mo", "cost-red") +
+      hudItem(compactHud ? "Kids" : "Children", String(state.children), "") +
+      hudItem("Bank int (" + Math.round(state.bankApr * 100) + "%)", fmt(state.bankInterestThisMonth) + "/mo", state.bankInterestThisMonth ? "warn" : "") +
+      hudItem("CC int (24%)", fmt(state.ccInterestThisMonth) + "/mo", state.ccInterestThisMonth ? "warn" : "") +
+      hudItem("HI int (120%)", fmt(state.hiInterestThisMonth) + "/mo", state.hiInterestThisMonth ? "bad" : "") +
+      hudItem(compactHud ? "Tot Exp" : "Total Expenses", fmt(te) + "/mo", "") +
+      hudItem("Cashflow", fmt(cf) + "/mo", cfClass) +
+      hudItem(compactHud ? "P÷E" : "Passive ÷ Exp", (r * 100).toFixed(1) + "%", "highlight") +
+      hudItem(compactHud ? "Net Worth" : "Net Worth", fmt(netWorth()), "nw-blue");
+    var hudKeys = ["cash", "pay", "passive", "tax", "living", "kids", "bankint", "ccint", "hiint", "totexp", "cashflow", "ratio", "networth"];
+    [].forEach.call($("hud").children, function (el, i) { if (hudKeys[i]) el.classList.add("hud-" + hudKeys[i]); });
+
+    $("expense-breakdown").innerHTML =
+      "<li><span>Active Income (Paycheck)</span><span class='val-cash'>" + fmt(state.jobIncome) + "</span></li>" +
+      "<li><span>Passive Income</span><span class='val-cash'>" + fmt(state.passiveIncome) + "</span></li>" +
+      "<li><span>Tax (PAYE+ACC)</span><span>" + fmt(state.tax) + "</span></li>" +
+      "<li><span>Living (base + kids)</span><span class='val-cost'>" + fmt(state.livingExpenses) + "</span></li>" +
+      "<li><span>Kid costs alone</span><span class='val-cost'>" + fmt(state.childMonthlyTotal) + "</span></li>" +
+      "<li><span>Bank loan interest</span><span>" + fmt(state.bankInterestThisMonth) + "</span></li>" +
+      "<li><span>Credit card 24% p.a.</span><span>" + fmt(state.ccInterestThisMonth) + "</span></li>" +
+      "<li><span>High-interest 120% p.a.</span><span>" + fmt(state.hiInterestThisMonth) + "</span></li>" +
+      "<li><span>Total expenses</span><span>" + fmt(te) + "</span></li>";
+
+    $("bs-assets").innerHTML =
+      "<li><span>Cash</span><span class='val-cash'>" + fmt(state.cash) + "</span></li>" +
+      "<li><span>Investments (mkt)</span><span>" + fmt(totalGrowthValue()) + "</span></li>" +
+      "<li><span>Income assets (book)</span><span>" + fmt(cashflowBookValue()) + "</span></li>" +
+      "<li><span>Property (mkt)</span><span>" + fmt(propertyMarketValue()) + "</span></li>" +
+      "<li><span>Business (mkt)</span><span>" + fmt(businessMarketValue()) + "</span></li>" +
+      "<li><span>Total assets</span><span>" + fmt(totalAssets()) + "</span></li>";
+
+    $("bs-liabilities").innerHTML =
+      "<li><span>Bank loan</span><span>" + fmt(state.bankLoan) + "</span></li>" +
+      "<li><span>Credit card</span><span>" + fmt(state.ccBalance) + " / " + fmt(CC_LIMIT) + "</span></li>" +
+      "<li><span>High-interest loan</span><span>" + fmt(state.hiLoan) + "</span></li>" +
+      "<li><span>Total liabilities</span><span>" + fmt(totalLiabilities()) + "</span></li>";
+
+    $("bs-net").textContent = "Net Worth " + fmt(netWorth());
+    $("bs-net").classList.toggle("bankrupt", netWorth() < 0);
+    renderHoldings();
+    renderIndexStrip();
+    $("play-month-label").textContent =
+      "Month " + state.month + " of " + TOTAL_MONTHS +
+      " · Year " + yearOf(state.month) + " · Month " + monthInYear(state.month);
+    $("month-bar-fill").style.width = ((state.month - 1) / TOTAL_MONTHS * 100) + "%";
+
+    var ow = $("offwork-banner");
+    if (state.offWork && state.restQueue.length) {
+      var left = state.restQueue.length;
+      var paidLabel = state.offWorkPaid ? "PAID leave (paycheck on)" : "UNPAID (paycheck $0, tax $0)";
+      ow.textContent = "Off work this month — " + paidLabel + ". Rest months remaining (incl. this month): " + left +
+        ". Living, kid costs, and all loan interest still due.";
+      ow.classList.add("show");
+    } else ow.classList.remove("show");
+
+    if (state.hiLoan > 0) $("hi-loan-banner").classList.add("show");
+    else $("hi-loan-banner").classList.remove("show");
+
+    var warn = $("cash-warning");
+    if (state.cash < 500 || state.hiLoan > 0 || state.ccBalance > CC_LIMIT * 0.8) warn.classList.add("show");
+    else warn.classList.remove("show");
+
+    $("btn-pay-bank").disabled = !(state.bankLoan > 0 && state.cash >= STEP);
+    $("btn-pay-hi").disabled = !(state.hiLoan > 0 && state.cash >= STEP);
+    $("btn-pay-cc").disabled = !(state.ccBalance > 0 && state.cash >= STEP);
+    bindTooltips();
+    refreshSpaceHint();
+  }
+
+  function renderHoldings() {
+    var al = $("assets-list");
+    var rows = [];
+    state.assets.forEach(function (a) {
+      rows.push("<li><span>" + a.title + ' <span class="pill cashflow">+' + fmt(a.passive) + "/mo</span></span><span>" + fmt(a.cost) + " book</span></li>");
+    });
+    state.properties.forEach(function (p, idx) {
+      var mv = Math.round(p.costBasis * state.priceIndex.property);
+      var sp = scaledPropertyPassive(p);
+      rows.push("<li><span>" + p.title + ' <span class="pill property">+' + fmt(sp) + "/mo @ " + indexPct("property") + "%</span></span><span>Mkt " + fmt(mv) +
+        ' <button type="button" class="btn-secondary btn-sm btn-sell-prop" data-idx="' + idx + '">Sell</button></span></li>');
+    });
+    state.businesses.forEach(function (b, idx) {
+      var mv = Math.round(b.costBasis * state.priceIndex.business);
+      var sp = scaledBusinessPassive(b);
+      rows.push("<li><span>" + b.title + ' <span class="pill business">+' + fmt(sp) + "/mo @ " + indexPct("business") + "%</span></span><span>Mkt " + fmt(mv) +
+        ' <button type="button" class="btn-secondary btn-sm btn-sell-biz" data-idx="' + idx + '">Sell</button></span></li>');
+    });
+    GROWTH_KEYS.forEach(function (key) {
+      var u = state.growthUnits[key];
+      if (!(u > 0)) return;
+      rows.push("<li><span>" + ASSET_LABELS[key] + " ×" + fmtUnits(u) +
+        ' <span class="pill growth">' + indexPct(key) + "%</span></span><span>" + fmt(growthValue(key)) +
+        ' <button type="button" class="btn-secondary btn-sm btn-sell-g" data-key="' + key + '">Sell</button></span></li>');
+    });
+    if (!rows.length) al.innerHTML = "<li>None yet — watch for Opportunity cards</li>";
+    else {
+      al.innerHTML = rows.join("");
+      al.querySelectorAll(".btn-sell-g").forEach(function (btn) {
+        btn.addEventListener("click", function () { sellGrowth(btn.getAttribute("data-key")); });
+      });
+      al.querySelectorAll(".btn-sell-prop").forEach(function (btn) {
+        btn.addEventListener("click", function () { sellProperty(Number(btn.getAttribute("data-idx"))); });
+      });
+      al.querySelectorAll(".btn-sell-biz").forEach(function (btn) {
+        btn.addEventListener("click", function () { sellBusiness(Number(btn.getAttribute("data-idx"))); });
+      });
+    }
+  }
+
+  function sellGrowth(key) {
+    if (!(state.growthUnits[key] > 0)) return;
+    var proceeds = growthValue(key);
+    state.cash += proceeds;
+    state.growthUnits[key] = 0;
+    showToast("Sold " + ASSET_LABELS[key] + " for " + fmt(proceeds) + ".", "ok");
+    renderHud();
+  }
+  function sellProperty(idx) {
+    var p = state.properties[idx];
+    if (!p) return;
+    var mv = Math.round(p.costBasis * state.priceIndex.property);
+    var loanShare = Math.min(state.bankLoan, p.loanAmount);
+    var net = mv - loanShare;
+    state.bankLoan = Math.max(0, state.bankLoan - loanShare);
+    state.cash += net;
+    state.properties.splice(idx, 1);
+    recomputePassive();
+    showToast("Sold property. Net " + fmt(net) + " after loan " + fmt(loanShare) + ".", "ok");
+    renderHud();
+  }
+  function sellBusiness(idx) {
+    var b = state.businesses[idx];
+    if (!b) return;
+    var mv = Math.round(b.costBasis * state.priceIndex.business);
+    var loanShare = Math.min(state.bankLoan, b.loanAmount);
+    var net = mv - loanShare;
+    state.bankLoan = Math.max(0, state.bankLoan - loanShare);
+    state.cash += net;
+    state.businesses.splice(idx, 1);
+    recomputePassive();
+    showToast("Sold business. Net " + fmt(net) + " after loan " + fmt(loanShare) + ".", "ok");
+    renderHud();
+  }
+
+  function financeDownPayment(down) {
+    if (state.cash >= down) {
+      state.cash -= down;
+      return { ok: true, method: "cash" };
+    }
+    state.cash -= down;
+    var method = coverShortfall() || "debt";
+    return { ok: true, method: method };
+  }
+
+  function buyOpportunity(mode) {
+    var ev = state.pendingEvent;
+    if (!ev || ev.type !== "opportunity" || state.eventResolved) return;
+
+    if (ev.kind === "growth" || ev.kind === "cashflow") {
+      var cost = ev.cost;
+      if (mode === "cash") {
+        if (state.cash < cost) { showToast("Insufficient cash.", "error"); return; }
+        state.cash -= cost;
+      } else if (mode === "hi") {
+        state.cash -= cost;
+        coverShortfall();
+      } else return;
+
+      if (ev.kind === "growth") {
+        state.growthUnits[ev.assetKey] += (ev.units || 1);
+        showToast("Growth asset bought.", "ok");
+      } else {
+        state.assets.push({ title: ev.title, passive: ev.passive, cost: cost });
+        recomputePassive();
+        showToast("Cashflow asset bought! +" + fmt(ev.passive) + "/mo.", "ok");
+      }
+    } else if (ev.kind === "property" || ev.kind === "business") {
+      var down = ev.downPayment;
+      var loanAmt = ev.price - down;
+      if (mode === "cash" && state.cash < down) { showToast("Need more for down payment.", "error"); return; }
+      var fin = financeDownPayment(down);
+      state.bankLoan += loanAmt;
+      var entry = { title: ev.title, costBasis: ev.price, downPayment: down, loanAmount: loanAmt, passive: ev.passive };
+      if (ev.kind === "property") state.properties.push(entry);
+      else state.businesses.push(entry);
+      recomputePassive();
+      var msg = capitalize(ev.kind) + " bought. Down " + fmt(down) + " (" + fin.method + "), bank loan +" + fmt(loanAmt) + ".";
+      if (fin.method !== "cash") msg += " Deposit shortfall via CC then HI (HI ceil $1,000).";
+      showToast(msg, fin.method !== "cash" ? "error" : "ok");
+    }
+
+    state.eventResolved = true;
+    state.tradePending = false;
+    state.marketNote = "";
+    renderHud();
+    renderEvent();
+  }
+
+  function skipOpportunity() {
+    if (!state.pendingEvent || state.eventResolved) return;
+    state.eventResolved = true;
+    state.tradePending = false;
+    state.marketNote = "";
+    showToast("Skipped opportunity.", "");
+    renderEvent();
+  }
+
+  function doBirth() {
+    var add = CHILD_COST_MIN + Math.round(Math.random() * (CHILD_COST_MAX - CHILD_COST_MIN));
+    add = round10(add);
+    state.children += 1;
+    state.childMonthlyTotal += add;
+    state.birthThisYear = true;
+    state.lastBirthMonth = state.month;
+    recomputeLiving();
+    state.marketNote = "Child #" + state.children + ": +" + fmt(add) + "/mo living forever (no one-time hospital fee).";
+  }
+  function declineBirth() {
+    state.cash -= DECLINE_PROCEDURE_FEE;
+    var cov = coverShortfall();
+    state.birthThisYear = true;
+    state.marketNote = "Declined further child — paid " + fmt(DECLINE_PROCEDURE_FEE) + " procedure fee (no new child, no extra living)." +
+      (cov ? " Covered shortfall via " + cov + "." : "");
+  }
+
+  function applyMarket(ev) {
+    state.marketNote = "";
+    state.tradePending = false;
+    if (ev.effect === "noop") {
+      state.marketNote = "Flavour only — no change to your books.";
+      return;
+    }
+    if (ev.effect === "price") {
+      var key = ev.assetKey;
+      state.priceIndex[key] = Math.max(0.2, +(state.priceIndex[key] * (1 + ev.pct)).toFixed(4));
+      recomputePassive();
+      state.marketNote = ASSET_LABELS[key] + " index now " + indexPct(key) + "%.";
+      if (ev.trade) state.tradePending = true;
+      return;
+    }
+    if (ev.effect === "tax_bill") {
+      state.cash -= ev.amount;
+      coverShortfall();
+      state.marketNote = "Paid IRD catch-up " + fmt(ev.amount) + ".";
+      return;
+    }
+    if (ev.effect === "rate") {
+      state.bankApr = Math.max(0.05, Math.min(0.12, +(state.bankApr + ev.bankDelta).toFixed(4)));
+      state.marketNote = "Bank loan rate now " + (state.bankApr * 100).toFixed(1) + "% p.a. (HI stays 120%).";
+      return;
+    }
+    if (ev.effect === "rental_vacancy") {
+      if (state.properties.length) {
+        var hit = 0;
+        state.properties.forEach(function (p) { hit += scaledPropertyPassive(p); });
+        state.cash -= hit;
+        coverShortfall();
+        state.marketNote = "Vacancy cash hit −" + fmt(hit) + " (scaled rent).";
+      } else state.marketNote = "No property owned — no vacancy hit.";
+      return;
+    }
+    if (ev.effect === "rental_boom") {
+      if (state.properties.length) {
+        var bonus = 0;
+        state.properties.forEach(function (p) { bonus += scaledPropertyPassive(p); });
+        state.cash += bonus;
+        state.marketNote = "Rent boom +" + fmt(bonus) + " cash (scaled rent).";
+      } else state.marketNote = "No property — no boom bonus.";
+      return;
+    }
+    if (ev.effect === "wage_note") {
+      state.cash += (ev.cashDelta || 0);
+      coverShortfall();
+      state.marketNote = "Cash adjustment " + ((ev.cashDelta >= 0 ? "+" : "") + fmt(ev.cashDelta)) + ".";
+    }
+  }
+
+  function tradeBuy(key) {
+    if (!BASE_UNIT[key]) return;
+    var unitPrice = Math.round(BASE_UNIT[key] * state.priceIndex[key]);
+    if (state.cash < unitPrice) {
+      showToast("Need " + fmt(unitPrice) + " cash to buy 1 unit.", "error");
+      return;
+    }
+    state.cash -= unitPrice;
+    state.growthUnits[key] += 1;
+    showToast("Bought 1 " + ASSET_LABELS[key] + " @ " + fmt(unitPrice) + ".", "ok");
+    renderHud();
+    renderEvent();
+  }
+  function tradeSell(key) {
+    if (!BASE_UNIT[key] || !(state.growthUnits[key] > 0)) {
+      showToast("No units to sell.", "error");
+      return;
+    }
+    var sellUnits = Math.min(1, state.growthUnits[key]);
+    var unitPrice = Math.round(BASE_UNIT[key] * state.priceIndex[key] * sellUnits);
+    state.growthUnits[key] = +(state.growthUnits[key] - sellUnits).toFixed(4);
+    if (state.growthUnits[key] < 0.0001) state.growthUnits[key] = 0;
+    state.cash += unitPrice;
+    showToast("Sold " + fmtUnits(sellUnits) + " " + ASSET_LABELS[key] + " @ " + fmt(unitPrice) + ".", "ok");
+    renderHud();
+    renderEvent();
+  }
+  function finishTrade() {
+    state.tradePending = false;
+    state.eventResolved = true;
+    showToast(state.marketNote || "Market noted.", "ok");
+    renderHud();
+    renderEvent();
+  }
+
+  function resolveNonOpportunity() {
+    var ev = state.pendingEvent;
+    if (!ev || state.eventResolved) return;
+
+    if (ev.type === "market") {
+      applyMarket(ev);
+      if (state.tradePending) {
+        renderHud();
+        renderEvent();
+        return;
+      }
+      state.eventResolved = true;
+      showToast(state.marketNote || "Market noted.", "ok");
+      renderHud();
+      renderEvent();
+      return;
+    }
+
+    if (ev.offWork) {
+      var dur = 1 + Math.floor(Math.random() * 3);
+      startRest(dur);
+      var paidBits = state.restQueue.map(function (m, i) {
+        return "M" + (i + 1) + ":" + (m.paid ? "paid" : "unpaid");
+      }).join(", ");
+      state.marketNote = "Rest " + dur + " month(s) — " + paidBits + ". Leave left this year: " + (state.paidLeaveAvailable ? "yes" : "no") + ".";
+      state.eventResolved = true;
+      showToast(state.marketNote, "ok");
+      renderHud();
+      renderEvent();
+      return;
+    }
+
+    if (ev.birth) {
+      if (!canHaveChild()) state.marketNote = "Too soon after last birth (need " + MIN_MONTHS_BETWEEN_BIRTHS + " months) — skipped.";
+      else doBirth();
+      state.eventResolved = true;
+      showToast(state.marketNote || "Birth applied.", "ok");
+      renderHud();
+      renderEvent();
+      return;
+    }
+
+    if (ev.cost) state.cash -= ev.cost;
+    if (ev.expenseDelta) {
+      state.livingBase += ev.expenseDelta;
+      recomputeLiving();
+    }
+    if (ev.cashDelta) state.cash += ev.cashDelta;
+    var cov = coverShortfall();
+    if (cov) showToast("Shortfall covered via " + cov + " (CC first, then HI ceil $1,000).", "error");
+    else showToast("Event applied.", "ok");
+    state.eventResolved = true;
+    state.marketNote = "";
+    renderHud();
+    renderEvent();
+  }
+
+  function renderEvent() {
+    var ev = state.pendingEvent;
+    var area = $("event-area");
+    if (!ev) {
+      area.className = "event-card type-life";
+      area.innerHTML = '<div class="event-type">Quiet month</div><div class="event-title">No special event</div><div class="event-amount">—</div><div class="event-copy">Hit Next Month when ready.</div>';
+      $("event-actions").innerHTML = "";
+      refreshSpaceHint();
+      return;
+    }
+    area.className = "event-card type-" + ev.type;
+    var amountText = ev.label || "—";
+    var amountClass = "";
+    var copy = ev.copy;
+    var financeHtml = "";
+
+    if (ev.type === "opportunity") {
+      if (ev.kind === "growth") {
+        amountText = "No cashflow · price risk";
+        financeHtml = '<div class="event-finance"><span>Down payment</span> ' + fmt(ev.cost) +
+          ' &nbsp;|&nbsp; <span>Loan needed</span> ' + fmt(0) +
+          ' &nbsp;|&nbsp; <span>Full price</span> ' + fmt(ev.cost) + "</div>";
+        copy = ev.copy || "";
+      } else if (ev.kind === "cashflow") {
+        amountText = "+" + fmt(ev.passive) + "/mo · ROI " + fmtRoi(annualizedRoiPct(ev.passive, ev.cost));
+        financeHtml = '<div class="event-finance"><span>Down payment</span> ' + fmt(ev.cost) +
+          ' &nbsp;|&nbsp; <span>Loan needed</span> ' + fmt(0) +
+          ' &nbsp;|&nbsp; <span>Full price</span> ' + fmt(ev.cost) + "</div>";
+        copy = ev.copy || "";
+      } else if (ev.kind === "property" || ev.kind === "business") {
+        var loanNeed = ev.price - ev.downPayment;
+        amountText = "+" + fmt(ev.passive) + "/mo · ROI " + fmtRoi(annualizedRoiPct(ev.passive, ev.downPayment)) + " on deposit";
+        financeHtml = '<div class="event-finance"><span>Down payment</span> ' + fmt(ev.downPayment) +
+          ' &nbsp;|&nbsp; <span>Loan needed</span> ' + fmt(loanNeed) +
+          ' &nbsp;|&nbsp; <span>Full price</span> ' + fmt(ev.price) + "</div>";
+        copy = ev.copy || "";
+      } else {
+        var loan2 = (ev.price || 0) - (ev.downPayment || 0);
+        amountText = "+" + fmt(ev.passive || 0) + "/mo";
+        financeHtml = '<div class="event-finance"><span>Down payment</span> ' + fmt(ev.downPayment || ev.cost || 0) +
+          ' &nbsp;|&nbsp; <span>Loan needed</span> ' + fmt(loan2) +
+          ' &nbsp;|&nbsp; <span>Full price</span> ' + fmt(ev.price || ev.cost || 0) + "</div>";
+        copy = ev.copy || "";
+      }
+    } else if (ev.type === "market" && ev.effect === "price") {
+      amountText = ASSET_LABELS[ev.assetKey] + " " + (ev.pct >= 0 ? "+" : "") + Math.round(ev.pct * 100) + "% → index " + indexPct(ev.assetKey) + "%";
+    } else if (ev.cost && ev.expenseDelta) {
+      amountText = fmt(-ev.cost) + " & +" + fmt(ev.expenseDelta) + "/mo";
+      amountClass = " cost-red";
+    } else if (ev.cost) {
+      amountText = fmt(-ev.cost);
+      amountClass = " cost-red";
+    } else if (ev.expenseDelta) {
+      amountText = "+" + fmt(ev.expenseDelta) + "/mo living";
+      amountClass = " cost-red";
+    } else if (ev.cashDelta != null) amountText = (ev.cashDelta >= 0 ? "+" : "") + fmt(ev.cashDelta);
+    else if (ev.amount) {
+      amountText = fmt(-ev.amount);
+      amountClass = " cost-red";
+    }
+    if (ev.type === "spending") amountClass = " cost-red";
+
+    var actions = "";
+    if (!state.eventResolved) {
+      if (ev.type === "opportunity") {
+        actions = '<div class="event-actions">';
+        if (ev.kind === "property" || ev.kind === "business") {
+          var down = ev.downPayment;
+          var sf = Math.max(0, down - state.cash);
+          var hiCover = ceil1000(sf);
+          if (state.cash >= down) {
+            actions += '<button type="button" class="btn-primary" id="btn-buy" data-tip="Deposit from cash; bank loans the rest">Buy (down ' + fmt(down) + " cash)</button>";
+          } else {
+            actions += '<button type="button" class="btn-warn" id="btn-buy-hi" data-tip="CC then HI for deposit shortfall">Buy — CC/HI covers shortfall</button>';
+            actions += '<span class="hi-label">CC first ($20k), then HI 120% ceil $1,000</span>';
+          }
+          actions += '<div class="event-copy">Bank loan for remainder: ' + fmt(ev.price - down) + " @ " + (state.bankApr * 100).toFixed(1) + "% p.a. interest-only.</div>";
+        } else {
+          var shortfall = Math.max(0, ev.cost - state.cash);
+          var hiNeed = ceil1000(shortfall);
+          if (state.cash >= ev.cost) {
+            actions += '<button type="button" class="btn-primary" id="btn-buy" data-tip="Pay from cash">Buy (' + fmt(ev.cost) + ")</button>";
+          } else {
+            actions += '<button type="button" class="btn-warn" id="btn-buy-hi" data-tip="CC then HI">Buy with CC/HI</button>';
+            actions += '<span class="hi-label">CC first, then HI ceil $1,000</span>';
+          }
+        }
+        actions += '<button type="button" class="btn-secondary" id="btn-skip-event" data-tip="Pass on this deal">Skip</button></div>';
+      } else if (ev.type === "market" && state.tradePending) {
+        var key = ev.assetKey;
+        actions = '<div class="trade-box"><strong>Trade on this move</strong><div class="event-actions" style="margin-top:0.5rem">';
+        if (BASE_UNIT[key]) {
+          var px = Math.round(BASE_UNIT[key] * state.priceIndex[key]);
+          actions += '<button type="button" class="btn-primary btn-sm" id="btn-trade-buy">Buy 1 @ ' + fmt(px) + "</button>";
+          if (state.growthUnits[key] > 0) {
+            var su = Math.min(1, state.growthUnits[key]);
+            actions += '<button type="button" class="btn-secondary btn-sm" id="btn-trade-sell">Sell ' + fmtUnits(su) + ' @ ' + fmt(Math.round(px * su)) + "</button>";
+          }
+        }
+        if (key === "property" && state.properties.length) {
+          actions += '<span class="event-copy">Property index updated — sell from Holdings if you want out.</span>';
+        }
+        if (key === "business" && state.businesses.length) {
+          actions += '<span class="event-copy">Business index updated — sell from Holdings if you want out.</span>';
+        }
+        actions += '<button type="button" class="btn-market" id="btn-trade-done">Done trading</button></div>';
+        if (state.marketNote) actions += '<div class="event-copy">' + state.marketNote + "</div>";
+        actions += "</div>";
+      } else if (ev.type === "market") {
+        actions = '<div class="event-actions"><button type="button" class="btn-market" id="btn-resolve" data-tip="Apply this market card">Continue</button></div>';
+      } else if (ev.birth) {
+        actions = '<div class="event-actions">';
+        actions += '<button type="button" class="btn-primary" id="btn-birth-accept" data-tip="Add child + ongoing living (no one-time fee)">Accept — new child</button>';
+        if (state.children >= 3) {
+          actions += '<button type="button" class="btn-secondary" id="btn-birth-decline" data-tip="No new child; pay one-time procedure fee">Decline — pay ' + fmt(DECLINE_PROCEDURE_FEE) + ' procedure fee</button>';
+        }
+        actions += '</div>';
+        if (state.children >= 3) {
+          actions += '<div class="event-copy">Already ' + state.children + ' children. Decline = ' + fmt(DECLINE_PROCEDURE_FEE) + ' procedure fee only (no child, no extra living).</div>';
+        } else {
+          actions += '<div class="event-copy">Accept adds a child and permanent monthly living cost (no one-time hospital fee).</div>';
+        }
+      } else {
+        actions = '<div class="event-actions"><button type="button" class="btn-primary" id="btn-resolve" data-tip="Apply this event">Accept</button></div>';
+      }
+    } else {
+      actions = '<div class="event-copy" style="color:var(--accent)">Resolved. Advance when ready.</div>';
+      if (state.marketNote) actions += '<div class="event-copy">' + state.marketNote + "</div>";
+    }
+
+    var typeLabel = ev.type === "market" ? "Market / News" : capitalize(ev.type);
+    area.innerHTML =
+      '<div class="event-type">' + typeLabel + "</div>" +
+      '<div class="event-title">' + ev.title + "</div>" +
+      '<div class="event-amount' + amountClass + '">' + amountText + "</div>" +
+      financeHtml +
+      '<div class="event-copy">' + copy + "</div>";
+    $("event-actions").innerHTML = actions;
+
+    if (!state.eventResolved) {
+      if (ev.type === "opportunity") {
+        var buy = $("btn-buy"), buyHI = $("btn-buy-hi"), skip = $("btn-skip-event");
+        if (buy) buy.addEventListener("click", function () { buyOpportunity("cash"); });
+        if (buyHI) buyHI.addEventListener("click", function () { buyOpportunity("hi"); });
+        if (skip) skip.addEventListener("click", skipOpportunity);
+      } else if (state.tradePending) {
+        var tb = $("btn-trade-buy"), ts = $("btn-trade-sell"), td = $("btn-trade-done");
+        if (tb) tb.addEventListener("click", function () { tradeBuy(ev.assetKey); });
+        if (ts) ts.addEventListener("click", function () { tradeSell(ev.assetKey); });
+        if (td) td.addEventListener("click", finishTrade);
+      } else if (ev.birth) {
+        var ba = $("btn-birth-accept"), bd = $("btn-birth-decline");
+        if (ba) ba.addEventListener("click", function () {
+          if (!canHaveChild()) { showToast("Too soon after last birth.", "error"); return; }
+          doBirth();
+          state.eventResolved = true;
+          showToast(state.marketNote || "Birth applied.", "ok");
+          renderHud();
+          renderEvent();
+        });
+        if (bd) bd.addEventListener("click", function () {
+          declineBirth();
+          state.eventResolved = true;
+          showToast(state.marketNote || "Declined.", "ok");
+          renderHud();
+          renderEvent();
+        });
+      } else {
+        var res = $("btn-resolve");
+        if (res) res.addEventListener("click", resolveNonOpportunity);
+      }
+    }
+    bindTooltips();
+    refreshSpaceHint();
+  }
+
+  function beginMonth() {
+    maybeResetYearFlags();
+    applyPayStatus();
+    state.pendingEvent = drawEvent();
+    state.eventResolved = false;
+    state.tradePending = false;
+    state.marketNote = "";
+    renderHud();
+    renderEvent();
+  }
+
+  function nextMonth() {
+    if (!state.eventResolved) {
+      showToast("Resolve this month's event first.", "error");
+      return;
+    }
+    if (state.bankrupt) return;
+    pushUndoSnapshot();
+    settleMonthCashflow();
+    recomputePassive();
+    state.history.push({
+      month: state.month, cash: state.cash, passive: state.passiveIncome,
+      ratio: ratio(), netWorth: netWorth(), children: state.children
+    });
+    if (checkBankruptcy("settle")) { updateUndoBtn(); return; }
+    if (state.month >= TOTAL_MONTHS) { endGame(); updateUndoBtn(); return; }
+    advanceRestAfterSettle();
+    state.month += 1;
+    beginMonth();
+    autoSave();
+    updateUndoBtn();
+  }
+
+  function autoResolve(ev) {
+    if (ev.type === "opportunity") {
+      if (ev.kind === "growth" || ev.kind === "cashflow") {
+        if (state.cash >= ev.cost) {
+          state.cash -= ev.cost;
+          if (ev.kind === "growth") state.growthUnits[ev.assetKey] += (ev.units || 1);
+          else {
+            state.assets.push({ title: ev.title, passive: ev.passive, cost: ev.cost });
+            recomputePassive();
+          }
+        }
+      } else if ((ev.kind === "property" || ev.kind === "business") && state.cash >= ev.downPayment) {
+        state.cash -= ev.downPayment;
+        var loanAmt = ev.price - ev.downPayment;
+        state.bankLoan += loanAmt;
+        var entry = { title: ev.title, costBasis: ev.price, downPayment: ev.downPayment, loanAmount: loanAmt, passive: ev.passive };
+        if (ev.kind === "property") state.properties.push(entry);
+        else state.businesses.push(entry);
+        recomputePassive();
+      }
+    } else if (ev.type === "market") {
+      applyMarket(ev);
+      state.tradePending = false;
+    } else if (ev.offWork && !state.offWork) {
+      startRest(1 + Math.floor(Math.random() * 3));
+    } else if (ev.birth && canHaveChild()) {
+      doBirth();
+    } else {
+      if (ev.cost) state.cash -= ev.cost;
+      if (ev.expenseDelta) { state.livingBase += ev.expenseDelta; recomputeLiving(); }
+      if (ev.cashDelta) state.cash += ev.cashDelta;
+      coverShortfall();
+    }
+  }
+
+  function skipThreeMonths() {
+    if (!state.eventResolved) {
+      showToast("Resolve this month's event first.", "error");
+      return;
+    }
+    if (state.bankrupt) return;
+    /* Push before each month advance so B undoes one month at a time after Skip 3. */
+    pushUndoSnapshot();
+    settleMonthCashflow();
+    state.history.push({ month: state.month, cash: state.cash, passive: state.passiveIncome, ratio: ratio(), netWorth: netWorth(), children: state.children });
+    if (checkBankruptcy("skip")) { updateUndoBtn(); return; }
+    if (state.month >= TOTAL_MONTHS) { endGame(); updateUndoBtn(); return; }
+
+    for (var k = 0; k < 2; k++) {
+      advanceRestAfterSettle();
+      state.month += 1;
+      if (state.month > TOTAL_MONTHS) { state.month = TOTAL_MONTHS; endGame(); updateUndoBtn(); return; }
+      maybeResetYearFlags();
+      applyPayStatus();
+      var skipEv = drawEvent();
+      state.pendingEvent = skipEv;
+      autoResolve(skipEv);
+      state.eventResolved = true;
+      state.tradePending = false;
+      pushUndoSnapshot();
+      settleMonthCashflow();
+      recomputePassive();
+      state.history.push({ month: state.month, cash: state.cash, passive: state.passiveIncome, ratio: ratio(), netWorth: netWorth(), children: state.children });
+      if (checkBankruptcy("skip")) { updateUndoBtn(); return; }
+      if (state.month >= TOTAL_MONTHS) { endGame(); updateUndoBtn(); return; }
+    }
+    advanceRestAfterSettle();
+    state.month += 1;
+    if (state.month > TOTAL_MONTHS) { state.month = TOTAL_MONTHS; endGame(); updateUndoBtn(); return; }
+    beginMonth();
+    autoSave();
+    updateUndoBtn();
+    showToast("Skipped ahead 3 months.", "ok");
+  }
+
+  var repayUI = { kind: "bank", amount: 0 };
+
+  function liabilityKey(kind) {
+    if (kind === "bank") return "bankLoan";
+    if (kind === "cc") return "ccBalance";
+    return "hiLoan";
+  }
+  function liabilityLabel(kind) {
+    if (kind === "bank") return "bank loan";
+    if (kind === "cc") return "credit card";
+    return "high-interest loan";
+  }
+  function maxRepay(kind) {
+    var bal = state[liabilityKey(kind)] || 0;
+    return Math.min(floor1000(state.cash), floor1000(bal));
+  }
+  function syncRepayUI() {
+    var kindSel = $("repay-kind");
+    var kind = kindSel.value;
+    repayUI.kind = kind;
+    var max = maxRepay(kind);
+    if (repayUI.amount > max) repayUI.amount = max;
+    if (repayUI.amount < 0) repayUI.amount = 0;
+    if (repayUI.amount > 0 && repayUI.amount % STEP !== 0) repayUI.amount = floor1000(repayUI.amount);
+    $("repay-amount").textContent = fmt(repayUI.amount);
+    var bal = state[liabilityKey(kind)] || 0;
+    $("repay-hint").textContent =
+      "Balance " + fmt(bal) + " · Cash " + fmt(state.cash) +
+      " · Max repay " + fmt(max) + " (steps of $1,000). You can repay anytime during play.";
+    $("repay-minus").disabled = repayUI.amount < STEP;
+    $("repay-plus").disabled = repayUI.amount + STEP > max;
+    $("repay-confirm").disabled = !(repayUI.amount >= STEP && repayUI.amount <= max);
+    refreshSpaceHint();
+  }
+  function openRepayModal(preferredKind) {
+    var modal = $("repay-modal");
+    var kindSel = $("repay-kind");
+    var bankOk = state.bankLoan > 0 && state.cash >= STEP;
+    var hiOk = state.hiLoan > 0 && state.cash >= STEP;
+    var ccOk = state.ccBalance > 0 && state.cash >= STEP;
+    if (!bankOk && !hiOk && !ccOk) {
+      showToast("Need at least $1,000 cash and an outstanding liability to repay.", "error");
+      return;
+    }
+    kindSel.innerHTML = "";
+    if (state.bankLoan > 0) {
+      var ob = document.createElement("option");
+      ob.value = "bank";
+      ob.textContent = "Bank loan (" + fmt(state.bankLoan) + ")";
+      kindSel.appendChild(ob);
+    }
+    if (state.ccBalance > 0) {
+      var oc = document.createElement("option");
+      oc.value = "cc";
+      oc.textContent = "Credit card (" + fmt(state.ccBalance) + ")";
+      kindSel.appendChild(oc);
+    }
+    if (state.hiLoan > 0) {
+      var oh = document.createElement("option");
+      oh.value = "hi";
+      oh.textContent = "High-interest loan (" + fmt(state.hiLoan) + ")";
+      kindSel.appendChild(oh);
+    }
+    var start = preferredKind;
+    if (start === "bank" && state.bankLoan <= 0) start = state.ccBalance > 0 ? "cc" : "hi";
+    if (start === "cc" && state.ccBalance <= 0) start = state.bankLoan > 0 ? "bank" : "hi";
+    if (start === "hi" && state.hiLoan <= 0) start = state.ccBalance > 0 ? "cc" : "bank";
+    if (![].some.call(kindSel.options, function (o) { return o.value === start; })) {
+      start = kindSel.options[0].value;
+    }
+    kindSel.value = start;
+    repayUI.kind = start;
+    repayUI.amount = maxRepay(start);
+    modal.hidden = false;
+    modal.classList.add("show");
+    syncRepayUI();
+    var conf = $("repay-confirm");
+    if (conf) conf.focus();
+  }
+  function closeRepayModal() {
+    var modal = $("repay-modal");
+    modal.classList.remove("show");
+    modal.hidden = true;
+    refreshSpaceHint();
+  }
+  function confirmRepay() {
+    var kind = repayUI.kind;
+    var amt = repayUI.amount;
+    var max = maxRepay(kind);
+    if (!(amt >= STEP) || amt % STEP !== 0 || amt > max) {
+      showToast("Amount must be a $1,000 multiple within the allowed max.", "error");
+      return;
+    }
+    state.cash -= amt;
+    state[liabilityKey(kind)] -= amt;
+    showToast("Paid " + fmt(amt) + " on " + liabilityLabel(kind) + ".", "ok");
+    closeRepayModal();
+    renderHud();
+  }
+  function payLiability(kind) {
+    openRepayModal(kind === "bank" ? "bank" : kind === "cc" ? "cc" : "hi");
+  }
+
+  function sumStat(big, lbl) {
+    return '<div class="summary-stat"><div class="big">' + big + '</div><div class="lbl">' + lbl + "</div></div>";
+  }
+
+  function endGame(isBankrupt) {
+    var reasonEl = $("summary-reason");
+    var headEl = $("summary-heading");
+    if (isBankrupt || state.bankrupt) {
+      state.bankrupt = true;
+      if (!state.endReason) state.endReason = "Bankrupt — Net Worth below $0";
+      if (headEl) headEl.textContent = "Bankruptcy";
+      if (reasonEl) { reasonEl.style.display = "block"; reasonEl.textContent = state.endReason; }
+    } else {
+      if (headEl) headEl.textContent = "10-Year Summary";
+      if (reasonEl) { reasonEl.style.display = "none"; reasonEl.textContent = ""; }
+    }
+    $("month-bar-fill").style.width = "100%";
+    applyPayStatus();
+    refreshInterestPreview();
+    var r = ratio();
+    var pct = (r * 100).toFixed(1);
+    var pass = r >= 0.5;
+    $("summary-career").textContent =
+      (state.career && state.career.name) || "—" + " · " + capitalize(state.difficulty || "normal") + " · " + (state.bankrupt ? ("Bankrupt at month " + state.month + " · ") : "120 months (10 years) complete · ") + "Children: " + state.children;
+    $("summary-badge").innerHTML =
+      '<span class="win-badge ' + (pass ? "pass" : "fail") + '">' +
+      (pass ? "Strong run — " : "Keep building — ") +
+      "Passive ÷ Expenses = " + pct + "%</span>";
+    $("summary-grid").innerHTML =
+      sumStat(fmt(state.cash), "Final cash") +
+      sumStat(fmt(state.jobIncome) + "/mo", "Paycheck") +
+      sumStat(fmt(state.passiveIncome) + "/mo", "Passive") +
+      sumStat(fmt(totalExpenses()) + "/mo", "Total expenses") +
+      sumStat(pct + "%", "Win metric") +
+      sumStat(fmt(netWorth()), "Net worth") +
+      sumStat(String(state.children), "Children") +
+      sumStat(fmt(state.bankLoan), "Bank loan") +
+      sumStat(fmt(state.ccBalance), "Credit card") +
+      sumStat(fmt(state.hiLoan), "HI loan 120%") +
+      sumStat(fmt(totalGrowthValue()), "Investments") +
+      sumStat(fmt(propertyMarketValue() + businessMarketValue()), "Prop+Biz mkt");
+
+    $("summary-bs-assets").innerHTML =
+      "<li><span>Cash</span><span>" + fmt(state.cash) + "</span></li>" +
+      "<li><span>Investments</span><span>" + fmt(totalGrowthValue()) + "</span></li>" +
+      "<li><span>Income assets</span><span>" + fmt(cashflowBookValue()) + "</span></li>" +
+      "<li><span>Property</span><span>" + fmt(propertyMarketValue()) + "</span></li>" +
+      "<li><span>Business</span><span>" + fmt(businessMarketValue()) + "</span></li>" +
+      "<li><span>Total assets</span><span>" + fmt(totalAssets()) + "</span></li>";
+    $("summary-bs-liab").innerHTML =
+      "<li><span>Bank loan</span><span>" + fmt(state.bankLoan) + "</span></li>" +
+      "<li><span>Credit card</span><span>" + fmt(state.ccBalance) + "</span></li>" +
+      "<li><span>High-interest loan</span><span>" + fmt(state.hiLoan) + "</span></li>" +
+      "<li><span>Total liabilities</span><span>" + fmt(totalLiabilities()) + "</span></li>";
+    $("summary-bs-net").textContent = "Net Worth " + fmt(netWorth());
+    showScreen("summary");
+    autoSave();
+  }
+
+  function resetEconomyFlags() {
+    state.growthUnits = { metals: 0, bitcoin: 0, usindex: 0 };
+    state.priceIndex = { metals: 1, bitcoin: 1, usindex: 1, property: 1, business: 1 };
+    state.assets = [];
+    state.properties = [];
+    state.businesses = [];
+    state.children = 0;
+    state.childMonthlyTotal = 0;
+    state.birthThisYear = false;
+    state.paidLeaveAvailable = true;
+    state.restQueue = [];
+    state.offWork = false;
+    state.offWorkPaid = false;
+    state.bankLoan = 0;
+    state.hiLoan = 0;
+    state.bankApr = BANK_APR_DEFAULT;
+    state.passiveIncome = 0;
+    state.month = 1;
+    state.history = [];
+    state.marketNote = "";
+    state.tradePending = false;
+      state.ccBalance = 0;
+    state.lastBirthMonth = null;
+    state.lastIllnessMonth = null;
+    state.bankrupt = false;
+    state.endReason = "";
+    state.ccInterestThisMonth = 0;
+  }
+
+  function initCareerEconomy() {
+    var c = state.career;
+    state.baseGross = round10(monthlyGrossFromRate(c.rate));
+    state.livingBase = livingFromIncome(state.baseGross);
+    resetEconomyFlags();
+    recomputeLiving();
+    applyPayStatus();
+    var monthlyNetPay = state.baseGross - monthlyTaxFromGross(state.baseGross);
+    state.cash = startingCash(Math.max(500, monthlyNetPay));
+    $("play-career-title").textContent =
+      c.name + " · " + fmt(c.rate) + "/hr · " + fmt(state.baseGross) + "/mo gross";
+  }
+
+  function startGame() {
+    clearUndoStack();
+    initCareerEconomy();
+    showScreen("play");
+    beginMonth();
+    autoSave();
+    updateUndoBtn();
+  }
+
+  function restartToTitle() {
+    clearUndoStack();
+    state.difficulty = null;
+    state.career = null;
+    document.querySelectorAll(".choice-card.selected").forEach(function (el) { el.classList.remove("selected"); });
+    $("btn-diff-next").disabled = true;
+    $("btn-career-start").disabled = true;
+    showScreen("title");
+    updateUndoBtn();
+  }
+
+  function buildDifficulty() {
+    var grid = $("difficulty-grid");
+    grid.innerHTML = "";
+    DIFFICULTIES.forEach(function (d) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "choice-card diff-card " + d.cls;
+      btn.dataset.id = d.id;
+      btn.setAttribute("data-tip", d.desc);
+      btn.innerHTML = '<div class="diff-label">' + d.label + '</div><div class="diff-desc">' + d.desc + "</div>";
+      btn.addEventListener("click", function () {
+        state.difficulty = d.id;
+        grid.querySelectorAll(".choice-card").forEach(function (c) { c.classList.remove("selected"); });
+        btn.classList.add("selected");
+        $("btn-diff-next").disabled = false;
+        refreshSpaceHint();
+      });
+      grid.appendChild(btn);
+    });
+  }
+
+  function buildCareers() {
+    var grid = $("career-grid");
+    grid.innerHTML = "";
+    CAREERS.forEach(function (c) {
+      var gross = round10(monthlyGrossFromRate(c.rate));
+      var tax = monthlyTaxFromGross(gross);
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "choice-card";
+      btn.dataset.id = String(c.id);
+      btn.setAttribute("data-tip", "Start with " + fmt(c.rate) + "/hr gross pay");
+      btn.innerHTML =
+        '<div class="name">' + c.id + ". " + c.name + "</div>" +
+        '<div class="rate">' + fmt(c.rate) + "/hr</div>" +
+        '<div class="guide">Guide ' + c.guide + " · " + fmt(gross) + "/mo gross · Tax ~" + fmt(tax) + "/mo</div>";
+      btn.addEventListener("click", function () {
+        state.career = c;
+        grid.querySelectorAll(".choice-card").forEach(function (el) { el.classList.remove("selected"); });
+        btn.classList.add("selected");
+        $("btn-career-start").disabled = false;
+        refreshSpaceHint();
+      });
+      grid.appendChild(btn);
+    });
+  }
+
+  $("btn-start").addEventListener("click", function () { showScreen("difficulty"); });
+  $("btn-continue").addEventListener("click", function () { loadGame(); });
+  $("btn-load-file").addEventListener("click", openSaveFilePicker);
+  $("btn-load-title").addEventListener("click", function () { openSlotModal("load"); });
+  $("slot-cancel").addEventListener("click", closeSlotModal);
+  $("slot-modal").addEventListener("click", function (e) { if (e.target === $("slot-modal")) closeSlotModal(); });
+  $("slot-file").addEventListener("click", function () {
+    if (slotMode === "save") {
+      if (downloadSaveFile(buildSavePayload())) showToast("Save file downloaded.", "ok");
+      else showToast("Could not download save file.", "error");
+      closeSlotModal();
+    } else if (state.screen === "play" && !state.bankrupt) {
+      showConfirm("Load a save file? Current progress will be overwritten.", function () { closeSlotModal(); openSaveFilePicker(); });
+    } else { closeSlotModal(); openSaveFilePicker(); }
+  });
+  $("btn-save").addEventListener("click", manualSave);
+  $("btn-load").addEventListener("click", confirmLoadDuringPlay);
+  $("btn-load-file-play").addEventListener("click", function () {
+    showConfirm("Load save file? Current progress will be overwritten.", function () {
+      openSaveFilePicker();
+    });
+  });
+  $("save-file-input").addEventListener("change", handleSaveFileSelected);
+  $("btn-diff-back").addEventListener("click", function () { showScreen("title"); });
+  $("btn-diff-next").addEventListener("click", function () {
+    if (!state.difficulty) return;
+    showScreen("career");
+  });
+  $("btn-career-back").addEventListener("click", function () { showScreen("difficulty"); });
+  $("btn-career-start").addEventListener("click", function () {
+    if (!state.career || !state.difficulty) return;
+    startGame();
+  });
+  $("btn-next").addEventListener("click", nextMonth);
+  $("btn-skip3").addEventListener("click", skipThreeMonths);
+  $("btn-prev-month").addEventListener("click", previousMonth);
+  $("btn-pay-bank").addEventListener("click", function () { payLiability("bank"); });
+  $("btn-pay-hi").addEventListener("click", function () { payLiability("hi"); });
+  $("btn-pay-cc").addEventListener("click", function () { payLiability("cc"); });
+  $("repay-kind").addEventListener("change", function () {
+    repayUI.amount = maxRepay($("repay-kind").value);
+    syncRepayUI();
+  });
+  $("repay-minus").addEventListener("click", function () {
+    repayUI.amount = Math.max(0, repayUI.amount - STEP);
+    syncRepayUI();
+  });
+  $("repay-plus").addEventListener("click", function () {
+    var max = maxRepay($("repay-kind").value);
+    repayUI.amount = Math.min(max, repayUI.amount + STEP);
+    syncRepayUI();
+  });
+  $("repay-cancel").addEventListener("click", closeRepayModal);
+  $("repay-confirm").addEventListener("click", confirmRepay);
+  $("repay-modal").addEventListener("click", function (e) {
+    if (e.target === $("repay-modal")) closeRepayModal();
+  });
+  $("confirm-cancel").addEventListener("click", function () { closeConfirm(false); });
+  $("confirm-ok").addEventListener("click", function () { closeConfirm(true); });
+  $("confirm-modal").addEventListener("click", function (e) {
+    if (e.target === $("confirm-modal")) closeConfirm(false);
+  });
+  $("btn-restart").addEventListener("click", function () {
+    showConfirm("Restart from the title screen? Progress will be lost.", function () {
+      restartToTitle();
+    });
+  });
+  $("btn-play-again").addEventListener("click", function () {
+    if (state.career && state.difficulty) startGame();
+    else restartToTitle();
+  });
+  $("btn-change-career").addEventListener("click", function () {
+    state.career = null;
+    $("btn-career-start").disabled = true;
+    document.querySelectorAll("#career-grid .choice-card").forEach(function (el) { el.classList.remove("selected"); });
+    showScreen("career");
+  });
+
+
+  function hotkeyAccept() {
+    if (state.eventResolved) return;
+    if ($("btn-buy")) { $("btn-buy").click(); return; }
+    if ($("btn-buy-hi")) { $("btn-buy-hi").click(); return; }
+    if ($("btn-birth-accept")) { $("btn-birth-accept").click(); return; }
+    if ($("btn-resolve")) { $("btn-resolve").click(); return; }
+  }
+
+  function hotkeyNext() {
+    if (state.bankrupt) return;
+    if (state.eventResolved) {
+      nextMonth();
+      return;
+    }
+    var ev = state.pendingEvent;
+    if (!ev) {
+      nextMonth();
+      return;
+    }
+    /* Market trade UI: finish without trading, then advance */
+    if (state.tradePending) {
+      finishTrade();
+      nextMonth();
+      return;
+    }
+    /* Opportunity: Skip then next month */
+    if (ev.type === "opportunity" && $("btn-skip-event")) {
+      skipOpportunity();
+      nextMonth();
+      return;
+    }
+    /* Continue (market / skippable) — not forced Accept spending/life/birth */
+    var res = $("btn-resolve");
+    if (res && ev.type === "market") {
+      resolveNonOpportunity();
+      if (state.tradePending) {
+        finishTrade();
+      }
+      if (state.eventResolved) nextMonth();
+      return;
+    }
+    showToast("Resolve this month's event first (Accept required).", "error");
+  }
+
+  function isTypingTarget(t) {
+    var tag = (t && t.tagName) ? t.tagName.toLowerCase() : "";
+    return tag === "input" || tag === "textarea" || tag === "select" || !!(t && t.isContentEditable);
+  }
+  function isSpaceKey(e) { return e.key === " " || e.key === "Spacebar" || e.code === "Space"; }
+
+  document.addEventListener("keydown", function (e) {
+    var typing = isTypingTarget(e.target);
+    var spaceOrEnter = isSpaceKey(e) || e.key === "Enter";
+    if (isConfirmModalOpen()) {
+      if (e.key === "Escape") { e.preventDefault(); closeConfirm(false); return; }
+      if (!typing && spaceOrEnter) { e.preventDefault(); if (!e.repeat) closeConfirm(true); return; }
+      return;
+    }
+    if (isRepayModalOpen()) {
+      if (e.key === "Escape") { e.preventDefault(); closeRepayModal(); return; }
+      if (!typing && spaceOrEnter) {
+        e.preventDefault();
+        var rc = $("repay-confirm");
+        if (!e.repeat && rc && !rc.disabled) confirmRepay();
+        return;
+      }
+      return;
+    }
+    if (isSlotModalOpen()) {
+      /* Esc closes; Space/Enter act natively on the focused slot button (no blind default). */
+      if (e.key === "Escape") { e.preventDefault(); closeSlotModal(); }
+      return;
+    }
+    if (typing) return;
+    if (spaceOrEnter) {
+      if (state.screen === "summary") return;
+      e.preventDefault();
+      if (e.repeat) return; /* one press = one step */
+      pressSpaceDefault();
+      return;
+    }
+    if (state.screen !== "play" || state.bankrupt) return;
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key === "a" || e.key === "A") {
+      e.preventDefault();
+      if (!e.repeat) hotkeyAccept();
+      return;
+    }
+    if (e.key === "n" || e.key === "N") {
+      e.preventDefault();
+      if (!e.repeat) hotkeyNext();
+      return;
+    }
+    if (e.key === "b" || e.key === "B") {
+      e.preventDefault();
+      if (!e.repeat) previousMonth();
+      return;
+    }
+    if (e.key === "s" || e.key === "S") {
+      e.preventDefault();
+      if (!e.repeat) manualSave();
+    }
+  });
+  /* Stop the browser's own "Space clicks the focused button" on key-up (would double-step). */
+  document.addEventListener("keyup", function (e) {
+    if (!isSpaceKey(e) || isTypingTarget(e.target) || isSlotModalOpen()) return;
+    if (state.screen === "summary" && !isConfirmModalOpen()) return;
+    e.preventDefault();
+  });
+
+  buildDifficulty();
+  buildCareers();
+  probeStorage();
+  migrateLegacySave();
+  refreshContinueUI();
+  refreshSpaceHint();
+  if (legacyMigratedNow) setTimeout(function () { showToast("Your previous save was copied to Slot 1 (Load game).", "ok"); }, 300);
+
+  window.SMARTER_DOLLAR = {
+    CAREERS: CAREERS, OPPORTUNITY: OPPORTUNITY, SPENDING: SPENDING, LIFE: LIFE, MARKET: MARKET,
+    DECKS: DECKS, DIFFICULTIES: DIFFICULTIES,
+    monthlyTaxFromGross: monthlyTaxFromGross, monthlyGrossFromRate: monthlyGrossFromRate,
+    effectiveTaxRate: effectiveTaxRate, round10: round10, state: state,
+    TOTAL_MONTHS: TOTAL_MONTHS, HOURS: HOURS, HI_APR: HI_APR,
+    MIN_MONTHS_BETWEEN_ILLNESS: MIN_MONTHS_BETWEEN_ILLNESS,
+    canDrawIllness: canDrawIllness, annualizedRoiPct: annualizedRoiPct,
+    BANK_APR_DEFAULT: BANK_APR_DEFAULT, STEP: STEP, BASE_UNIT: BASE_UNIT,
+    floor1000: floor1000, ceil1000: ceil1000,
+    startRest: startRest, applyPayStatus: applyPayStatus, totalExpenses: totalExpenses,
+    totalAssets: totalAssets, totalLiabilities: totalLiabilities, netWorth: netWorth,
+    coverShortfall: coverShortfall, recomputePassive: recomputePassive,
+    recomputeLiving: recomputeLiving, settleMonthCashflow: settleMonthCashflow,
+    advanceRestAfterSettle: advanceRestAfterSettle, doBirth: doBirth,
+    applyMarket: applyMarket, growthValue: growthValue
+  };
+})();
+</script>
+</body>
+</html>
