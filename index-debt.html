@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SMARTER $ — Debt Paydown</title>
+<style>
+:root {
+  --bg: #0f172a; --surface: #1e293b; --surface2: #334155; --text: #f1f5f9; --muted: #94a3b8;
+  --accent: #22c55e; --accent-dim: #16a34a; --warn: #f59e0b; --danger: #ef4444; --info: #38bdf8;
+  --radius: 12px;
+  --font: "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); line-height: 1.45; min-height: 100vh; }
+button { font-family: inherit; cursor: pointer; border: none; border-radius: 8px; padding: 0.65rem 1.2rem; font-size: 1rem; font-weight: 600; transition: transform 0.1s, background 0.15s, opacity 0.15s; }
+button:hover:not(:disabled) { transform: translateY(-1px); }
+button:active:not(:disabled) { transform: translateY(0); }
+button:disabled { opacity: 0.45; cursor: not-allowed; }
+button:focus-visible { outline: 3px solid var(--info); outline-offset: 2px; }
+.btn-primary { background: var(--accent); color: #052e16; }
+.btn-primary:hover:not(:disabled) { background: var(--accent-dim); color: #fff; }
+.btn-secondary { background: var(--surface2); color: var(--text); }
+.btn-secondary:hover:not(:disabled) { background: #475569; }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--surface2); }
+.btn-sm { padding: 0.3rem 0.55rem; font-size: 0.8rem; }
+.btn-warn { background: #b45309; color: #fffbeb; }
+.screen { display: none; min-height: 100vh; padding: 1.5rem; max-width: 1100px; margin: 0 auto; }
+.screen.active { display: flex; flex-direction: column; gap: 1.1rem; }
+h1 { font-size: clamp(1.7rem, 4vw, 2.4rem); letter-spacing: -0.02em; }
+h2 { font-size: 1.3rem; }
+h3 { font-size: 1.05rem; color: var(--muted); font-weight: 600; }
+.subtitle { color: var(--muted); font-size: 1.02rem; max-width: 40rem; }
+.logo-dollar { display: inline-block; background: linear-gradient(135deg, #22c55e, #38bdf8); -webkit-background-clip: text; background-clip: text; color: transparent; font-weight: 800; }
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0.75rem; }
+.choice-card { background: var(--surface); border: 2px solid var(--surface2); border-radius: var(--radius); padding: 1rem; text-align: left; color: var(--text); width: 100%; }
+.choice-card:hover:not(:disabled) { border-color: var(--accent); background: #1a2744; }
+.choice-card.selected { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(34,197,94,0.35); }
+.choice-card .name { font-weight: 700; margin-bottom: 0.35rem; }
+.choice-card .guide { color: var(--muted); font-size: 0.85rem; margin-top: 0.35rem; }
+.hud { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 0.5rem; }
+.hud-item { background: var(--surface); border-radius: 10px; padding: 0.6rem 0.7rem; border: 1px solid var(--surface2); }
+.hud-item .label { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }
+.hud-item .value { font-size: 1.05rem; font-weight: 700; margin-top: 0.1rem; }
+.hud-item .value.good { color: var(--accent); }
+.hud-item .value.bad { color: var(--danger); }
+.hud-item .value.warn { color: var(--warn); }
+.hud-item .value.cash-gold { color: #fbbf24; }
+.hud-item.highlight { border-color: var(--accent); background: #132a1f; }
+.panel { background: var(--surface); border-radius: var(--radius); padding: 1rem; border: 1px solid var(--surface2); }
+.panel h3 { margin-bottom: 0.55rem; color: var(--text); }
+.controls { display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: center; }
+.title-hero { text-align: center; padding: 2rem 0 1rem; display: flex; flex-direction: column; align-items: center; gap: 0.75rem; }
+.title-hero p { max-width: 38rem; color: var(--muted); }
+.center-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.5rem; justify-content: center; }
+.footer-note { color: var(--muted); font-size: 0.8rem; margin-top: auto; padding-top: 1rem; }
+.edition-link { color: var(--info); font-size: 0.9rem; text-decoration: none; border-bottom: 1px dotted var(--info); }
+.edition-link:hover { color: #7dd3fc; }
+.toast { position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(120%); background: var(--surface); border: 1px solid var(--surface2); padding: 0.75rem 1.25rem; border-radius: 8px; z-index: 100; transition: transform 0.25s; max-width: 90vw; text-align: center; }
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.error { border-color: var(--danger); color: #fca5a5; }
+.toast.ok { border-color: var(--accent); color: #86efac; }
+.warning-banner { background: rgba(245,158,11,0.15); border: 1px solid var(--warn); color: #fcd34d; padding: 0.7rem 1rem; border-radius: 8px; font-size: 0.95rem; display: none; }
+.warning-banner.show { display: block; }
+.warning-banner.bad { background: rgba(239,68,68,0.18); border-color: var(--danger); color: #fca5a5; }
+.debt-table-wrap { overflow-x: auto; }
+table.debts { width: 100%; border-collapse: collapse; font-size: 0.92rem; min-width: 680px; }
+table.debts th { text-align: left; color: var(--muted); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em; padding: 0.45rem 0.4rem; border-bottom: 1px solid var(--surface2); }
+table.debts td { padding: 0.55rem 0.4rem; border-bottom: 1px solid rgba(148,163,184,0.12); vertical-align: middle; }
+table.debts tr.paid td { opacity: 0.45; text-decoration: line-through; }
+table.debts tr.hint-avalanche { background: rgba(239,68,68,0.08); }
+table.debts tr.hint-snowball { background: rgba(56,189,248,0.08); }
+.hint-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+@media (max-width: 700px) { .hint-panel { grid-template-columns: 1fr; } }
+.hint-card { background: var(--bg); border-radius: 10px; padding: 0.75rem; border: 1px solid var(--surface2); }
+.hint-card.avalanche { border-color: rgba(239,68,68,0.45); }
+.hint-card.snowball { border-color: rgba(56,189,248,0.45); }
+.hint-card h4 { font-size: 0.9rem; margin-bottom: 0.35rem; }
+.hint-card.avalanche h4 { color: #fca5a5; }
+.hint-card.snowball h4 { color: #7dd3fc; }
+.hint-card p { color: var(--muted); font-size: 0.85rem; }
+.badge-row { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.win-badge { display: inline-block; padding: 0.35rem 0.85rem; border-radius: 999px; font-weight: 700; font-size: 0.9rem; }
+.win-badge.pass { background: rgba(34,197,94,0.2); color: var(--accent); }
+.win-badge.stretch { background: rgba(56,189,248,0.2); color: var(--info); }
+.win-badge.fail { background: rgba(239,68,68,0.2); color: #fca5a5; }
+.summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; }
+.summary-stat { background: var(--surface); border-radius: 10px; padding: 1rem; border: 1px solid var(--surface2); text-align: center; }
+.summary-stat .big { font-size: 1.4rem; font-weight: 800; }
+.summary-stat .lbl { color: var(--muted); font-size: 0.85rem; margin-top: 0.25rem; }
+.reflection { background: var(--surface); border-radius: var(--radius); padding: 1.15rem; border-left: 4px solid var(--info); }
+.reflection ol { margin: 0.65rem 0 0 1.25rem; color: var(--muted); }
+.reflection li { margin-bottom: 0.45rem; }
+.event-banner { background: rgba(56,189,248,0.12); border: 1px solid var(--info); color: #bae6fd; padding: 0.7rem 1rem; border-radius: 8px; font-size: 0.95rem; display: none; }
+.event-banner.show { display: block; }
+.event-banner.cost { background: rgba(239,68,68,0.14); border-color: var(--danger); color: #fecaca; }
+.event-banner.bonus { background: rgba(34,197,94,0.14); border-color: var(--accent); color: #bbf7d0; }
+.play-top { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0.75rem; }
+.month-label { font-size: 1.15rem; font-weight: 800; }
+.extra-controls { display: flex; align-items: center; gap: 0.3rem; flex-wrap: wrap; }
+.extra-amt { min-width: 4.5rem; text-align: right; font-weight: 700; background: var(--bg); border: 1px solid var(--surface2); border-radius: 6px; padding: 0.25rem 0.4rem; }
+.extras-toolbar { display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: center; margin: 0.55rem 0 0.35rem; }
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(15,23,42,0.72); z-index: 200;
+  display: none; align-items: center; justify-content: center; padding: 1rem;
+}
+.modal-overlay.show { display: flex; }
+.modal-panel {
+  background: var(--surface); border: 1px solid var(--surface2); border-radius: var(--radius);
+  padding: 1.25rem; width: min(420px, 100%); box-shadow: 0 20px 50px rgba(0,0,0,0.45);
+}
+.modal-panel h3 { color: var(--text); margin-bottom: 0.75rem; }
+.modal-hint { color: var(--muted); font-size: 0.92rem; margin-top: 0.35rem; }
+.modal-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem; justify-content: flex-end; }
+.apr-hi { color: #fca5a5; font-weight: 700; }
+.apr-mid { color: #fcd34d; }
+.apr-lo { color: #86efac; }
+.muted { color: var(--muted); }
+.custom-tooltip {
+  position: fixed; z-index: 9999; max-width: 260px; padding: 0.45rem 0.7rem;
+  background: #0b1220; color: #f1f5f9; border: 1px solid #475569; border-radius: 8px;
+  font-size: 0.8rem; line-height: 1.3; pointer-events: none; box-shadow: 0 8px 24px rgba(0,0,0,0.45);
+  opacity: 0; transition: opacity 0.12s;
+}
+.custom-tooltip.show { opacity: 1; }
+.storage-note { font-size: 0.8rem; color: var(--muted); max-width: 36rem; }
+</style>
+</head>
+<body>
+
+<section id="screen-title" class="screen active" aria-label="Title">
+  <div class="title-hero">
+    <h1>SMARTER <span class="logo-dollar">$</span> — Debt Paydown</h1>
+    <p>A simpler New Zealand classroom game: start already in debt, protect your cashflow, and pay down consumer debts month by month (NZD).</p>
+    <p><strong>Primary goal:</strong> become <em>consumer-debt-free</em> (everything except the home loan).<br>
+       <strong>Stretch goal:</strong> become <em>fully debt-free</em> including the mortgage.</p>
+    <div class="center-actions">
+      <button type="button" class="btn-primary" id="btn-start" data-tip="Pick a starting profile">Start</button>
+      <button type="button" class="btn-secondary" id="btn-continue" data-tip="Resume browser save if available" hidden>Continue</button>
+      <button type="button" class="btn-ghost" id="btn-load-file-title" data-tip="Load a .json save downloaded earlier">Load file…</button>
+    </div>
+    <p id="continue-meta" class="subtitle" style="margin-top:0.25rem;display:none"></p>
+    <p class="storage-note" id="storage-note-title"></p>
+    <p style="margin-top:0.75rem"><a class="edition-link" href="index.html">← Full SMARTER $ game</a></p>
+  </div>
+  <p class="footer-note">NZD · Offline · Avalanche vs Snowball tips · localStorage + Save/Load file · classroom demo</p>
+</section>
+
+<section id="screen-profile" class="screen" aria-label="Choose profile">
+  <h2>Starting situation</h2>
+  <p class="subtitle">You already have debts. Choose how tight the month feels. Minimum payments take most of your surplus — extras are how you climb out.</p>
+  <div class="card-grid" id="profile-grid" role="group" aria-label="Profiles"></div>
+  <div class="center-actions" style="justify-content:flex-start">
+    <button type="button" class="btn-ghost" id="btn-profile-back">Back</button>
+    <button type="button" class="btn-primary" id="btn-profile-go" disabled>Begin month 1</button>
+  </div>
+</section>
+
+<section id="screen-play" class="screen" aria-label="Play">
+  <div class="play-top">
+    <div>
+      <div class="month-label" id="month-label">Month 1</div>
+      <div class="muted" id="profile-label" style="font-size:0.85rem"></div>
+    </div>
+    <div class="badge-row" id="badge-row"></div>
+  </div>
+  <div class="hud" id="hud"></div>
+  <div class="warning-banner" id="warn-banner"></div>
+  <div class="event-banner" id="event-banner"></div>
+
+  <div class="panel">
+    <h3>Your debts</h3>
+    <p class="muted" style="font-size:0.85rem;margin-bottom:0.5rem">Minimums are taken automatically each month. Use extras from your surplus. Tips highlight Avalanche (highest APR) and Snowball (smallest balance) — you choose freely.</p>
+    <div class="extras-toolbar">
+      <button type="button" class="btn-ghost btn-sm" id="btn-zero-all-extras" data-tip="Set every debt extra to $0">Zero all extras</button>
+    </div>
+    <div class="debt-table-wrap">
+      <table class="debts" id="debt-table">
+        <thead>
+          <tr>
+            <th>Debt</th>
+            <th>Balance</th>
+            <th>APR</th>
+            <th>Min / mo</th>
+            <th>Interest (est.)</th>
+            <th>Extra this month</th>
+          </tr>
+        </thead>
+        <tbody id="debt-tbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="hint-panel" id="hint-panel">
+    <div class="hint-card avalanche">
+      <h4>Avalanche tip</h4>
+      <p id="hint-avalanche">Pay highest APR first to cut interest cost.</p>
+    </div>
+    <div class="hint-card snowball">
+      <h4>Snowball tip</h4>
+      <p id="hint-snowball">Pay smallest balance first for quick wins.</p>
+    </div>
+  </div>
+
+  <div class="controls">
+    <button type="button" class="btn-primary" id="btn-next" data-tip="Settle this month (interest → mins → extras), then advance (hotkey N)">Next Month (N)</button>
+    <button type="button" class="btn-secondary" id="btn-prev-month" data-tip="Undo last month advance (can go back to month 1)" disabled>Previous Month (B)</button>
+    <button type="button" class="btn-secondary" id="btn-save" data-tip="Try browser save, then offer file download if needed (hotkey S)">Save (S)</button>
+    <button type="button" class="btn-ghost" id="btn-save-file" data-tip="Download a .json save (works on file://)">Save file</button>
+    <button type="button" class="btn-ghost" id="btn-load" data-tip="Load browser save if available">Load</button>
+    <button type="button" class="btn-ghost" id="btn-load-file" data-tip="Load a .json save from disk">Load file…</button>
+    <button type="button" class="btn-warn btn-sm" id="btn-claim" data-tip="End the class session with your consumer-debt-free win" hidden>Claim win</button>
+    <button type="button" class="btn-danger btn-sm" id="btn-restart" data-tip="Clear browser save and return to title">Restart</button>
+  </div>
+  <p class="footer-note">Teaching demo — rates and mins are classroom figures, not a quote from a bank. Prefer <strong>Save file</strong> if Chrome blocks storage on file://.</p>
+</section>
+
+<section id="screen-end" class="screen" aria-label="Summary">
+  <div class="title-hero" style="padding-top:1rem">
+    <h1 id="end-title">Well done</h1>
+    <div class="badge-row" id="end-badges" style="justify-content:center"></div>
+  </div>
+  <div class="summary-grid" id="end-stats"></div>
+  <div class="reflection">
+    <h3 style="color:var(--text)">Classroom reflection</h3>
+    <ol id="end-reflect"></ol>
+  </div>
+  <div class="center-actions">
+    <button type="button" class="btn-primary" id="btn-end-again">Play again</button>
+    <a class="edition-link" href="index.html" style="align-self:center">Full SMARTER $ game</a>
+  </div>
+</section>
+
+<div class="modal-overlay" id="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title" hidden>
+  <div class="modal-panel">
+    <h3 id="confirm-title">Confirm</h3>
+    <p class="modal-hint" id="confirm-message" style="color:var(--text)"></p>
+    <div class="modal-actions">
+      <button type="button" class="btn-ghost" id="confirm-cancel">Cancel</button>
+      <button type="button" class="btn-primary" id="confirm-ok">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<input type="file" id="file-load-input" accept="application/json,.json" hidden>
+<div class="toast" id="toast" role="status"></div>
+<div class="custom-tooltip" id="tooltip"></div>
+
+<script>
+(function () {
+  "use strict";
+
+  var SAVE_KEY = "smarter-dollar-debt-save-v1";
+  var MAX_MONTHS = 60;
+  var SHORTFALL_FAIL = 8;
+
+  function roundDollar(n) { return Math.round(Number(n) || 0); }
+  function fmt(n) {
+    var v = roundDollar(n);
+    var sign = v < 0 ? "-" : "";
+    return sign + "$" + Math.abs(v).toLocaleString("en-NZ");
+  }
+  function fmtPct(apr) { return (Math.round(apr * 100) / 100).toFixed(2) + "%"; }
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+
+  var DEBT_DEFS = [
+    { id: "cc", name: "Credit card", apr: 22.95, kind: "revolving", minPct: 0.03, minFloor: 20, consumer: true },
+    { id: "hp", name: "Hire purchase", apr: 14.95, kind: "fixed", consumer: true },
+    { id: "od", name: "Overdraft", apr: 18.50, kind: "revolving", minPct: 0.03, minFloor: 20, consumer: true },
+    { id: "pl", name: "Personal loan", apr: 13.90, kind: "fixed", consumer: true },
+    { id: "car", name: "Car loan", apr: 9.25, kind: "fixed", consumer: true },
+    { id: "mortgage", name: "Home loan (mortgage)", apr: 5.49, kind: "fixed", consumer: false }
+  ];
+
+  var PROFILES = [
+    {
+      id: "breathing",
+      label: "Breathing room",
+      desc: "Small surplus most months. Good for learning Avalanche vs Snowball.",
+      cash: 1200,
+      paycheck: 4400,
+      living: 2100,
+      balances: { cc: 2400, hp: 980, od: 450, pl: 3800, car: 6500, mortgage: 165000 },
+      fixedMins: { hp: 55, pl: 95, car: 145, mortgage: 820 }
+    },
+    {
+      id: "tight",
+      label: "Tight",
+      desc: "Default classroom path. Thin surplus — every extra dollar counts.",
+      cash: 650,
+      paycheck: 4200,
+      living: 2250,
+      balances: { cc: 3200, hp: 1400, od: 780, pl: 5200, car: 8200, mortgage: 220000 },
+      fixedMins: { hp: 75, pl: 125, car: 185, mortgage: 1050 }
+    },
+    {
+      id: "very-tight",
+      label: "Very tight",
+      desc: "Barely covering mins some months. Events sting. Stretch for the class.",
+      cash: 280,
+      paycheck: 3900,
+      living: 2350,
+      balances: { cc: 4100, hp: 1850, od: 1100, pl: 6800, car: 9800, mortgage: 260000 },
+      fixedMins: { hp: 95, pl: 155, car: 220, mortgage: 1220 }
+    }
+  ];
+
+  var EVENTS = [
+    { id: "car_repair", label: "Car repair", text: "Warrant of Fitness failed — unexpected garage bill.", amount: -380 },
+    { id: "dental", label: "Dental bill", text: "Unsubsidised dental work this month.", amount: -220 },
+    { id: "phone", label: "Phone replacement", text: "Cracked screen — mid-range replacement.", amount: -450 },
+    { id: "power", label: "Power spike", text: "Winter power bill higher than usual.", amount: -160 },
+    { id: "bonus", label: "Small bonus", text: "One-off workplace bonus hits your account.", amount: 350 },
+    { id: "tax_credit", label: "Tax credit", text: "Small IRD credit or rebate lands.", amount: 180 },
+    { id: "gift", label: "Family koha", text: "Whanau chip in a little help this month.", amount: 200 }
+  ];
+
+  var state = null;
+  var selectedProfileId = "tight";
+  var tipTimer = null;
+  var storageOk = null; // null=unknown, true/false
+  var warnedStorageOnce = false;
+  /* Undo stack: deep-cloned playable states. Persisted in save JSON (capped at 120). */
+  var UNDO_CAP = 120;
+  var undoStack = [];
+  var confirmCallback = null;
+
+  function $(id) { return document.getElementById(id); }
+
+  function pushUndoSnapshot() {
+    if (!state) return;
+    try {
+      undoStack.push(clone(state));
+      if (undoStack.length > UNDO_CAP) undoStack.shift();
+    } catch (err) {}
+    updateUndoBtn();
+  }
+  function clearUndoStack() {
+    undoStack = [];
+    updateUndoBtn();
+  }
+  function updateUndoBtn() {
+    var btn = $("btn-prev-month");
+    if (!btn) return;
+    var onPlay = $("screen-play") && $("screen-play").classList.contains("active");
+    var can = !!(state && onPlay && !state.ended && undoStack.length > 0);
+    btn.disabled = !can;
+  }
+  function previousMonth() {
+    if (!state || state.ended) return;
+    if (!$("screen-play").classList.contains("active")) return;
+    if (!undoStack.length) {
+      showToast("Nothing to undo — already at earliest month.", "error");
+      updateUndoBtn();
+      return;
+    }
+    state = clone(undoStack.pop());
+    state.debts.forEach(function (d) { d.extra = d.extra || 0; });
+    autoSave();
+    renderPlay();
+    updateUndoBtn();
+    showToast("Restored previous month (Month " + (state.month || 1) + ").", "ok");
+  }
+
+  function isConfirmModalOpen() {
+    var m = $("confirm-modal");
+    return !!(m && m.classList.contains("show") && !m.hidden);
+  }
+  function showConfirm(message, onConfirm, opts) {
+    opts = opts || {};
+    var title = $("confirm-title");
+    var msg = $("confirm-message");
+    var okBtn = $("confirm-ok");
+    if (title) title.textContent = opts.title || "Confirm";
+    if (msg) msg.textContent = message;
+    if (okBtn) okBtn.textContent = opts.okLabel || "Confirm";
+    confirmCallback = typeof onConfirm === "function" ? onConfirm : null;
+    var modal = $("confirm-modal");
+    if (!modal) {
+      if (confirmCallback) confirmCallback();
+      return;
+    }
+    modal.hidden = false;
+    modal.classList.add("show");
+    if (okBtn) okBtn.focus();
+  }
+  function closeConfirm(accepted) {
+    var modal = $("confirm-modal");
+    if (modal) {
+      modal.classList.remove("show");
+      modal.hidden = true;
+    }
+    var cb = confirmCallback;
+    confirmCallback = null;
+    if (accepted && cb) cb();
+  }
+
+  function showToast(msg, kind) {
+    var t = $("toast");
+    t.textContent = msg;
+    t.className = "toast show" + (kind ? " " + kind : "");
+    clearTimeout(showToast._tm);
+    showToast._tm = setTimeout(function () { t.classList.remove("show"); }, 2800);
+  }
+
+  function showScreen(id) {
+    document.querySelectorAll(".screen").forEach(function (s) { s.classList.remove("active"); });
+    $(id).classList.add("active");
+  }
+
+  function makePayload() {
+    return { v: 1, game: "smarter-dollar-debt", savedAt: Date.now(), state: state, undoStack: undoStack.slice(-UNDO_CAP) };
+  }
+
+  function tryLocalSet(payload) {
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
+      var check = localStorage.getItem(SAVE_KEY);
+      if (!check) throw new Error("empty readback");
+      storageOk = true;
+      return true;
+    } catch (e) {
+      storageOk = false;
+      return false;
+    }
+  }
+
+  function tryLocalGet() {
+    try {
+      var raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) return null;
+      storageOk = true;
+      return JSON.parse(raw);
+    } catch (e) {
+      storageOk = false;
+      return null;
+    }
+  }
+
+  function tryLocalClear() {
+    try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
+  }
+
+  function downloadSaveFile() {
+    if (!state || state.ended) {
+      showToast("Nothing to save", "error");
+      return;
+    }
+    try {
+      var payload = makePayload();
+      var blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement("a");
+      var m = state.month || 1;
+      a.href = url;
+      a.download = "smarter-dollar-debt-month-" + m + ".json";
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+      showToast("Save file downloaded", "ok");
+    } catch (e) {
+      showToast("File save failed", "error");
+    }
+  }
+
+  function saveGame(opts) {
+    opts = opts || {};
+    if (!state || state.ended) {
+      showToast("Nothing to save", "error");
+      return;
+    }
+    var payload = makePayload();
+    var ok = tryLocalSet(payload);
+    if (ok) {
+      showToast("Saved in browser", "ok");
+      refreshContinueBtn();
+      return;
+    }
+    if (!warnedStorageOnce) {
+      warnedStorageOnce = true;
+      showToast("Browser storage blocked — use Save file", "error");
+      updateStorageNotes();
+    } else {
+      showToast("Storage blocked — downloading file…", "error");
+    }
+    // Always fall back to file download so the player is never stuck
+    downloadSaveFile();
+  }
+
+  function autoSave() {
+    if (!state || state.ended) return;
+    var payload = makePayload();
+    if (tryLocalSet(payload)) {
+      refreshContinueBtn();
+      return;
+    }
+    if (!warnedStorageOnce) {
+      warnedStorageOnce = true;
+      showToast("Auto-save blocked on file:// — use Save file (or host via http)", "error");
+      updateStorageNotes();
+    }
+  }
+
+  function applyLoadedPayload(payload, sourceLabel) {
+    if (!payload || !payload.state || !payload.state.debts) {
+      showToast("Save file invalid", "error");
+      return false;
+    }
+    state = payload.state;
+    state.debts.forEach(function (d) { d.extra = d.extra || 0; });
+    if (Array.isArray(payload.undoStack)) {
+      undoStack = payload.undoStack.slice(-UNDO_CAP).map(function (s) { return clone(s); });
+    } else {
+      clearUndoStack();
+    }
+    showToast("Loaded from " + (sourceLabel || "save"), "ok");
+    showScreen("screen-play");
+    renderPlay();
+    updateUndoBtn();
+    return true;
+  }
+
+  function loadFromLocal() {
+    var payload = tryLocalGet();
+    if (!payload) {
+      showToast("No browser save — try Load file", "error");
+      return false;
+    }
+    if (state && !state.ended && $("screen-play").classList.contains("active")) {
+      showConfirm("Load saved game? Current progress will be overwritten.", function () {
+        applyLoadedPayload(payload, "browser");
+      });
+      return true;
+    }
+    return applyLoadedPayload(payload, "browser");
+  }
+
+  function openFilePicker() {
+    if (state && !state.ended && $("screen-play").classList.contains("active")) {
+      showConfirm("Load save file? Current progress will be overwritten.", function () {
+        $("file-load-input").value = "";
+        $("file-load-input").click();
+      });
+      return;
+    }
+    $("file-load-input").value = "";
+    $("file-load-input").click();
+  }
+
+  function onFilePicked(ev) {
+    var file = ev.target.files && ev.target.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var payload = JSON.parse(String(reader.result || ""));
+        applyLoadedPayload(payload, "file");
+      } catch (e) {
+        showToast("Could not read JSON save", "error");
+      }
+    };
+    reader.onerror = function () { showToast("File read failed", "error"); };
+    reader.readAsText(file);
+  }
+
+  function updateStorageNotes() {
+    var note = $("storage-note-title");
+    if (!note) return;
+    if (storageOk === false) {
+      note.textContent = "Note: browser storage looks blocked (common in OneDrive preview or file://). Use Save file / Load file — or download this HTML and open in Chrome for auto-save.";
+    } else if (location.protocol === "file:") {
+      note.textContent = "If Continue/auto-save fails (OneDrive preview or file://), use Save file / Load file, or download and open in Chrome.";
+    } else {
+      note.textContent = "";
+    }
+  }
+
+  function refreshContinueBtn() {
+    var btn = $("btn-continue");
+    var meta = $("continue-meta");
+    var payload = tryLocalGet();
+    if (!payload || !payload.state) {
+      btn.hidden = true;
+      meta.style.display = "none";
+      updateStorageNotes();
+      return;
+    }
+    btn.hidden = false;
+    meta.style.display = "block";
+    var st = payload.state;
+    meta.textContent = "Browser save: " + (st.profileLabel || "game") + " · Month " + st.month +
+      (payload.savedAt ? " · " + new Date(payload.savedAt).toLocaleString() : "");
+    updateStorageNotes();
+  }
+
+  function minPaymentFor(debt) {
+    if (debt.balance <= 0) return 0;
+    if (debt.kind === "revolving") {
+      return Math.max(debt.minFloor || 20, roundDollar(debt.balance * (debt.minPct || 0.03)));
+    }
+    return Math.min(debt.fixedMin || 0, debt.balance);
+  }
+
+  function estInterest(debt) {
+    if (debt.balance <= 0) return 0;
+    return roundDollar(debt.balance * (debt.apr / 100) / 12);
+  }
+
+  function consumerDebts(st) {
+    return st.debts.filter(function (d) { return d.consumer && d.balance > 0; });
+  }
+
+  function allConsumerClear(st) {
+    return st.debts.every(function (d) { return !d.consumer || d.balance <= 0; });
+  }
+
+  function allClear(st) {
+    return st.debts.every(function (d) { return d.balance <= 0; });
+  }
+
+  function totalDebt(st, consumerOnly) {
+    return st.debts.reduce(function (s, d) {
+      if (consumerOnly && !d.consumer) return s;
+      return s + Math.max(0, d.balance);
+    }, 0);
+  }
+
+  function buildDebts(profile) {
+    return DEBT_DEFS.map(function (def) {
+      var bal = profile.balances[def.id] || 0;
+      return {
+        id: def.id,
+        name: def.name,
+        apr: def.apr,
+        kind: def.kind,
+        consumer: def.consumer,
+        balance: bal,
+        startBalance: bal,
+        minPct: def.minPct,
+        minFloor: def.minFloor,
+        fixedMin: profile.fixedMins[def.id] || 0,
+        extra: 0,
+        paidOffMonth: null
+      };
+    });
+  }
+
+  function newGame(profileId) {
+    var profile = PROFILES.find(function (p) { return p.id === profileId; }) || PROFILES[1];
+    return {
+      profileId: profile.id,
+      profileLabel: profile.label,
+      month: 1,
+      cash: profile.cash,
+      paycheck: profile.paycheck,
+      living: profile.living,
+      debts: buildDebts(profile),
+      totalInterestPaid: 0,
+      lastMonthInterest: 0,
+      extrasHistory: [],
+      avalancheHits: 0,
+      snowballHits: 0,
+      otherExtraHits: 0,
+      shortfallStreak: 0,
+      consumerFreeMonth: null,
+      fullyFreeMonth: null,
+      ended: false,
+      endReason: null,
+      lastEvent: null,
+      monthsWithEvent: 0
+    };
+  }
+
+  function projectedSurplus(st) {
+    var mins = 0;
+    var interest = 0;
+    st.debts.forEach(function (d) {
+      if (d.balance <= 0) return;
+      var intEst = estInterest(d);
+      interest += intEst;
+      var temp = clone(d);
+      temp.balance = d.balance + intEst;
+      mins += minPaymentFor(temp);
+    });
+    return {
+      interest: interest,
+      mins: mins,
+      surplus: st.cash + st.paycheck - st.living - mins,
+      afterLiving: st.cash + st.paycheck - st.living
+    };
+  }
+
+  function avalancheTarget(st) {
+    var list = consumerDebts(st);
+    if (!list.length) {
+      return st.debts.find(function (d) { return !d.consumer && d.balance > 0; }) || null;
+    }
+    return list.slice().sort(function (a, b) { return b.apr - a.apr || a.balance - b.balance; })[0];
+  }
+
+  function snowballTarget(st) {
+    var list = consumerDebts(st);
+    if (!list.length) {
+      return st.debts.find(function (d) { return !d.consumer && d.balance > 0; }) || null;
+    }
+    return list.slice().sort(function (a, b) { return a.balance - b.balance || b.apr - a.apr; })[0];
+  }
+
+  function totalExtrasAllocated(st) {
+    return st.debts.reduce(function (s, d) { return s + (d.extra || 0); }, 0);
+  }
+
+  function maybeEvent(st) {
+    if (st.month < 3) return null;
+    if (st.lastEvent && st.lastEvent.month === st.month - 1) return null;
+    if (Math.random() > 0.18) return null;
+    var ev = EVENTS[Math.floor(Math.random() * EVENTS.length)];
+    st.cash = roundDollar(st.cash + ev.amount);
+    st.lastEvent = { month: st.month, id: ev.id, label: ev.label, text: ev.text, amount: ev.amount };
+    st.monthsWithEvent += 1;
+    return st.lastEvent;
+  }
+
+  function settleMonth() {
+    if (!state || state.ended) return;
+    pushUndoSnapshot();
+    var st = state;
+    var avBefore = avalancheTarget(st);
+    var snBefore = snowballTarget(st);
+    var extrasPlan = st.debts.map(function (d) {
+      return { id: d.id, amount: Math.max(0, roundDollar(d.extra || 0)) };
+    });
+
+    st.cash = roundDollar(st.cash + st.paycheck - st.living);
+
+    var monthInterest = 0;
+    st.debts.forEach(function (d) {
+      if (d.balance <= 0) { d.extra = 0; return; }
+      var interest = roundDollar(d.balance * (d.apr / 100) / 12);
+      d.balance = roundDollar(d.balance + interest);
+      monthInterest += interest;
+      st.totalInterestPaid += interest;
+    });
+    st.lastMonthInterest = monthInterest;
+
+    var minShortfall = 0;
+    st.debts.forEach(function (d) {
+      if (d.balance <= 0) return;
+      var minDue = minPaymentFor(d);
+      var pay = Math.min(minDue, d.balance, Math.max(0, st.cash));
+      d.balance = roundDollar(d.balance - pay);
+      st.cash = roundDollar(st.cash - pay);
+      if (pay < minDue && d.balance > 0) minShortfall += (minDue - pay);
+      if (d.balance <= 0) {
+        d.balance = 0;
+        if (d.paidOffMonth == null) d.paidOffMonth = st.month;
+      }
+    });
+
+    var extrasApplied = [];
+    extrasPlan.forEach(function (x) {
+      if (x.amount <= 0) return;
+      var d = st.debts.find(function (dd) { return dd.id === x.id; });
+      if (!d || d.balance <= 0) return;
+      var pay = Math.min(x.amount, d.balance, Math.max(0, st.cash));
+      if (pay <= 0) return;
+      d.balance = roundDollar(d.balance - pay);
+      st.cash = roundDollar(st.cash - pay);
+      extrasApplied.push({ id: d.id, amount: pay });
+      if (d.balance <= 0) {
+        d.balance = 0;
+        if (d.paidOffMonth == null) d.paidOffMonth = st.month;
+      }
+    });
+
+    var topId = null, topAmt = 0;
+    extrasApplied.forEach(function (x) {
+      if (x.amount > topAmt) { topAmt = x.amount; topId = x.id; }
+    });
+    if (topId && topAmt > 0) {
+      if (avBefore && topId === avBefore.id) st.avalancheHits += 1;
+      else if (snBefore && topId === snBefore.id) st.snowballHits += 1;
+      else st.otherExtraHits += 1;
+      st.extrasHistory.push({ month: st.month, id: topId, amount: topAmt });
+    }
+
+    st.debts.forEach(function (d) { d.extra = 0; });
+
+    if (minShortfall > 0 || st.cash < 0) st.shortfallStreak += 1;
+    else st.shortfallStreak = 0;
+
+    if (!st.consumerFreeMonth && allConsumerClear(st)) {
+      st.consumerFreeMonth = st.month;
+      showToast("Badge: Consumer-debt-free! Stretch = clear mortgage, or Claim win.", "ok");
+    }
+    if (!st.fullyFreeMonth && allClear(st)) {
+      st.fullyFreeMonth = st.month;
+    }
+
+    if (allClear(st)) {
+      endGame("fully-free");
+      return;
+    }
+    if (st.shortfallStreak >= SHORTFALL_FAIL || st.cash < -2500) {
+      endGame("spiral");
+      return;
+    }
+    if (st.month >= MAX_MONTHS) {
+      endGame(allConsumerClear(st) ? "consumer-free" : "timeout");
+      return;
+    }
+
+    st.month += 1;
+    maybeEvent(st);
+    autoSave();
+    renderPlay();
+  }
+
+  function endGame(reason) {
+    state.ended = true;
+    state.endReason = reason;
+    tryLocalClear();
+    renderEnd();
+    showScreen("screen-end");
+  }
+
+  function strategyLabel(st) {
+    if (st.avalancheHits === 0 && st.snowballHits === 0 && st.otherExtraHits === 0) {
+      return "Mostly minimums only";
+    }
+    if (st.avalancheHits > st.snowballHits && st.avalancheHits >= st.otherExtraHits) {
+      return "Mostly Avalanche (highest APR first)";
+    }
+    if (st.snowballHits > st.avalancheHits && st.snowballHits >= st.otherExtraHits) {
+      return "Mostly Snowball (smallest balance first)";
+    }
+    return "Mixed extras (no single strategy dominated)";
+  }
+
+  function setExtra(debtId, delta) {
+    var d = state.debts.find(function (x) { return x.id === debtId; });
+    if (!d || d.balance <= 0) return;
+    var proj = projectedSurplus(state);
+    var available = Math.max(0, proj.surplus);
+    var others = totalExtrasAllocated(state) - (d.extra || 0);
+    var room = Math.max(0, available - others);
+    var next = Math.max(0, roundDollar((d.extra || 0) + delta));
+    d.extra = Math.min(next, room, d.balance + estInterest(d));
+    renderPlay();
+  }
+
+  function zeroExtra(debtId) {
+    var d = state.debts.find(function (x) { return x.id === debtId; });
+    if (!d) return;
+    d.extra = 0;
+    renderPlay();
+  }
+
+  function zeroAllExtras() {
+    if (!state) return;
+    state.debts.forEach(function (x) { x.extra = 0; });
+    renderPlay();
+  }
+
+  function dumpAllExtraTo(debtId) {
+    var d = state.debts.find(function (x) { return x.id === debtId; });
+    if (!d || d.balance <= 0) return;
+    state.debts.forEach(function (x) { x.extra = 0; });
+    var proj = projectedSurplus(state);
+    var available = Math.max(0, proj.surplus);
+    d.extra = Math.min(available, d.balance + estInterest(d));
+    renderPlay();
+  }
+
+  function renderHud() {
+    var st = state;
+    var proj = projectedSurplus(st);
+    var extras = totalExtrasAllocated(st);
+    var surplusLeft = proj.surplus - extras;
+    var html = "";
+    function item(label, value, cls, tip) {
+      html += '<div class="hud-item' + (cls && cls.indexOf("highlight") >= 0 ? " highlight" : "") + '"' +
+        (tip ? ' data-tip="' + tip + '"' : "") + '><div class="label">' + label +
+        '</div><div class="value ' + (cls || "") + '">' + value + "</div></div>";
+    }
+    item("Cash", fmt(st.cash), "cash-gold", "Money in the bank before this month settles");
+    item("Paycheck", fmt(st.paycheck), "", "Net take-home this month");
+    item("Living costs", fmt(st.living), "bad", "Rent, food, transport, utilities (classroom bundle)");
+    item("Interest (est.)", fmt(proj.interest), proj.interest > 0 ? "warn" : "", "Estimated interest if balances stay as shown");
+    item("Mins (est.)", fmt(proj.mins), "", "Estimated minimum payments after interest");
+    item("Surplus left", fmt(surplusLeft), surplusLeft >= 0 ? "good" : "bad highlight", "Cash left for extras after paycheck, living, and mins");
+    item("Consumer debt", fmt(totalDebt(st, true)), "warn", "All debts except the home loan");
+    item("Interest paid", fmt(st.totalInterestPaid), "", "Total interest paid so far");
+    $("hud").innerHTML = html;
+  }
+
+  function renderDebts() {
+    var st = state;
+    var av = avalancheTarget(st);
+    var sn = snowballTarget(st);
+    var tbody = $("debt-tbody");
+    tbody.innerHTML = "";
+    st.debts.forEach(function (d) {
+      var tr = document.createElement("tr");
+      var paid = d.balance <= 0;
+      if (paid) tr.classList.add("paid");
+      if (!paid && av && d.id === av.id) tr.classList.add("hint-avalanche");
+      if (!paid && sn && d.id === sn.id && (!av || sn.id !== av.id)) tr.classList.add("hint-snowball");
+
+      var aprCls = d.apr >= 18 ? "apr-hi" : d.apr >= 10 ? "apr-mid" : "apr-lo";
+      var balForMin = paid ? 0 : d.balance + estInterest(d);
+      var minNow = paid ? 0 : minPaymentFor({
+        balance: balForMin, kind: d.kind, minPct: d.minPct, minFloor: d.minFloor, fixedMin: d.fixedMin
+      });
+      var intEst = paid ? 0 : estInterest(d);
+
+      var extraCell;
+      if (paid) {
+        extraCell = '<span class="muted">Paid off' + (d.paidOffMonth ? " · M" + d.paidOffMonth : "") + "</span>";
+      } else {
+        extraCell =
+          '<div class="extra-controls">' +
+          '<button type="button" class="btn-secondary btn-sm" data-act="sub" data-id="' + d.id + '">-$50</button>' +
+          '<span class="extra-amt">' + fmt(d.extra || 0) + "</span>" +
+          '<button type="button" class="btn-secondary btn-sm" data-act="add" data-id="' + d.id + '">+$50</button>' +
+          '<button type="button" class="btn-ghost btn-sm" data-act="zero" data-id="' + d.id + '" data-tip="Set this debt extra to $0">Zero</button>' +
+          '<button type="button" class="btn-ghost btn-sm" data-act="max" data-id="' + d.id + '" data-tip="Put all surplus here">Max</button>' +
+          "</div>";
+      }
+
+      tr.innerHTML =
+        "<td><strong>" + d.name + "</strong>" + (!d.consumer ? ' <span class="muted">(stretch)</span>' : "") + "</td>" +
+        "<td>" + fmt(d.balance) + "</td>" +
+        '<td class="' + aprCls + '">' + fmtPct(d.apr) + "</td>" +
+        "<td>" + fmt(minNow) + "</td>" +
+        "<td>" + fmt(intEst) + "</td>" +
+        "<td>" + extraCell + "</td>";
+      tbody.appendChild(tr);
+    });
+
+    tbody.querySelectorAll("button[data-act]").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var id = btn.getAttribute("data-id");
+        var act = btn.getAttribute("data-act");
+        if (act === "add") setExtra(id, 50);
+        else if (act === "sub") setExtra(id, -50);
+        else if (act === "zero") zeroExtra(id);
+        else if (act === "max") dumpAllExtraTo(id);
+      });
+    });
+  }
+
+  function renderHints() {
+    var av = avalancheTarget(state);
+    var sn = snowballTarget(state);
+    if (av) {
+      $("hint-avalanche").innerHTML = "Suggested focus: <strong>" + av.name + "</strong> at " +
+        fmtPct(av.apr) + ". Paying high-interest debt first usually costs less overall.";
+    } else {
+      $("hint-avalanche").textContent = "No consumer debts left — Avalanche would target the mortgage next.";
+    }
+    if (sn) {
+      $("hint-snowball").innerHTML = "Suggested focus: <strong>" + sn.name + "</strong> (" +
+        fmt(sn.balance) + "). Clearing a small balance can free its minimum for the next target.";
+    } else {
+      $("hint-snowball").textContent = "No consumer debts left — Snowball would target the mortgage next.";
+    }
+  }
+
+  function renderBadges() {
+    var html = "";
+    if (state.consumerFreeMonth) {
+      html += '<span class="win-badge pass">Consumer-debt-free · M' + state.consumerFreeMonth + "</span>";
+    }
+    if (state.fullyFreeMonth) {
+      html += '<span class="win-badge stretch">Fully debt-free · M' + state.fullyFreeMonth + "</span>";
+    }
+    $("badge-row").innerHTML = html;
+    var claim = $("btn-claim");
+    if (state.consumerFreeMonth && !state.ended && !allClear(state)) {
+      claim.hidden = false;
+    } else {
+      claim.hidden = true;
+    }
+  }
+
+  function renderWarn() {
+    var banner = $("warn-banner");
+    var proj = projectedSurplus(state);
+    banner.className = "warning-banner";
+    if (state.shortfallStreak >= 3) {
+      banner.classList.add("show", "bad");
+      banner.textContent = "Warning: " + state.shortfallStreak +
+        " months of shortfall. If mins keep exceeding cash (~" + SHORTFALL_FAIL +
+        " months), the game ends — try an easier profile or put every surplus dollar on high APR debt.";
+    } else if (proj.surplus < 0) {
+      banner.classList.add("show", "bad");
+      banner.textContent = "This month looks short by about " + fmt(Math.abs(proj.surplus)) +
+        " after living + minimums. Extras are locked at $0 until cashflow improves.";
+    } else if (proj.surplus < 100) {
+      banner.classList.add("show");
+      banner.textContent = "Very thin surplus (" + fmt(proj.surplus) +
+        "). A random bill could wipe extras — prioritise high APR if you can.";
+    } else {
+      banner.classList.remove("show");
+      banner.textContent = "";
+    }
+
+    var ev = $("event-banner");
+    if (state.lastEvent && state.lastEvent.month === state.month) {
+      var e = state.lastEvent;
+      ev.className = "event-banner show " + (e.amount < 0 ? "cost" : "bonus");
+      ev.textContent = "Event: " + e.label + " — " + e.text + " (" + fmt(e.amount) + ")";
+    } else {
+      ev.className = "event-banner";
+      ev.textContent = "";
+    }
+  }
+
+  function renderPlay() {
+    $("month-label").textContent = "Month " + state.month + " of " + MAX_MONTHS;
+    $("profile-label").textContent = "Profile: " + state.profileLabel;
+    renderHud();
+    renderDebts();
+    renderHints();
+    renderBadges();
+    renderWarn();
+    updateUndoBtn();
+    bindTooltips($("screen-play"));
+  }
+
+  function renderEnd() {
+    var st = state;
+    var title = $("end-title");
+    var reason = st.endReason;
+    if (reason === "fully-free") title.textContent = "Fully debt-free!";
+    else if (reason === "consumer-free") title.textContent = "Consumer-debt-free!";
+    else if (reason === "spiral") title.textContent = "Cashflow spiral";
+    else title.textContent = "Time's up";
+
+    var b = "";
+    if (st.consumerFreeMonth) b += '<span class="win-badge pass">Consumer-debt-free</span>';
+    if (st.fullyFreeMonth) b += '<span class="win-badge stretch">Fully debt-free</span>';
+    if (reason === "spiral" || (reason === "timeout" && !st.consumerFreeMonth)) {
+      b += '<span class="win-badge fail">Did not clear consumer debt</span>';
+    }
+    $("end-badges").innerHTML = b;
+
+    var monthsTaken = st.consumerFreeMonth || st.month;
+    $("end-stats").innerHTML =
+      '<div class="summary-stat"><div class="big">' + monthsTaken + '</div><div class="lbl">Months to consumer-free</div></div>' +
+      '<div class="summary-stat"><div class="big">' + fmt(st.totalInterestPaid) + '</div><div class="lbl">Total interest paid</div></div>' +
+      '<div class="summary-stat"><div class="big">' + fmt(totalDebt(st, true)) + '</div><div class="lbl">Consumer debt left</div></div>' +
+      '<div class="summary-stat"><div class="big">' + fmt(totalDebt(st, false) - totalDebt(st, true)) + '</div><div class="lbl">Mortgage left</div></div>' +
+      '<div class="summary-stat"><div class="big" style="font-size:1rem">' + strategyLabel(st) + '</div><div class="lbl">Strategy path</div></div>' +
+      '<div class="summary-stat"><div class="big">' + fmt(st.cash) + '</div><div class="lbl">Cash at end</div></div>';
+
+    var reflect = [];
+    reflect.push("Compare your total interest with a classmate who used the other strategy tip.");
+    reflect.push("Avalanche hits: " + st.avalancheHits + " · Snowball hits: " + st.snowballHits +
+      " · Other focus: " + st.otherExtraHits + ".");
+    if (st.consumerFreeMonth && !st.fullyFreeMonth) {
+      reflect.push("Stretch idea: keeping the mortgage while clearing consumer debt is common advice — why might that be?");
+    }
+    if (reason === "spiral") {
+      reflect.push("What would need to change in real life: income, living costs, or refinancing high-APR debt?");
+    }
+    reflect.push("Minimum payments barely reduce principal when APR is high — extras matter.");
+    $("end-reflect").innerHTML = reflect.map(function (t) { return "<li>" + t + "</li>"; }).join("");
+  }
+
+  function renderProfiles() {
+    var grid = $("profile-grid");
+    grid.innerHTML = "";
+    PROFILES.forEach(function (p) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "choice-card" + (selectedProfileId === p.id ? " selected" : "");
+      var cons = p.balances.cc + p.balances.hp + p.balances.od + p.balances.pl + p.balances.car;
+      btn.innerHTML = '<div class="name">' + p.label + "</div>" +
+        "<div>Pay " + fmt(p.paycheck) + " · Living " + fmt(p.living) + "</div>" +
+        '<div class="guide">' + p.desc + "</div>" +
+        '<div class="guide">Consumer debt ≈ ' + fmt(cons) + "</div>";
+      btn.addEventListener("click", function () {
+        selectedProfileId = p.id;
+        $("btn-profile-go").disabled = false;
+        renderProfiles();
+      });
+      grid.appendChild(btn);
+    });
+    $("btn-profile-go").disabled = !selectedProfileId;
+  }
+
+  function bindTooltips(root) {
+    var tip = $("tooltip");
+    (root || document).querySelectorAll("[data-tip]").forEach(function (el) {
+      if (el._tipBound) return;
+      el._tipBound = true;
+      el.addEventListener("mouseenter", function () {
+        clearTimeout(tipTimer);
+        tipTimer = setTimeout(function () {
+          tip.textContent = el.getAttribute("data-tip");
+          tip.classList.add("show");
+          var r = el.getBoundingClientRect();
+          tip.style.left = Math.min(window.innerWidth - 280, Math.max(8, r.left)) + "px";
+          tip.style.top = (r.bottom + 8) + "px";
+        }, 1000);
+      });
+      el.addEventListener("mouseleave", function () {
+        clearTimeout(tipTimer);
+        tip.classList.remove("show");
+      });
+    });
+  }
+
+  $("btn-start").addEventListener("click", function () {
+    selectedProfileId = "tight";
+    renderProfiles();
+    showScreen("screen-profile");
+  });
+  $("btn-continue").addEventListener("click", function () { loadFromLocal(); });
+  $("btn-load-file-title").addEventListener("click", openFilePicker);
+  $("btn-profile-back").addEventListener("click", function () {
+    showScreen("screen-title");
+    refreshContinueBtn();
+  });
+  $("btn-profile-go").addEventListener("click", function () {
+    clearUndoStack();
+    state = newGame(selectedProfileId);
+    autoSave();
+    if (storageOk === false) {
+      showToast("Tip: use Save file — browser storage blocked", "error");
+    }
+    showScreen("screen-play");
+    renderPlay();
+  });
+  $("btn-next").addEventListener("click", settleMonth);
+  $("btn-prev-month").addEventListener("click", previousMonth);
+  $("btn-zero-all-extras").addEventListener("click", zeroAllExtras);
+  $("btn-save").addEventListener("click", function () { saveGame(); });
+  $("btn-save-file").addEventListener("click", downloadSaveFile);
+  $("btn-load").addEventListener("click", function () { loadFromLocal(); });
+  $("btn-load-file").addEventListener("click", openFilePicker);
+  $("file-load-input").addEventListener("change", onFilePicked);
+  $("confirm-cancel").addEventListener("click", function () { closeConfirm(false); });
+  $("confirm-ok").addEventListener("click", function () { closeConfirm(true); });
+  $("confirm-modal").addEventListener("click", function (e) {
+    if (e.target === $("confirm-modal")) closeConfirm(false);
+  });
+  $("btn-claim").addEventListener("click", function () {
+    if (!state || !state.consumerFreeMonth) return;
+    showConfirm("End the session and claim your consumer-debt-free win?", function () {
+      endGame("consumer-free");
+    });
+  });
+  $("btn-restart").addEventListener("click", function () {
+    showConfirm("Restart and clear the browser debt-game save?", function () {
+      tryLocalClear();
+      clearUndoStack();
+      state = null;
+      refreshContinueBtn();
+      showScreen("screen-title");
+      updateUndoBtn();
+    });
+  });
+  $("btn-end-again").addEventListener("click", function () {
+    clearUndoStack();
+    state = null;
+    refreshContinueBtn();
+    showScreen("screen-title");
+    updateUndoBtn();
+  });
+
+  document.addEventListener("keydown", function (e) {
+    var tag = (e.target && e.target.tagName) || "";
+    var typing = tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || (e.target && e.target.isContentEditable);
+    if (isConfirmModalOpen()) {
+      if (e.key === "Escape") { e.preventDefault(); closeConfirm(false); return; }
+      if (!typing && (e.key === " " || e.key === "Enter")) { e.preventDefault(); closeConfirm(true); return; }
+      return;
+    }
+    if (!$("screen-play").classList.contains("active")) return;
+    if (typing) return;
+    var k = e.key.toLowerCase();
+    if (k === "n") { e.preventDefault(); settleMonth(); }
+    else if (k === "b") { e.preventDefault(); previousMonth(); }
+    else if (k === "s") { e.preventDefault(); saveGame(); }
+  });
+
+  // Probe storage once at boot
+  try {
+    localStorage.setItem(SAVE_KEY + "-probe", "1");
+    localStorage.removeItem(SAVE_KEY + "-probe");
+    storageOk = true;
+  } catch (e) {
+    storageOk = false;
+  }
+
+  refreshContinueBtn();
+  updateStorageNotes();
+  bindTooltips(document);
+})();
+</script>
+</body>
+</html>
