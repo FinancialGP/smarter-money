@@ -403,8 +403,13 @@ select.modal-select {
 .month-log { list-style: none; margin: 0; padding: 0; font-size: 0.8rem; color: var(--muted); display: flex; flex-direction: column; gap: 0.12rem; }
 .month-log b { color: var(--text); font-weight: 700; }
 .event-prev { font-size: 0.76rem; color: var(--muted); border-top: 1px dashed var(--surface2); padding-top: 0.2rem; }
+.linked-note { display: inline-block; font-size: 0.8em; color: #a5f3fc; background: rgba(34,211,238,0.12); border-radius: 6px; padding: 0 0.35rem; }
+.scaled-note { display: inline-block; font-size: 0.78em; color: #fde68a; background: rgba(251,191,36,0.12); border-radius: 6px; padding: 0 0.35rem; }
 .h3-note { font-weight: 500; color: var(--muted); font-size: 0.75em; }
-#btn-next.waiting { opacity: 0.5; }
+.next-month-bar { flex: 0 0 auto; padding-top: 0.45rem; display: flex; }
+.next-month-bar #btn-next { width: 100%; font-size: 1.05rem; padding: 0.6rem 1rem; }
+.next-month-bar #btn-next.waiting { opacity: 0.4; font-size: 0.82rem; padding: 0.3rem 0.8rem; cursor: not-allowed; box-shadow: none; }
+@media (min-width: 861px) and (max-height: 760px) { .next-month-bar { padding-top: 0.3rem; } .next-month-bar #btn-next { padding: 0.45rem 1rem; } }
 @media (min-width: 861px) and (max-height: 760px) { .event-prev { display: none; } .h3-note { display: none; } .month-log { font-size: 0.74rem; } }
 /* v5.1 colour scheme: income & assets GOLD, expenses & liabilities RED (labels + amounts + totals) */
 #expense-breakdown li.row-inc, #expense-breakdown li.row-inc span { color: #fbbf24; }
@@ -487,7 +492,6 @@ select.modal-select {
       <button type="button" class="btn-secondary btn-sm" id="btn-pay-cc" data-tip="Repay credit card (24% p.a.) in $1,000 steps">Pay CC</button>
       <button type="button" class="btn-secondary btn-sm" id="btn-skip3" data-tip="After this month's events: auto-resolve the next months quickly (3 paydays)">Skip 3</button>
       <button type="button" class="btn-secondary btn-sm" id="btn-prev-month" data-tip="Go back to the start of the previous month (same 4 events). Hotkey B." disabled>Previous Month (B)</button>
-      <button type="button" class="btn-primary" id="btn-next" data-tip="Payday: settle this month and start the next (after all 4 events). Hotkey N. Space/Enter = highlighted next step. A = Accept/Buy.">Next Month</button>
       <button type="button" class="btn-secondary btn-sm" id="btn-save" data-tip="Save to one of 5 slots (hotkey S). Downloads a file if browser storage is blocked.">Save</button>
       <button type="button" class="btn-secondary btn-sm" id="btn-load" data-tip="Choose a save slot (or Auto) to load — overwrites current run">Load</button>
       <button type="button" class="btn-ghost btn-sm" id="btn-load-file-play" data-tip="Load a SMARTER save JSON file (overwrites current run)">Load file</button>
@@ -530,6 +534,9 @@ select.modal-select {
         <div class="event-copy">Each month: 4 events in order (market news → opportunity → life/spending → wildcard), then Next Month = payday. If you get sick, the other events that month are skipped.</div>
       </div>
       <div id="event-actions" class="event-actions-bar"></div>
+      <div class="next-month-bar">
+        <button type="button" class="btn-primary" id="btn-next" data-tip="Payday: settle this month and start the next (after all 4 events). Hotkey N. Space/Enter = highlighted next step. A = Accept/Buy.">Next Month (payday) &rarr;</button>
+      </div>
     </div>
     <div class="panel play-holdings-panel">
       <h3>Holdings</h3>
@@ -640,8 +647,14 @@ select.modal-select {
   var CC_LIMIT = 20000;
   var BANK_APR_DEFAULT = 0.07;
   var STEP = 1000;
-  var CHILD_COST_MIN = 400;
+  var CHILD_COST_MIN = 400;   /* v5 legacy (no longer used for new births) */
   var CHILD_COST_MAX = 600;
+  /* v5.2 income scaling. Reference = a middle career (~$6,500/mo gross ≈ $78k/yr, like Chef). */
+  var REF_GROSS = 6500;
+  var INCOME_FACTOR_MIN = 0.6, INCOME_FACTOR_MAX = 1.8;
+  /* Child cost per WEEK = $40 + 3% of weekly gross pay, floor $80, cap $180 (≈ $350–$780/mo).
+     Set once at birth from the career's gross pay (not reduced by sick leave), then fixed. */
+  var CHILD_WEEK_BASE = 40, CHILD_WEEK_PCT = 0.03, CHILD_WEEK_MIN = 80, CHILD_WEEK_MAX = 180;
   var DECLINE_PROCEDURE_FEE = 2000;
   var MIN_MONTHS_BETWEEN_BIRTHS = 10;
   var MIN_MONTHS_BETWEEN_ILLNESS = 12;
@@ -729,7 +742,7 @@ select.modal-select {
   ];
 
   var LIFE = [
-    { id: "l1", type: "life", title: "Overtime Month", copy: "Short-staffed — extra hours.", cashDelta: 600, label: "+$600" },
+    { id: "l1", type: "life", title: "Overtime Month", copy: "Short-staffed — extra hours.", cashDelta: 600, label: "+$600", wage: true },
     { id: "l2", type: "life", title: "IRD Tax Refund", copy: "Small PAYE wash-up lands.", cashDelta: 320, label: "+$320" },
     { id: "l3", type: "life", title: "Flatmate Moves Out", copy: "Rent share jumps.", expenseDelta: 150, label: "+$150/mo" },
     { id: "l4", type: "life", title: "Win on Lotto Scratchie", copy: "Not life-changing — but nice.", cashDelta: 50, label: "+$50" },
@@ -737,7 +750,7 @@ select.modal-select {
     { id: "l6", type: "life", title: "Parking Fine", copy: "P-meter ran out.", cashDelta: -80, label: "−$80" },
     { id: "l7", type: "life", title: "Community Market Stall", copy: "Sold baking at the market.", cashDelta: 180, label: "+$180" },
     { id: "l8", type: "life", title: "Rent Review", copy: "Landlord: rent up from next month.", expenseDelta: 120, label: "+$120/mo" },
-    { id: "l9", type: "life", title: "Work Bonus", copy: "Spot bonus for covering roster.", cashDelta: 500, label: "+$500" },
+    { id: "l9", type: "life", title: "Work Bonus", copy: "Spot bonus for covering roster.", cashDelta: 500, label: "+$500", wage: true },
     { id: "l10", type: "life", title: "Flooded Laundry", copy: "Hose burst — replace gear.", cashDelta: -300, label: "−$300" },
     { id: "l11", type: "life", title: "Scholarship / Grant", copy: "Study or training grant hits.", cashDelta: 600, label: "+$600" },
     { id: "l12", type: "life", title: "Public Transport Strike", copy: "More fuel / rides this month.", cashDelta: -200, label: "−$200" },
@@ -745,7 +758,7 @@ select.modal-select {
     { id: "li1", type: "life", title: "Workplace Injury", copy: "ACC vibe: you need rest. Duration rolled 1–3 months. First month may use your yearly paid leave.", offWork: true, label: "Off work 1–3 mo" },
     { id: "li2", type: "life", title: "Serious Illness", copy: "Doctor orders rest. Duration 1–3 months. Paid leave (1 mo/year) covers the first month if still available.", offWork: true, label: "Off work 1–3 mo" },
     { id: "li3", type: "life", title: "Accident Recovery", copy: "Crash / fall — recovery time. Rest 1–3 months; expenses continue.", offWork: true, label: "Off work 1–3 mo" },
-    { id: "lc1", type: "life", title: "Having a Child", copy: "New family member! One-time costs plus permanent living increase (~$400–$600/mo per child).", birth: true, label: "New child" }
+    { id: "lc1", type: "life", title: "Having a Child", copy: "New family member! Permanent living increase per child, based on your income ($40/week + 3% of weekly pay, $80–$180/week).", birth: true, label: "New child" }
   ];
 
   var MARKET = [
@@ -873,6 +886,43 @@ select.modal-select {
     state.passiveIncome = p;
   }
   function recomputeLiving() { state.livingExpenses = state.livingBase + state.childMonthlyTotal; }
+  /* ---- v5.2 income scaling ---- */
+  function incomeFactor(st) {
+    st = st || state;
+    var g = st.baseGross || REF_GROSS;
+    return Math.max(INCOME_FACTOR_MIN, Math.min(INCOME_FACTOR_MAX, +(g / REF_GROSS).toFixed(2)));
+  }
+  function childCostWeekly(st) {
+    st = st || state;
+    var weeklyGross = (st.baseGross || REF_GROSS) * 12 / 52;
+    var w = CHILD_WEEK_BASE + CHILD_WEEK_PCT * weeklyGross;
+    return Math.max(CHILD_WEEK_MIN, Math.min(CHILD_WEEK_MAX, Math.round(w / 5) * 5));
+  }
+  function childCostMonthly(st) { return round10(childCostWeekly(st) * 52 / 12); }
+  function signedFmt(n) { return (n >= 0 ? "+" : "") + fmt(n); }
+  function cardLabel(c) {
+    var parts = [];
+    if (c.cost) parts.push(fmt(-c.cost));
+    if (c.cashDelta) parts.push(signedFmt(c.cashDelta));
+    if (c.expenseDelta) parts.push("+" + fmt(c.expenseDelta) + "/mo");
+    return parts.join(" & ") || c.label;
+  }
+  /* Life/spending cards: costs (one-off cost, negative cash, +$/mo living) and wage-linked gains
+     (Overtime, Work Bonus) are multiplied by the income factor and rounded to $10. Other gains
+     (tax refund, koha, scratchie…) stay fixed. Always computed from the BASE card, so it is safe
+     to re-apply after loading (no double scaling). */
+  function scaleCard(c, st) {
+    if (!c || !(c.type === "spending" || c.type === "life") || c.offWork || c.birth) return c;
+    var base = findCardById(c.id) || c;
+    var out = Object.assign({}, base, c.slot != null ? { slot: c.slot } : {});
+    var f = incomeFactor(st);
+    var touched = false;
+    if (base.cost) { out.cost = round10(base.cost * f); touched = true; }
+    if (base.expenseDelta) { out.expenseDelta = round10(base.expenseDelta * f); touched = true; }
+    if (base.cashDelta && (base.cashDelta < 0 || base.wage)) { out.cashDelta = round10(base.cashDelta * f); touched = true; }
+    if (touched && f !== 1) { out.scaled = f; out.baseLabel = base.label; out.label = cardLabel(out); }
+    return out;
+  }
   function applyPayStatus() {
     if (state.offWork && !state.offWorkPaid) {
       state.jobIncome = 0;
@@ -1480,12 +1530,12 @@ select.modal-select {
     GROWTH_KEYS.forEach(function (k) { if (gu[k] == null) gu[k] = 0; });
     if (st.pendingEvent && st.pendingEvent.id) {
       var fresh = findCardById(st.pendingEvent.id);
-      if (fresh) st.pendingEvent = Object.assign({}, fresh, st.pendingEvent.slot != null ? { slot: st.pendingEvent.slot } : {});
+      if (fresh) st.pendingEvent = scaleCard(Object.assign({}, fresh, st.pendingEvent.slot != null ? { slot: st.pendingEvent.slot } : {}, st.pendingEvent.linked ? { linked: st.pendingEvent.linked } : {}), st);
     }
     if (Array.isArray(st.monthEvents)) {
       st.monthEvents = st.monthEvents.map(function (c) {
         var f = c && c.id ? findCardById(c.id) : null;
-        return f ? Object.assign({}, f, c.slot != null ? { slot: c.slot } : {}) : c;
+        return f ? scaleCard(Object.assign({}, f, c.slot != null ? { slot: c.slot } : {}, c.linked ? { linked: c.linked } : {}), st) : c;
       });
     }
     return st;
@@ -1637,14 +1687,41 @@ select.modal-select {
     return w.life * 3 / 17;
   }
   function birthChance(w) { return 1 / 12 + w.life / 17; }
-  function cardWeight(c) { return (c.expenseDelta || c.effect === "tax_bill") ? PERMANENT_COST_WEIGHT : 1; }
-  /* Wildcard (event 4): difficulty-weighted, but no second spending card (spending already has
-     its own chance in event 3) — keeps a 4-event month from being 4x the bills. */
+  /* Dedicated Gold/Silver and Bitcoin news cards are drawn at 0.4x weight (rarer); those assets
+     mostly move through LINKED moves on the general market cards (see linkedMovesFor). */
+  var NO_CASHFLOW_NEWS_WEIGHT = 0.4;
+  var LINKED_MOVE_CHANCE = 0.30;
+  function cardWeight(c) {
+    if (c.expenseDelta || c.effect === "tax_bill") return PERMANENT_COST_WEIGHT;
+    if (c.type === "market" && c.effect === "price" && (c.assetKey === "metals" || c.assetKey === "bitcoin")) return NO_CASHFLOW_NEWS_WEIGHT;
+    return 1;
+  }
+  /* Wildcard (event 4): opportunity or life only (by difficulty weights). Never spending (event 3
+     already has it) and never market news (market news = once a month, event 1 only). */
   function pickWildcardType(w) {
-    var ww = { opportunity: w.opportunity, spending: 0, life: w.life, market: w.market };
-    var t = ww.opportunity + ww.life + ww.market;
-    ww.opportunity /= t; ww.life /= t; ww.market /= t;
-    return pickWeightedType(ww);
+    var t = w.opportunity + w.life;
+    return pickWeightedType({ opportunity: w.opportunity / t, spending: 0, life: w.life / t, market: 0 });
+  }
+  /* Linked moves for no-cashflow holdings (Gold/Silver, Bitcoin, US Index — no monthly income).
+     Rolled when the card is drawn (so the card can show it, and save/undo replay it):
+       US Index ±X%            → Bitcoin same way ×0.5, Gold/Silver opposite way ×0.25 (safe haven)
+       Property / Business ±X% → US Index same way ×0.4, Bitcoin same way ×0.3
+       RBNZ rate hike / cut    → Gold/Silver ∓3%, Bitcoin ∓6%, US Index ∓4%
+     Whole %, minimum 2%. Dedicated Gold/Silver / Bitcoin cards have no linked moves. */
+  function linkedMovesFor(c) {
+    var m = [];
+    function add(key, pct) {
+      var r = Math.round(pct * 100);
+      if (Math.abs(r) < 2) r = pct >= 0 ? 2 : -2;
+      m.push({ key: key, pct: r / 100 });
+    }
+    if (c.effect === "price" && c.assetKey === "usindex") { add("bitcoin", c.pct * 0.5); add("metals", -c.pct * 0.25); }
+    else if (c.effect === "price" && (c.assetKey === "property" || c.assetKey === "business")) { add("usindex", c.pct * 0.4); add("bitcoin", c.pct * 0.3); }
+    else if (c.effect === "rate") { var sg = c.bankDelta > 0 ? -1 : 1; add("metals", sg * 0.03); add("bitcoin", sg * 0.06); add("usindex", sg * 0.04); }
+    return m;
+  }
+  function linkedText(list) {
+    return list.map(function (l) { return ASSET_LABELS[l.key] + " " + (l.pct >= 0 ? "+" : "\u2212") + Math.round(Math.abs(l.pct) * 100) + "%"; }).join(", ");
   }
   /* One card of a type; never illness / baby (they have their own once-a-month checks);
      avoids repeating a card already drawn this month. */
@@ -1656,9 +1733,9 @@ select.modal-select {
     var r = Math.random() * total;
     for (var i = 0; i < deck.length; i++) {
       r -= cardWeight(deck[i]);
-      if (r <= 0) return Object.assign({}, deck[i]);
+      if (r <= 0) return scaleCard(Object.assign({}, deck[i]));
     }
-    return Object.assign({}, deck[deck.length - 1]);
+    return scaleCard(Object.assign({}, deck[deck.length - 1]));
   }
   /* The month's cards, drawn at payday (so undo / save replay the same cards).
      Fixed order: 1 Market news (prices move first, so you can trade) → 2 Opportunity (a deal
@@ -1678,7 +1755,10 @@ select.modal-select {
     var used = [];
     var out = [];
     function add(c, slot) { c.slot = slot; used.push(c.id); out.push(c); }
-    add(drawFromDeck("market", used), 0);
+    var mk = drawFromDeck("market", used);
+    var lk = linkedMovesFor(mk);
+    if (lk.length && Math.random() < LINKED_MOVE_CHANCE) mk.linked = lk;
+    add(mk, 0);
     add(drawFromDeck("opportunity", used), 1);
     if (canHaveChild() && !state.offWork && Math.random() < birthChance(w)) {
       add(Object.assign({}, LIFE.find(function (c) { return c.birth; })), 2);
@@ -2036,14 +2116,15 @@ select.modal-select {
   }
 
   function doBirth() {
-    var add = CHILD_COST_MIN + Math.round(Math.random() * (CHILD_COST_MAX - CHILD_COST_MIN));
-    add = round10(add);
+    var add = childCostMonthly();
+    if (!Array.isArray(state.childCosts)) state.childCosts = [];
+    state.childCosts.push(add);
     state.children += 1;
     state.childMonthlyTotal += add;
     state.birthThisYear = true;
     state.lastBirthMonth = state.month;
     recomputeLiving();
-    state.marketNote = "Child #" + state.children + ": +" + fmt(add) + "/mo living forever (no one-time hospital fee).";
+    state.marketNote = "Child #" + state.children + ": +" + fmt(childCostWeekly()) + "/week (" + fmt(add) + "/mo) living forever, based on your income.";
   }
   function declineBirth() {
     state.cash -= DECLINE_PROCEDURE_FEE;
@@ -2054,6 +2135,17 @@ select.modal-select {
   }
 
   function applyMarket(ev) {
+    applyMarketMain(ev);
+    if (Array.isArray(ev.linked) && ev.linked.length) {
+      ev.linked.forEach(function (l) {
+        if (state.priceIndex[l.key] == null) return;
+        state.priceIndex[l.key] = Math.max(0.2, +(state.priceIndex[l.key] * (1 + l.pct)).toFixed(4));
+      });
+      recomputePassive();
+      state.marketNote = (state.marketNote ? state.marketNote + " " : "") + "Linked: " + linkedText(ev.linked) + ".";
+    }
+  }
+  function applyMarketMain(ev) {
     state.marketNote = "";
     state.tradePending = false;
     if (ev.effect === "noop") {
@@ -2258,7 +2350,14 @@ select.modal-select {
     var ev = state.pendingEvent;
     var area = $("event-area");
     var btnNext = $("btn-next");
-    if (btnNext) btnNext.classList.toggle("waiting", !state.eventResolved);
+    if (btnNext) {
+      var waiting = !state.eventResolved;
+      btnNext.classList.toggle("waiting", waiting);
+      btnNext.disabled = waiting;
+      btnNext.innerHTML = waiting
+        ? "Next Month \u2014 after event " + (state.monthEvents && state.monthEvents.length ? state.monthEvents.length : 4)
+        : (state.month >= TOTAL_MONTHS ? "Final payday \u2192 summary" : "Next Month (payday) \u2192");
+    }
     if (state.eventResolved && state.monthEvents && state.monthEvents.length && state.monthLog.length) { renderMonthDone(); return; }
     if (!ev) {
       area.className = "event-card type-life";
@@ -2318,6 +2417,18 @@ select.modal-select {
       amountClass = " cost-red";
     }
     if (ev.type === "spending") amountClass = " cost-red";
+    if (ev.birth) {
+      amountText = "+" + fmt(childCostWeekly()) + "/week (" + fmt(childCostMonthly()) + "/mo)";
+      amountClass = " cost-red";
+      copy = "New family member! Living costs go up for as long as you play. For your income (" + fmt(state.baseGross) + "/mo gross) each child costs about " +
+        fmt(childCostWeekly()) + " a week = " + fmt(childCostMonthly()) + " a month ($40/week + 3% of weekly pay, $80–$180/week).";
+    }
+    if (ev.type === "market" && Array.isArray(ev.linked) && ev.linked.length) {
+      copy = (copy || "") + ' <span class="linked-note">Also moves (no-cashflow assets): ' + esc(linkedText(ev.linked)) + ".</span>";
+    }
+    if (ev.scaled && ev.scaled !== 1) {
+      copy = (copy || "") + ' <span class="scaled-note">Scaled to your income: ' + esc(ev.baseLabel || "") + " \u00d7 " + ev.scaled.toFixed(2) + ".</span>";
+    }
 
     var actions = "";
     if (!state.eventResolved) {
