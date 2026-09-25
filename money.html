@@ -388,6 +388,31 @@ select.modal-select {
   #screen-play .event-title { font-size: 1rem; }
   #screen-play .event-amount { font-size: 1.25rem; }
 }
+/* v5: month step header + recap */
+.event-step { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: #fde047; }
+.event-step .pips { display: inline-flex; gap: 4px; flex: 0 0 auto; }
+.event-step .event-type { font-size: inherit; }
+.event-step .step-sep { color: var(--muted); }
+.event-step .pip { width: 14px; height: 6px; border-radius: 3px; background: var(--surface2); display: inline-block; }
+.event-step .pip.done { background: var(--accent); }
+.event-step .pip.now { background: #fde047; }
+.event-card.type-done { border-color: var(--accent); }
+.event-card.sick { border-color: #ef4444; }
+.sick-banner { background: rgba(239,68,68,0.15); border: 1px solid #ef4444; color: #fecaca; font-weight: 700; font-size: 0.85rem; padding: 0.3rem 0.5rem; border-radius: 8px; }
+.event-card.sick .event-title { color: #fecaca; }
+.month-log { list-style: none; margin: 0; padding: 0; font-size: 0.8rem; color: var(--muted); display: flex; flex-direction: column; gap: 0.12rem; }
+.month-log b { color: var(--text); font-weight: 700; }
+.event-prev { font-size: 0.76rem; color: var(--muted); border-top: 1px dashed var(--surface2); padding-top: 0.2rem; }
+.h3-note { font-weight: 500; color: var(--muted); font-size: 0.75em; }
+#btn-next.waiting { opacity: 0.5; }
+@media (min-width: 861px) and (max-height: 760px) { .event-prev { display: none; } .h3-note { display: none; } .month-log { font-size: 0.74rem; } }
+/* v5.1 colour scheme: income & assets GOLD, expenses & liabilities RED (labels + amounts + totals) */
+#expense-breakdown li.row-inc, #expense-breakdown li.row-inc span { color: #fbbf24; }
+#expense-breakdown li.row-exp, #expense-breakdown li.row-exp span { color: #ef4444; }
+#bs-assets li, #bs-assets li span, #summary-bs-assets li, #summary-bs-assets li span { color: #fbbf24; }
+#bs-liabilities li, #bs-liabilities li span, #summary-bs-liab li, #summary-bs-liab li span { color: #ef4444; }
+#assets-list li > span { color: #fbbf24; }
+#assets-list li > span:last-child { font-weight: 700; }
 /* Space / Enter default-action hint */
 .space-default { position: relative; box-shadow: 0 0 0 3px #fde047, 0 0 14px rgba(253,224,71,0.45) !important; }
 .space-default::after {
@@ -416,6 +441,7 @@ select.modal-select {
     <h1>SMARTER <span class="logo-dollar">$</span></h1>
     <p>A New Zealand classroom game about income, tax, expenses, markets, debt, and building passive income — over <strong>10 years</strong> (120 months).</p>
     <p><strong>Win goal:</strong> Highest Passive Income ÷ Total Expenses after 120 months.</p>
+    <p class="subtitle" style="margin-top:0.25rem"><strong>Each month:</strong> 4 events in order — 1 Market news · 2 Opportunity · 3 Life / spending · 4 Wildcard — then <strong>Next Month = payday</strong>. Get sick? No other events that month.</p>
     <div class="center-actions" style="justify-content:center;flex-wrap:wrap">
       <button type="button" class="btn-primary" id="btn-start" data-tip="Choose difficulty, then career">Start Game</button>
       <button type="button" class="btn-secondary" id="btn-continue" data-tip="Resume the latest auto-save" hidden>Continue</button>
@@ -426,7 +452,7 @@ select.modal-select {
     <p id="storage-note" class="subtitle" style="margin-top:0.5rem;display:none">On OneDrive preview, use Save to download a file — or download this HTML and open in Chrome for auto-save.</p>
     <p style="margin-top:0.85rem"><a href="index-debt.html" style="color:#38bdf8;font-size:0.9rem;text-decoration:none;border-bottom:1px dotted #38bdf8">Debt Paydown edition →</a></p>
   </div>
-  <p class="footer-note">NZD · PAYE + ACC simplified · Offline Cashflow-style demo · v4 · 5 save slots + auto-save · Space = next step</p>
+  <p class="footer-note">NZD · PAYE + ACC simplified · Offline Cashflow-style demo · v5 · 4 events a month · 5 save slots + auto-save · Space = next step</p>
 </section>
 
 <section id="screen-difficulty" class="screen" aria-label="Choose difficulty">
@@ -459,9 +485,9 @@ select.modal-select {
       <button type="button" class="btn-secondary btn-sm" id="btn-pay-bank" data-tip="Repay bank loan in $1,000 steps">Pay Bank</button>
       <button type="button" class="btn-warn btn-sm" id="btn-pay-hi" data-tip="Repay high-interest loan (120%) in $1,000 steps">Pay HI</button>
       <button type="button" class="btn-secondary btn-sm" id="btn-pay-cc" data-tip="Repay credit card (24% p.a.) in $1,000 steps">Pay CC</button>
-      <button type="button" class="btn-secondary btn-sm" id="btn-skip3" data-tip="Auto-resolve the next 3 months quickly">Skip 3</button>
-      <button type="button" class="btn-secondary btn-sm" id="btn-prev-month" data-tip="Undo last month advance (can go back to month 1)" disabled>Previous Month (B)</button>
-      <button type="button" class="btn-primary" id="btn-next" data-tip="Settle this month and advance (hotkey N). Space/Enter = highlighted next step. A = Accept/Buy.">Next Month</button>
+      <button type="button" class="btn-secondary btn-sm" id="btn-skip3" data-tip="After this month's events: auto-resolve the next months quickly (3 paydays)">Skip 3</button>
+      <button type="button" class="btn-secondary btn-sm" id="btn-prev-month" data-tip="Go back to the start of the previous month (same 4 events). Hotkey B." disabled>Previous Month (B)</button>
+      <button type="button" class="btn-primary" id="btn-next" data-tip="Payday: settle this month and start the next (after all 4 events). Hotkey N. Space/Enter = highlighted next step. A = Accept/Buy.">Next Month</button>
       <button type="button" class="btn-secondary btn-sm" id="btn-save" data-tip="Save to one of 5 slots (hotkey S). Downloads a file if browser storage is blocked.">Save</button>
       <button type="button" class="btn-secondary btn-sm" id="btn-load" data-tip="Choose a save slot (or Auto) to load — overwrites current run">Load</button>
       <button type="button" class="btn-ghost btn-sm" id="btn-load-file-play" data-tip="Load a SMARTER save JSON file (overwrites current run)">Load file</button>
@@ -496,12 +522,12 @@ select.modal-select {
       </div>
     </div>
     <div class="panel play-event-panel">
-      <h3>This Month&rsquo;s Event</h3>
+      <h3>This Month&rsquo;s Events <span class="h3-note">(4 in order, then payday)</span></h3>
       <div id="event-area" class="event-card type-life">
         <div class="event-type">Life</div>
         <div class="event-title">Getting started…</div>
         <div class="event-amount">—</div>
-        <div class="event-copy">Pay arrives. Expenses leave. Events shape your ten years.</div>
+        <div class="event-copy">Each month: 4 events in order (market news → opportunity → life/spending → wildcard), then Next Month = payday. If you get sick, the other events that month are skipped.</div>
       </div>
       <div id="event-actions" class="event-actions-bar"></div>
     </div>
@@ -619,6 +645,13 @@ select.modal-select {
   var DECLINE_PROCEDURE_FEE = 2000;
   var MIN_MONTHS_BETWEEN_BIRTHS = 10;
   var MIN_MONTHS_BETWEEN_ILLNESS = 12;
+  /* v5: each month = payday, then 4 events in a fixed order (see drawMonthEvents).
+     Illness is checked first, at most once a month; if it happens the month has no other events. */
+  var EVENTS_PER_MONTH = 4;
+  var SLOT_NAMES = ["Market news", "Opportunity", "Life / spending", "Wildcard"];
+  /* 4x more cards per month: permanent "+$/mo living" cards are drawn less often so the
+     10-year expense creep stays close to the old one-event-a-month game. */
+  var PERMANENT_COST_WEIGHT = 0.35; /* also used for IRD catch-up bills */
 
   var CAREERS = [
     { id: 1, name: "Café Worker", rate: 25, guide: "$23–$30" },
@@ -757,6 +790,7 @@ select.modal-select {
     lastBirthMonth: null,
     lastIllnessMonth: null,
     pendingEvent: null, eventResolved: true, tradePending: false,
+    monthEvents: [], eventStep: 0, monthLog: [], sickMonth: false, stepNote: "",
     marketNote: "", history: [], bankrupt: false, endReason: ""
   };
 
@@ -893,6 +927,13 @@ select.modal-select {
   var UNDO_CAP = 120;
   var undoStack = [];
   var confirmCallback = null;
+  /* Snapshot of the START of the current month (after payday, event 1 not yet resolved).
+     Next Month pushes it onto undoStack, so Previous Month (B) = start of the previous month
+     with the same 4 cards. */
+  var monthStartSnap = null;
+  function captureMonthStart() {
+    try { monthStartSnap = deepCloneState(state); } catch (err) { monthStartSnap = null; }
+  }
 
   function pushUndoSnapshot() {
     try {
@@ -904,6 +945,7 @@ select.modal-select {
 
   function clearUndoStack() {
     undoStack = [];
+    monthStartSnap = null;
     updateUndoBtn();
   }
 
@@ -923,6 +965,7 @@ select.modal-select {
     }
     var snap = undoStack.pop();
     applyLoadedState(snap);
+    captureMonthStart();
     if (state.bankrupt || state.screen === "summary") {
       endGame(!!state.bankrupt);
     } else {
@@ -932,7 +975,7 @@ select.modal-select {
     }
     autoSave();
     updateUndoBtn();
-    showToast("Restored previous month (Month " + (state.month || 1) + ").", "ok");
+    showToast("Back to the start of Month " + (state.month || 1) + " (event 1 of " + (state.monthEvents.length || 1) + ").", "ok");
   }
 
   function isConfirmModalOpen() {
@@ -1032,6 +1075,9 @@ select.modal-select {
       career: (state.career && state.career.name) || "",
       difficulty: state.difficulty || "",
       month: state.month || 1,
+      eventStep: state.eventStep || 0,
+      eventCount: (state.monthEvents && state.monthEvents.length) || 0,
+      monthDone: !!state.eventResolved,
       netWorth: nw,
       bankrupt: !!state.bankrupt,
       finished: state.screen === "summary",
@@ -1054,8 +1100,21 @@ select.modal-select {
         var c = Object.assign({}, snap);
         delete c.history;
         return c;
-      })
+      }),
+      monthStart: monthStartSnap ? (function () { var c = Object.assign({}, monthStartSnap); delete c.history; return c; })() : null
     };
+  }
+  function rebuildMonthStart(data) {
+    if (!data.monthStart || typeof data.monthStart !== "object") return null;
+    var c = deepCloneState(data.monthStart);
+    var hist = (data.state && Array.isArray(data.state.history)) ? data.state.history : [];
+    if (!Array.isArray(c.history)) {
+      var m = c.month || 1;
+      c.history = deepCloneState(hist.filter(function (h) { return h.month < m; }));
+    }
+    migrateAssetState(c);
+    migrateMonthState(c);
+    return c;
   }
   function rebuildUndoStack(data) {
     if (!Array.isArray(data.undoStack)) return [];
@@ -1125,7 +1184,8 @@ select.modal-select {
     var m = meta.month || 1;
     var parts = [
       (meta.career || "Career") + (meta.difficulty ? " (" + capitalize(String(meta.difficulty)) + ")" : ""),
-      "Month " + m + " · Year " + yearOf(m) + " · Month " + monthInYear(m),
+      "Month " + m + " · Year " + yearOf(m) + " · Month " + monthInYear(m) +
+        (meta.eventCount && !meta.monthDone && !meta.finished && !meta.bankrupt ? " (event " + ((meta.eventStep || 0) + 1) + "/" + meta.eventCount + ")" : ""),
       "Net worth " + fmt(meta.netWorth || 0)
     ];
     if (meta.bankrupt) parts.push("Bankrupt");
@@ -1185,8 +1245,8 @@ select.modal-select {
     $("slot-title").textContent = slotMode === "save" ? "Save game — choose a slot" : "Load game — choose a save";
     $("slot-file").textContent = slotMode === "save" ? "Download file" : "Load from file…";
     $("slot-hint").textContent = storageOk
-      ? (slotMode === "save" ? "Pick a slot (1–5). Saving over a used slot asks first. Auto-save runs every month separately."
-                              : "Pick a slot to load. \u201cAuto\u201d is the latest automatic save (every month).")
+      ? (slotMode === "save" ? "Pick a slot (1–5). Saving over a used slot asks first. Auto-save runs after every step separately. A save made mid-month resumes at the same event."
+                              : "Pick a slot to load. \u201cAuto\u201d is the latest automatic save (every step).")
       : "Browser storage is blocked here (e.g. file preview). " + (slotMode === "save"
           ? "Choosing a slot will DOWNLOAD a save file instead." : "Use \u201cLoad from file\u2026\u201d to open a downloaded save.");
     if (slotMode === "load") {
@@ -1346,7 +1406,9 @@ select.modal-select {
     var status = "";
     if (st.bankrupt) status = " · Bankrupt";
     else if (st.screen === "summary" || (st.month >= TOTAL_MONTHS && st.eventResolved)) status = " · Finished";
-    return "Month " + month + " · " + career + " · " + diff + status;
+    var stepTxt = (!status && Array.isArray(st.monthEvents) && st.monthEvents.length > 1 && !st.eventResolved)
+      ? " (event " + ((st.eventStep || 0) + 1) + "/" + st.monthEvents.length + ")" : "";
+    return "Month " + month + stepTxt + " · " + career + " · " + diff + status;
   }
 
   function refreshContinueUI() {
@@ -1418,8 +1480,31 @@ select.modal-select {
     GROWTH_KEYS.forEach(function (k) { if (gu[k] == null) gu[k] = 0; });
     if (st.pendingEvent && st.pendingEvent.id) {
       var fresh = findCardById(st.pendingEvent.id);
-      if (fresh) st.pendingEvent = Object.assign({}, fresh);
+      if (fresh) st.pendingEvent = Object.assign({}, fresh, st.pendingEvent.slot != null ? { slot: st.pendingEvent.slot } : {});
     }
+    if (Array.isArray(st.monthEvents)) {
+      st.monthEvents = st.monthEvents.map(function (c) {
+        var f = c && c.id ? findCardById(c.id) : null;
+        return f ? Object.assign({}, f, c.slot != null ? { slot: c.slot } : {}) : c;
+      });
+    }
+    return st;
+  }
+  /* v4 → v5: old saves / undo snapshots had ONE event per month. They load as a 1-event month
+     (finish it, then Next Month); from the next payday on, months have 4 events. */
+  function migrateMonthState(st) {
+    if (!st || typeof st !== "object") return st;
+    if (!Array.isArray(st.monthEvents) || !st.monthEvents.length) {
+      st.monthEvents = st.pendingEvent ? [Object.assign({}, st.pendingEvent)] : [];
+      st.eventStep = 0;
+      st.monthLog = st.eventResolved && st.pendingEvent ? [{ n: 1, type: st.pendingEvent.type, title: st.pendingEvent.title, result: st.marketNote || "Resolved" }] : [];
+      st.sickMonth = !!(st.pendingEvent && st.pendingEvent.offWork);
+    }
+    if (typeof st.eventStep !== "number" || st.eventStep < 0) st.eventStep = 0;
+    if (st.monthEvents.length && st.eventStep > st.monthEvents.length - 1) st.eventStep = st.monthEvents.length - 1;
+    if (!Array.isArray(st.monthLog)) st.monthLog = [];
+    if (typeof st.stepNote !== "string") st.stepNote = "";
+    st.sickMonth = !!st.sickMonth;
     return st;
   }
 
@@ -1432,6 +1517,7 @@ select.modal-select {
     if (!state.priceIndex) state.priceIndex = { metals: 1, bitcoin: 1, usindex: 1, property: 1, business: 1 };
     if (!state.growthUnits) state.growthUnits = { metals: 0, bitcoin: 0, usindex: 0 };
     migrateAssetState(state);
+    migrateMonthState(state);
     if (!state.assets) state.assets = [];
     if (!state.properties) state.properties = [];
     if (!state.businesses) state.businesses = [];
@@ -1462,6 +1548,8 @@ select.modal-select {
     } else {
       clearUndoStack();
     }
+    monthStartSnap = rebuildMonthStart(data);
+    if (!monthStartSnap) captureMonthStart(); /* old save: best effort = the loaded point */
     var screen = state.screen || "play";
     if (state.bankrupt || screen === "summary") {
       endGame(!!state.bankrupt);
@@ -1543,28 +1631,64 @@ select.modal-select {
     if (state.lastIllnessMonth == null) return true;
     return monthsSinceLastIllness() >= MIN_MONTHS_BETWEEN_ILLNESS;
   }
-  function drawEvent() {
-    var diff = DIFFICULTIES.find(function (d) { return d.id === state.difficulty; });
-    var type = pickWeightedType(diff.weights);
-    var deck = DECKS[type].slice();
-    if (type === "life" && !canHaveChild()) deck = deck.filter(function (c) { return !c.birth; });
-    if (type === "life" && !canDrawIllness()) deck = deck.filter(function (c) { return !c.offWork; });
-    if (!deck.length) {
-      deck = DECKS[type].filter(function (c) {
-        if (type !== "life") return true;
-        if (c.birth && !canHaveChild()) return false;
-        if (c.offWork && !canDrawIllness()) return false;
-        return true;
-      });
-      if (!deck.length) deck = DECKS.market.slice();
-    }
-    var card = Object.assign({}, deck[Math.floor(Math.random() * deck.length)]);
-    if (canHaveChild() && !card.birth && !state.offWork && Math.random() < (1 / 12)) {
-      var birthCard = LIFE.find(function (c) { return c.birth; });
-      if (birthCard) card = Object.assign({}, birthCard);
-    }
-    return card;
+  function illnessChance(w) {
+    /* Same per-month chance as the old game (life weight × 3 illness cards / 17 life cards),
+       checked ONCE per month. */
+    return w.life * 3 / 17;
   }
+  function birthChance(w) { return 1 / 12 + w.life / 17; }
+  function cardWeight(c) { return (c.expenseDelta || c.effect === "tax_bill") ? PERMANENT_COST_WEIGHT : 1; }
+  /* Wildcard (event 4): difficulty-weighted, but no second spending card (spending already has
+     its own chance in event 3) — keeps a 4-event month from being 4x the bills. */
+  function pickWildcardType(w) {
+    var ww = { opportunity: w.opportunity, spending: 0, life: w.life, market: w.market };
+    var t = ww.opportunity + ww.life + ww.market;
+    ww.opportunity /= t; ww.life /= t; ww.market /= t;
+    return pickWeightedType(ww);
+  }
+  /* One card of a type; never illness / baby (they have their own once-a-month checks);
+     avoids repeating a card already drawn this month. */
+  function drawFromDeck(type, usedIds) {
+    var deck = DECKS[type].filter(function (c) { return !c.offWork && !c.birth && usedIds.indexOf(c.id) < 0; });
+    if (!deck.length) deck = DECKS[type].filter(function (c) { return !c.offWork && !c.birth; });
+    var total = 0;
+    deck.forEach(function (c) { total += cardWeight(c); });
+    var r = Math.random() * total;
+    for (var i = 0; i < deck.length; i++) {
+      r -= cardWeight(deck[i]);
+      if (r <= 0) return Object.assign({}, deck[i]);
+    }
+    return Object.assign({}, deck[deck.length - 1]);
+  }
+  /* The month's cards, drawn at payday (so undo / save replay the same cards).
+     Fixed order: 1 Market news (prices move first, so you can trade) → 2 Opportunity (a deal
+     to buy or skip) → 3 Life / spending (or a baby, max once a month) → 4 Wildcard (any type,
+     difficulty-weighted). Illness is checked first: if it hits, it is the ONLY event. */
+  function drawMonthEvents() {
+    var diff = DIFFICULTIES.find(function (d) { return d.id === state.difficulty; }) || DIFFICULTIES[1];
+    var w = diff.weights;
+    if (canDrawIllness() && Math.random() < illnessChance(w)) {
+      var sick = LIFE.filter(function (c) { return c.offWork; });
+      var card = Object.assign({}, sick[Math.floor(Math.random() * sick.length)]);
+      card.slot = "Illness";
+      state.sickMonth = true;
+      return [card];
+    }
+    state.sickMonth = false;
+    var used = [];
+    var out = [];
+    function add(c, slot) { c.slot = slot; used.push(c.id); out.push(c); }
+    add(drawFromDeck("market", used), 0);
+    add(drawFromDeck("opportunity", used), 1);
+    if (canHaveChild() && !state.offWork && Math.random() < birthChance(w)) {
+      add(Object.assign({}, LIFE.find(function (c) { return c.birth; })), 2);
+    } else {
+      add(drawFromDeck(Math.random() < w.spending / (w.spending + w.life) ? "spending" : "life", used), 2);
+    }
+    add(drawFromDeck(pickWildcardType(w), used), 3);
+    return out;
+  }
+  function drawEvent() { return drawMonthEvents()[0]; }
   function coverShortfall() {
     if (state.cash >= 0) return null;
     var shortfall = -state.cash;
@@ -1715,15 +1839,15 @@ select.modal-select {
     [].forEach.call($("hud").children, function (el, i) { if (hudKeys[i]) el.classList.add("hud-" + hudKeys[i]); });
 
     $("expense-breakdown").innerHTML =
-      "<li><span>Active Income (Paycheck)</span><span class='val-cash'>" + fmt(state.jobIncome) + "</span></li>" +
-      "<li><span>Passive Income</span><span class='val-cash'>" + fmt(state.passiveIncome) + "</span></li>" +
-      "<li><span>Tax (PAYE+ACC)</span><span>" + fmt(state.tax) + "</span></li>" +
-      "<li><span>Living (base + kids)</span><span class='val-cost'>" + fmt(state.livingExpenses) + "</span></li>" +
-      "<li><span>Kid costs alone</span><span class='val-cost'>" + fmt(state.childMonthlyTotal) + "</span></li>" +
-      "<li><span>Bank loan interest</span><span>" + fmt(state.bankInterestThisMonth) + "</span></li>" +
-      "<li><span>Credit card 24% p.a.</span><span>" + fmt(state.ccInterestThisMonth) + "</span></li>" +
-      "<li><span>High-interest 120% p.a.</span><span>" + fmt(state.hiInterestThisMonth) + "</span></li>" +
-      "<li><span>Total expenses</span><span>" + fmt(te) + "</span></li>";
+      "<li class='row-inc'><span>Active Income (Paycheck)</span><span class='val-cash'>" + fmt(state.jobIncome) + "</span></li>" +
+      "<li class='row-inc'><span>Passive Income</span><span class='val-cash'>" + fmt(state.passiveIncome) + "</span></li>" +
+      "<li class='row-exp'><span>Tax (PAYE+ACC)</span><span>" + fmt(state.tax) + "</span></li>" +
+      "<li class='row-exp'><span>Living (base + kids)</span><span class='val-cost'>" + fmt(state.livingExpenses) + "</span></li>" +
+      "<li class='row-exp'><span>Kid costs alone</span><span class='val-cost'>" + fmt(state.childMonthlyTotal) + "</span></li>" +
+      "<li class='row-exp'><span>Bank loan interest</span><span>" + fmt(state.bankInterestThisMonth) + "</span></li>" +
+      "<li class='row-exp'><span>Credit card 24% p.a.</span><span>" + fmt(state.ccInterestThisMonth) + "</span></li>" +
+      "<li class='row-exp'><span>High-interest 120% p.a.</span><span>" + fmt(state.hiInterestThisMonth) + "</span></li>" +
+      "<li class='row-exp'><span>Total expenses</span><span>" + fmt(te) + "</span></li>";
 
     $("bs-assets").innerHTML =
       "<li><span>Cash</span><span class='val-cash'>" + fmt(state.cash) + "</span></li>" +
@@ -1745,7 +1869,10 @@ select.modal-select {
     renderIndexStrip();
     $("play-month-label").textContent =
       "Month " + state.month + " of " + TOTAL_MONTHS +
-      " · Year " + yearOf(state.month) + " · Month " + monthInYear(state.month);
+      " · Year " + yearOf(state.month) + " · Month " + monthInYear(state.month) +
+      (state.monthEvents && state.monthEvents.length
+        ? (state.eventResolved ? " · Events done \u2192 payday" : state.sickMonth ? " · Sick month" : " · Event " + (state.eventStep + 1) + " of " + state.monthEvents.length)
+        : "");
     $("month-bar-fill").style.width = ((state.month - 1) / TOTAL_MONTHS * 100) + "%";
 
     var ow = $("offwork-banner");
@@ -1893,20 +2020,19 @@ select.modal-select {
       showToast(msg, fin.method !== "cash" ? "error" : "ok");
     }
 
-    state.eventResolved = true;
     state.tradePending = false;
     state.marketNote = "";
-    renderHud();
-    renderEvent();
+    completeStep(ev.kind === "cashflow" ? "Bought (+" + fmt(ev.passive) + "/mo)" :
+      ev.kind === "growth" ? "Bought " + (ev.units || 1) + " unit" + ((ev.units || 1) > 1 ? "s" : "") :
+      "Bought (bank loan " + fmt(ev.price - ev.downPayment) + ")");
   }
 
   function skipOpportunity() {
     if (!state.pendingEvent || state.eventResolved) return;
-    state.eventResolved = true;
     state.tradePending = false;
     state.marketNote = "";
     showToast("Skipped opportunity.", "");
-    renderEvent();
+    completeStep("Skipped");
   }
 
   function doBirth() {
@@ -1988,6 +2114,7 @@ select.modal-select {
     }
     state.cash -= unitPrice;
     state.growthUnits[key] += 1;
+    state.stepNote += " Bought 1 @ " + fmt(unitPrice) + ".";
     showToast("Bought 1 " + ASSET_LABELS[key] + " @ " + fmt(unitPrice) + ".", "ok");
     renderHud();
     renderEvent();
@@ -2002,16 +2129,16 @@ select.modal-select {
     state.growthUnits[key] = +(state.growthUnits[key] - sellUnits).toFixed(4);
     if (state.growthUnits[key] < 0.0001) state.growthUnits[key] = 0;
     state.cash += unitPrice;
+    state.stepNote += " Sold " + fmtUnits(sellUnits) + " @ " + fmt(unitPrice) + ".";
     showToast("Sold " + fmtUnits(sellUnits) + " " + ASSET_LABELS[key] + " @ " + fmt(unitPrice) + ".", "ok");
     renderHud();
     renderEvent();
   }
   function finishTrade() {
+    if (state.eventResolved) return;
     state.tradePending = false;
-    state.eventResolved = true;
     showToast(state.marketNote || "Market noted.", "ok");
-    renderHud();
-    renderEvent();
+    completeStep((state.marketNote || "Noted") + (state.stepNote || ""));
   }
 
   function resolveNonOpportunity() {
@@ -2025,10 +2152,8 @@ select.modal-select {
         renderEvent();
         return;
       }
-      state.eventResolved = true;
       showToast(state.marketNote || "Market noted.", "ok");
-      renderHud();
-      renderEvent();
+      completeStep(state.marketNote || "Noted");
       return;
     }
 
@@ -2039,20 +2164,16 @@ select.modal-select {
         return "M" + (i + 1) + ":" + (m.paid ? "paid" : "unpaid");
       }).join(", ");
       state.marketNote = "Rest " + dur + " month(s) — " + paidBits + ". Leave left this year: " + (state.paidLeaveAvailable ? "yes" : "no") + ".";
-      state.eventResolved = true;
       showToast(state.marketNote, "ok");
-      renderHud();
-      renderEvent();
+      completeStep(state.marketNote, true);
       return;
     }
 
     if (ev.birth) {
       if (!canHaveChild()) state.marketNote = "Too soon after last birth (need " + MIN_MONTHS_BETWEEN_BIRTHS + " months) — skipped.";
       else doBirth();
-      state.eventResolved = true;
       showToast(state.marketNote || "Birth applied.", "ok");
-      renderHud();
-      renderEvent();
+      completeStep(state.marketNote || "Birth applied");
       return;
     }
 
@@ -2065,15 +2186,80 @@ select.modal-select {
     var cov = coverShortfall();
     if (cov) showToast("Shortfall covered via " + cov + " (CC first, then HI ceil $1,000).", "error");
     else showToast("Event applied.", "ok");
-    state.eventResolved = true;
     state.marketNote = "";
+    completeStep((ev.label || "Applied") + (cov ? " (shortfall via " + cov.toUpperCase() + ")" : ""));
+  }
+
+  /* ---- Month step machine: payday → event 1..4 → Next Month ---- */
+  function loadStep() {
+    var c = state.monthEvents[state.eventStep];
+    state.pendingEvent = c ? Object.assign({}, c) : null;
+    state.eventResolved = !c;
+    state.tradePending = false;
+    state.marketNote = "";
+    state.stepNote = "";
+  }
+  /* Called once the current event is resolved: log it, then show the next event, or (after the
+     last one — or straight away after an illness) mark the month done so Next Month is the default. */
+  function completeStep(result, sick) {
+    var ev = state.pendingEvent;
+    if (ev) state.monthLog.push({ n: state.eventStep + 1, type: ev.type, title: ev.title, result: String(result || "Done").trim(), sick: !!sick });
+    var last = state.eventStep >= state.monthEvents.length - 1;
+    if (sick || state.sickMonth) {
+      state.sickMonth = true;
+      last = true;
+    }
+    if (last) {
+      state.eventResolved = true;
+      state.tradePending = false;
+    } else {
+      state.eventStep += 1;
+      loadStep();
+    }
     renderHud();
-    renderEvent();
+    if (!state.bankrupt) {
+      renderEvent();
+      autoSave();
+    }
+  }
+
+  function esc(t) { return String(t == null ? "" : t).replace(/[&<>"]/g, function (ch) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[ch]; }); }
+  function typeName(t) { return t === "market" ? "Market" : t === "opportunity" ? "Opportunity" : t === "spending" ? "Spending" : "Life"; }
+  /* "Event 2 of 4" + pips (done / current / to come) */
+  function stepHeader(label, typeLabel) {
+    var n = state.monthEvents.length;
+    var pips = "";
+    for (var i = 0; i < n; i++) {
+      var cls = (state.eventResolved || i < state.eventStep) ? "done" : (i === state.eventStep ? "now" : "");
+      pips += '<i class="pip ' + cls + '"></i>';
+    }
+    return '<div class="event-step"><span><span class="step-label">' + label + "</span>" +
+      (typeLabel ? ' <span class="step-sep">\u00b7</span> <span class="event-type">' + typeLabel + "</span>" : "") +
+      '</span><span class="pips">' + pips + "</span></div>";
+  }
+  function renderMonthDone() {
+    var area = $("event-area");
+    var sick = state.sickMonth;
+    area.className = "event-card type-" + (sick ? "life sick" : "done");
+    var rows = state.monthLog.map(function (l) {
+      return "<li><b>" + l.n + ". " + esc(l.title) + "</b> — " + esc(l.result) + "</li>";
+    }).join("");
+    area.innerHTML = stepHeader(sick ? "Sick month" : "All " + state.monthEvents.length + " events done") +
+      '<div class="event-title">' + (sick ? "You are sick — no other events this month" : "Month " + state.month + " complete") + "</div>" +
+      '<ul class="month-log">' + rows + "</ul>" +
+      '<div class="event-copy">' + (state.month >= TOTAL_MONTHS ? "Press Next Month for the final payday and your 10-year summary." :
+        "Press Next Month: payday (pay in, expenses out), then Month " + (state.month + 1) + "\u2019s events.") + "</div>";
+    $("event-actions").innerHTML = "";
+    bindTooltips();
+    refreshSpaceHint();
   }
 
   function renderEvent() {
     var ev = state.pendingEvent;
     var area = $("event-area");
+    var btnNext = $("btn-next");
+    if (btnNext) btnNext.classList.toggle("waiting", !state.eventResolved);
+    if (state.eventResolved && state.monthEvents && state.monthEvents.length && state.monthLog.length) { renderMonthDone(); return; }
     if (!ev) {
       area.className = "event-card type-life";
       area.innerHTML = '<div class="event-type">Quiet month</div><div class="event-title">No special event</div><div class="event-amount">—</div><div class="event-copy">Hit Next Month when ready.</div>';
@@ -2202,12 +2388,23 @@ select.modal-select {
     }
 
     var typeLabel = ev.type === "market" ? "Market / News" : capitalize(ev.type);
+    if (ev.slot === 3) typeLabel = "Wildcard · " + typeLabel;
+    if (ev.birth) typeLabel = "Life · Baby";
+    var n = state.monthEvents.length;
+    var header = ev.offWork && state.sickMonth
+      ? stepHeader("Illness", typeLabel)
+      : stepHeader(n > 1 ? "Event " + (state.eventStep + 1) + " of " + n : "Event", typeLabel);
+    var sickBanner = ev.offWork && state.sickMonth
+      ? '<div class="sick-banner">You are sick \u2014 no other events this month. Accept, then Next Month (payday).</div>' : "";
+    var prev = state.monthLog.length && !state.eventResolved ? state.monthLog[state.monthLog.length - 1] : null;
+    var prevHtml = prev ? '<div class="event-prev">Previous: ' + esc(prev.title) + " \u2014 " + esc(prev.result) + "</div>" : "";
     area.innerHTML =
-      '<div class="event-type">' + typeLabel + "</div>" +
+      header +
       '<div class="event-title">' + ev.title + "</div>" +
+      sickBanner +
       '<div class="event-amount' + amountClass + '">' + amountText + "</div>" +
       financeHtml +
-      '<div class="event-copy">' + copy + "</div>";
+      '<div class="event-copy">' + copy + "</div>" + prevHtml;
     $("event-actions").innerHTML = actions;
 
     if (!state.eventResolved) {
@@ -2226,17 +2423,13 @@ select.modal-select {
         if (ba) ba.addEventListener("click", function () {
           if (!canHaveChild()) { showToast("Too soon after last birth.", "error"); return; }
           doBirth();
-          state.eventResolved = true;
           showToast(state.marketNote || "Birth applied.", "ok");
-          renderHud();
-          renderEvent();
+          completeStep(state.marketNote || "New child");
         });
         if (bd) bd.addEventListener("click", function () {
           declineBirth();
-          state.eventResolved = true;
           showToast(state.marketNote || "Declined.", "ok");
-          renderHud();
-          renderEvent();
+          completeStep(state.marketNote || "Declined");
         });
       } else {
         var res = $("btn-resolve");
@@ -2247,24 +2440,39 @@ select.modal-select {
     refreshSpaceHint();
   }
 
-  function beginMonth() {
+  function prepareMonth() {
     maybeResetYearFlags();
     applyPayStatus();
-    state.pendingEvent = drawEvent();
-    state.eventResolved = false;
-    state.tradePending = false;
-    state.marketNote = "";
+    state.monthEvents = drawMonthEvents();
+    state.eventStep = 0;
+    state.monthLog = [];
+    loadStep();
+  }
+  function beginMonth() {
+    prepareMonth();
+    captureMonthStart();
     renderHud();
     renderEvent();
+  }
+  function pushMonthStartToUndo() {
+    if (monthStartSnap) {
+      undoStack.push(monthStartSnap);
+      if (undoStack.length > UNDO_CAP) undoStack.shift();
+      monthStartSnap = null;
+      updateUndoBtn();
+    } else pushUndoSnapshot();
+  }
+  function eventsLeftMsg() {
+    return "Finish this month\u2019s events first (event " + (state.eventStep + 1) + " of " + (state.monthEvents.length || 1) + ").";
   }
 
   function nextMonth() {
     if (!state.eventResolved) {
-      showToast("Resolve this month's event first.", "error");
+      showToast(eventsLeftMsg(), "error");
       return;
     }
     if (state.bankrupt) return;
-    pushUndoSnapshot();
+    pushMonthStartToUndo();
     settleMonthCashflow();
     recomputePassive();
     state.history.push({
@@ -2273,11 +2481,14 @@ select.modal-select {
     });
     if (checkBankruptcy("settle")) { updateUndoBtn(); return; }
     if (state.month >= TOTAL_MONTHS) { endGame(); updateUndoBtn(); return; }
+    var paid = state.jobIncome + state.passiveIncome;
     advanceRestAfterSettle();
     state.month += 1;
     beginMonth();
     autoSave();
     updateUndoBtn();
+    showToast("Payday \u2014 " + fmt(paid) + " in, expenses out. Month " + state.month +
+      (state.sickMonth ? ": you are sick (no other events)." : ": event 1 of " + state.monthEvents.length + "."), "ok");
   }
 
   function autoResolve(ev) {
@@ -2315,14 +2526,26 @@ select.modal-select {
     }
   }
 
+  function autoResolveMonth() {
+    for (var i = 0; i < state.monthEvents.length; i++) {
+      var c = Object.assign({}, state.monthEvents[i]);
+      state.pendingEvent = c;
+      state.eventStep = i;
+      autoResolve(c);
+      state.monthLog.push({ n: i + 1, type: c.type, title: c.title, result: "Auto (Skip 3)" });
+      if (c.offWork) break;
+    }
+    state.eventResolved = true;
+    state.tradePending = false;
+  }
   function skipThreeMonths() {
     if (!state.eventResolved) {
-      showToast("Resolve this month's event first.", "error");
+      showToast(eventsLeftMsg(), "error");
       return;
     }
     if (state.bankrupt) return;
-    /* Push before each month advance so B undoes one month at a time after Skip 3. */
-    pushUndoSnapshot();
+    /* Push each month's start before advancing so B undoes one month at a time after Skip 3. */
+    pushMonthStartToUndo();
     settleMonthCashflow();
     state.history.push({ month: state.month, cash: state.cash, passive: state.passiveIncome, ratio: ratio(), netWorth: netWorth(), children: state.children });
     if (checkBankruptcy("skip")) { updateUndoBtn(); return; }
@@ -2332,14 +2555,10 @@ select.modal-select {
       advanceRestAfterSettle();
       state.month += 1;
       if (state.month > TOTAL_MONTHS) { state.month = TOTAL_MONTHS; endGame(); updateUndoBtn(); return; }
-      maybeResetYearFlags();
-      applyPayStatus();
-      var skipEv = drawEvent();
-      state.pendingEvent = skipEv;
-      autoResolve(skipEv);
-      state.eventResolved = true;
-      state.tradePending = false;
-      pushUndoSnapshot();
+      prepareMonth();
+      captureMonthStart();
+      autoResolveMonth();
+      pushMonthStartToUndo();
       settleMonthCashflow();
       recomputePassive();
       state.history.push({ month: state.month, cash: state.cash, passive: state.passiveIncome, ratio: ratio(), netWorth: netWorth(), children: state.children });
@@ -2538,7 +2757,12 @@ select.modal-select {
     state.history = [];
     state.marketNote = "";
     state.tradePending = false;
-      state.ccBalance = 0;
+    state.monthEvents = [];
+    state.eventStep = 0;
+    state.monthLog = [];
+    state.sickMonth = false;
+    state.stepNote = "";
+    state.ccBalance = 0;
     state.lastBirthMonth = null;
     state.lastIllnessMonth = null;
     state.bankrupt = false;
@@ -2713,6 +2937,9 @@ select.modal-select {
     if ($("btn-resolve")) { $("btn-resolve").click(); return; }
   }
 
+  /* N: when the month's events are done = Next Month (payday). During the events it moves ONE
+     step without spending: Skip a deal, Continue / Done trading on market news. Spending, life
+     and baby cards still need Accept. */
   function hotkeyNext() {
     if (state.bankrupt) return;
     if (state.eventResolved) {
@@ -2724,29 +2951,21 @@ select.modal-select {
       nextMonth();
       return;
     }
-    /* Market trade UI: finish without trading, then advance */
     if (state.tradePending) {
       finishTrade();
-      nextMonth();
       return;
     }
-    /* Opportunity: Skip then next month */
     if (ev.type === "opportunity" && $("btn-skip-event")) {
       skipOpportunity();
-      nextMonth();
       return;
     }
-    /* Continue (market / skippable) — not forced Accept spending/life/birth */
     var res = $("btn-resolve");
     if (res && ev.type === "market") {
       resolveNonOpportunity();
-      if (state.tradePending) {
-        finishTrade();
-      }
-      if (state.eventResolved) nextMonth();
+      if (state.tradePending) finishTrade();
       return;
     }
-    showToast("Resolve this month's event first (Accept required).", "error");
+    showToast("This card needs Accept (A / Space) \u2014 event " + (state.eventStep + 1) + " of " + state.monthEvents.length + ".", "error");
   }
 
   function isTypingTarget(t) {
@@ -2838,7 +3057,9 @@ select.modal-select {
     coverShortfall: coverShortfall, recomputePassive: recomputePassive,
     recomputeLiving: recomputeLiving, settleMonthCashflow: settleMonthCashflow,
     advanceRestAfterSettle: advanceRestAfterSettle, doBirth: doBirth,
-    applyMarket: applyMarket, growthValue: growthValue
+    applyMarket: applyMarket, growthValue: growthValue,
+    EVENTS_PER_MONTH: EVENTS_PER_MONTH, drawMonthEvents: drawMonthEvents, canHaveChild: canHaveChild,
+    undoDepth: function () { return undoStack.length; }
   };
 })();
 </script>
