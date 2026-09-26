@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SMARTER $ — NZ Financial Literacy Game (v5.5)</title>
+<title>SMARTER $ — NZ Financial Literacy Game (v5.6)</title>
 <style>
 :root {
   --bg: #0f172a; --surface: #1e293b; --surface2: #334155; --text: #f1f5f9; --muted: #94a3b8;
@@ -152,6 +152,12 @@ select.modal-select {
 .reflection li { margin-bottom: 0.5rem; }
 .win-badge { display: inline-block; padding: 0.35rem 0.85rem; border-radius: 999px; font-weight: 700; font-size: 0.9rem; }
 .win-badge.pass { background: rgba(34,197,94,0.2); color: var(--accent); }
+.win-badge.gold { background: rgba(251,191,36,0.22); color: #fcd34d; border: 1px solid #fbbf24; font-size: 1.05rem; }
+.win-panel { text-align: center; border: 2px solid #fbbf24; }
+.win-panel h3 { color: #fcd34d; font-size: 1.5rem; }
+.win-emoji { font-size: 2.4rem; line-height: 1; }
+.win-when { color: #fcd34d; font-weight: 700; font-size: 1.05rem; margin: 0.3rem 0 0; }
+.win-panel .modal-actions { justify-content: center; }
 .win-badge.fail { background: rgba(239,68,68,0.2); color: #fca5a5; }
 .footer-note { color: var(--muted); font-size: 0.8rem; margin-top: auto; padding-top: 1rem; }
 .assets-list { font-size: 0.88rem; color: var(--muted); max-height: 180px; overflow-y: auto; list-style: none; }
@@ -452,7 +458,7 @@ select.modal-select {
   <div class="title-hero">
     <h1>SMARTER <span class="logo-dollar">$</span></h1>
     <p>A New Zealand classroom game about income, tax, expenses, markets, debt, and building passive income — over <strong>10 years</strong> (120 months).</p>
-    <p><strong>Win goal:</strong> Highest Passive Income ÷ Total Expenses after 120 months.</p>
+    <p><strong>Win goal:</strong> Financial Freedom — passive income ≥ total expenses (P÷E ≥ 100%) at a payday. The sooner, the better. Then see your summary or keep playing to month 120.</p>
     <p class="subtitle" style="margin-top:0.25rem"><strong>Each month:</strong> 4 events in order — 1 Market news · 2 Opportunity · 3 Life / spending · 4 Wildcard — then <strong>Next Month = payday</strong>. Get sick? No other events that month.</p>
     <div class="center-actions" style="justify-content:center;flex-wrap:wrap">
       <button type="button" class="btn-primary" id="btn-start" data-tip="Choose difficulty, then career">Start Game</button>
@@ -470,7 +476,7 @@ select.modal-select {
 
 <section id="screen-difficulty" class="screen" aria-label="Choose difficulty">
   <h2>Choose Difficulty</h2>
-  <p class="subtitle">Every month: 1 market news → 2 deal → 3 life/spending → 4 wildcard (deal or life). Harder levels mean more spending, fewer deals, more illness and a tougher start. Each deck (64 cards) is shuffled; a card comes back only after the whole deck is used. Permanent cost rises happen at most once per game.</p>
+  <p class="subtitle">Every month: 1 market news → 2 deal → 3 life/spending → 4 wildcard (deal or life). Harder levels mean more spending, fewer deals, more illness and a tougher start. Each deck (64 cards; market 76) is shuffled; a card comes back only after the whole deck is used. Permanent cost rises happen at most once per game.</p>
   <div class="card-grid" id="difficulty-grid" role="group" aria-label="Difficulty options"></div>
   <div class="center-actions">
     <button type="button" class="btn-ghost" id="btn-diff-back">Back</button>
@@ -631,6 +637,18 @@ select.modal-select {
   </div>
 </div>
 
+<div class="modal-overlay" id="win-modal" role="dialog" aria-modal="true" aria-labelledby="win-title" hidden>
+  <div class="modal-panel win-panel">
+    <div class="win-emoji" aria-hidden="true">🎉</div>
+    <h3 id="win-title">Financial Freedom!</h3>
+    <p class="win-when" id="win-when"></p>
+    <p class="modal-hint" id="win-message" style="color:var(--text);font-size:0.95rem;margin:0.4rem 0 0"></p>
+    <div class="modal-actions">
+      <button type="button" class="btn-secondary" id="win-summary">See Summary</button>
+      <button type="button" class="btn-primary" id="win-keep">Keep Playing</button>
+    </div>
+  </div>
+</div>
 <div class="modal-overlay" id="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title" hidden>
   <div class="modal-panel">
     <h3 id="confirm-title">Confirm</h3>
@@ -990,7 +1008,20 @@ select.modal-select {
     {"id": "mf5", "type": "market", "title": "Dairy Prices Up", "copy": "Good news for farmers.", "effect": "noop", "label": "NZ news"},
     {"id": "mf6", "type": "market", "title": "Unemployment Rises", "copy": "More people are looking for work.", "effect": "noop", "label": "NZ news"},
     {"id": "mf7", "type": "market", "title": "Tourism Record", "copy": "A busy summer for visitors.", "effect": "noop", "label": "NZ news"},
-    {"id": "mf8", "type": "market", "title": "Inflation Eases", "copy": "Prices rise more slowly now.", "effect": "noop", "label": "NZ news"}
+    {"id": "mf8", "type": "market", "title": "Inflation Eases", "copy": "Prices rise more slowly now.", "effect": "noop", "label": "NZ news"},
+    /* v5.6 buyout offers: a buyer pays market value × (1 + premium 10–50%, rolled at draw) for ONE matching holding */
+    {"id": "by1", "type": "market", "title": "Buyer Wants Your Rental", "copy": "A family wants to buy a rental home.", "effect": "buyout", "match": "property", "words": [], "want": "a rental property", "label": "Buyout offer"},
+    {"id": "by2", "type": "market", "title": "Investor Buys a Rental", "copy": "An investor is buying rentals in your area.", "effect": "buyout", "match": "property", "words": [], "want": "a rental property", "label": "Buyout offer"},
+    {"id": "by3", "type": "market", "title": "Family Wants a House", "copy": "A big family needs a house, not a flat.", "effect": "buyout", "match": "property", "words": ["house", "townhouse", "duplex"], "want": "a rental house", "label": "Buyout offer"},
+    {"id": "by4", "type": "market", "title": "Flat Hunter Calls", "copy": "A buyer wants a small flat or unit.", "effect": "buyout", "match": "property", "words": ["flat", "unit"], "want": "a flat or unit", "label": "Buyout offer"},
+    {"id": "by5", "type": "market", "title": "Holiday Buyer Wants a Bach", "copy": "An Auckland family wants a holiday bach.", "effect": "buyout", "match": "property", "words": ["bach"], "want": "a holiday bach", "label": "Buyout offer"},
+    {"id": "by6", "type": "market", "title": "Business Buyer Calls", "copy": "A buyer wants to own a small business.", "effect": "buyout", "match": "business", "words": [], "want": "a business", "label": "Buyout offer"},
+    {"id": "by7", "type": "market", "title": "Café Chain Buyout", "copy": "A big café chain buys food businesses.", "effect": "buyout", "match": "business", "words": ["café", "cafe", "takeaway", "coffee"], "want": "a café or food business", "label": "Buyout offer"},
+    {"id": "by8", "type": "market", "title": "Service Company Buyout", "copy": "A service company buys small local firms.", "effect": "buyout", "match": "business", "words": ["salon", "cleaning", "lawn", "detailing", "childcare"], "want": "a service business", "label": "Buyout offer"},
+    {"id": "by9", "type": "market", "title": "Delivery Firm Buys Vans", "copy": "A delivery company wants van businesses.", "effect": "buyout", "match": "business", "words": ["van", "courier", "mechanic"], "want": "a van business", "label": "Buyout offer"},
+    {"id": "by10", "type": "market", "title": "Gold Dealer Pays Top Price", "copy": "A dealer pays more than market for gold and silver.", "effect": "buyout", "match": "metals", "words": [], "want": "gold or silver", "label": "Buyout offer"},
+    {"id": "by11", "type": "market", "title": "Crypto Fund Buys Bitcoin", "copy": "A crypto fund pays above market price.", "effect": "buyout", "match": "bitcoin", "words": [], "want": "bitcoin", "label": "Buyout offer"},
+    {"id": "by12", "type": "market", "title": "Fund Buys Your Shares", "copy": "A fund pays a premium for US index shares.", "effect": "buyout", "match": "usindex", "words": [], "want": "US index shares", "label": "Buyout offer"}
   ];
 
   var DECKS = { opportunity: OPPORTUNITY, spending: SPENDING, life: LIFE, market: MARKET };
@@ -1010,7 +1041,8 @@ select.modal-select {
     lastIllnessMonth: null,
     pendingEvent: null, eventResolved: true, tradePending: false,
     monthEvents: [], eventStep: 0, monthLog: [], sickMonth: false, stepNote: "",
-    marketNote: "", history: [], bankrupt: false, endReason: "", usedOnce: [], decks: null
+    marketNote: "", history: [], bankrupt: false, endReason: "", usedOnce: [], decks: null,
+    wonMonth: null, winStats: null, winModalPending: false, endedEarlyMonth: null
   };
 
   function $(id) { return document.getElementById(id); }
@@ -1227,6 +1259,11 @@ select.modal-select {
     return DEAL_ROI_MEAN;
   }
   function rollDeal(c) {
+    /* v5.6 buyout offer: premium 10–50% (whole %) rolled at draw, so save / undo replay it. */
+    if (c && c.effect === "buyout") {
+      if (c.premium == null) c.premium = (10 + Math.floor(Math.random() * 41)) / 100;
+      return c;
+    }
     if (!c || c.type !== "opportunity" || c.dealRolled) return c;
     if (c.kind !== "cashflow" && c.kind !== "property" && c.kind !== "business") return c;
     var roi = drawDealRoi();
@@ -1273,6 +1310,7 @@ select.modal-select {
     return Math.round(dealGross(ev) / idx);
   }
   function dealKeep(c) {
+    if (c && c.effect === "buyout") return c.premium != null ? { premium: c.premium } : {};   /* v5.6: keep rolled premium on load */
     if (!c || !c.dealRolled) return {};
     var k = { dealRolled: true, roi: c.roi, netMo: c.netMo, passive: c.passive, label: c.label };
     if (c.kind !== "cashflow") { k.downPayment = c.downPayment; k.notionalDown = c.notionalDown; k.zeroDown = c.zeroDown; }
@@ -1405,6 +1443,7 @@ select.modal-select {
   function usable(el) { return !!(el && !el.disabled && !el.hidden && el.offsetParent !== null); }
   function spaceTarget() {
     if (isConfirmModalOpen()) return $("confirm-ok");
+    if (isWinModalOpen()) return $("win-keep");
     if (isRepayModalOpen()) { var rc = $("repay-confirm"); return usable(rc) ? rc : null; }
     if (isSlotModalOpen()) return null;
     var scr = state.screen;
@@ -1419,7 +1458,7 @@ select.modal-select {
        one, which is always 'affordable' but would cost you money every month. */
     var pe = state.pendingEvent;
     if (pe.type === "opportunity" && pe.dealRolled && pe.netMo < 0 && usable($("btn-skip-event"))) return $("btn-skip-event");
-    var order = ["btn-buy", "btn-trade-done", "btn-birth-accept", "btn-resolve", "btn-skip-event"];
+    var order = ["btn-buyout-keep", "btn-buyout-ok", "btn-buy", "btn-trade-done", "btn-birth-accept", "btn-resolve", "btn-skip-event"];
     for (var i = 0; i < order.length; i++) {
       var el = $(order[i]);
       if (usable(el)) return el;
@@ -1859,6 +1898,8 @@ select.modal-select {
     renderHud();
     renderEvent();
     updateUndoBtn();
+    closeWinModal();
+    if (state.winModalPending && state.wonMonth && state.screen === "play" && !state.bankrupt) openWinModal(false);   /* no fanfare on load / undo */
   }
 
   function fmtUnits(u) {
@@ -2469,6 +2510,69 @@ select.modal-select {
     }
   }
 
+  /* ---- v5.6 buyout offers ----
+     The buyer wants ONE holding: the matching holding with the highest market value (property /
+     business: title contains one of the card's words, or any if the card has none). Metals /
+     bitcoin / US index: the whole holding. Offer = market value × (1 + premium). Chosen from the
+     current holdings each time the card is shown, so it is deterministic for save / undo. */
+  function buyoutTarget(ev, st) {
+    st = st || state;
+    if (!ev || ev.effect !== "buyout") return null;
+    var prem = ev.premium || 0;
+    if (ev.match === "metals" || ev.match === "bitcoin" || ev.match === "usindex") {
+      var u = st.growthUnits[ev.match] || 0;
+      if (!(u > 0)) return null;
+      var gv = Math.round(u * BASE_UNIT[ev.match] * st.priceIndex[ev.match]);
+      var go = Math.round(gv * (1 + prem));
+      return { kind: "growth", key: ev.match, idx: -1, title: ASSET_LABELS[ev.match] + " ×" + fmtUnits(u), market: gv, offer: go, loan: 0, net: go, cashflow: 0 };
+    }
+    var list = ev.match === "property" ? st.properties : ev.match === "business" ? st.businesses : [];
+    var idxKey = ev.match === "property" ? "property" : "business";
+    var words = (ev.words || []).map(function (w) { return String(w).toLowerCase(); });
+    var best = null;
+    list.forEach(function (h, i) {
+      var t = String(h.title || "").toLowerCase();
+      if (words.length && !words.some(function (w) { return t.indexOf(w) >= 0; })) return;
+      var mv = Math.round(h.costBasis * st.priceIndex[idxKey]);
+      if (!best || mv > best.market) best = { idx: i, h: h, market: mv };
+    });
+    if (!best) return null;
+    var offer = Math.round(best.market * (1 + prem));
+    var loan = Math.min(st.bankLoan, best.h.loanAmount);
+    var cf = Math.round(best.h.passive * st.priceIndex[idxKey]);
+    return { kind: ev.match, key: idxKey, idx: best.idx, title: best.h.title, market: best.market, offer: offer, loan: loan, net: offer - loan, cashflow: cf };
+  }
+  function acceptBuyout() {
+    var ev = state.pendingEvent;
+    if (!ev || ev.effect !== "buyout" || state.eventResolved) return;
+    var t = buyoutTarget(ev);
+    if (!t) { declineBuyout(); return; }
+    if (t.kind === "growth") {
+      state.cash += t.offer;
+      state.growthUnits[t.key] = 0;
+    } else {
+      var list = t.kind === "property" ? state.properties : state.businesses;
+      state.bankLoan = Math.max(0, state.bankLoan - t.loan);
+      state.cash += t.net;
+      list.splice(t.idx, 1);
+      recomputePassive();
+      coverShortfall();   /* only if the holding was underwater even at the offer price */
+    }
+    state.marketNote = "Sold " + t.title + " for " + fmt(t.offer) + " (+" + Math.round(ev.premium * 100) + "% over market)" +
+      (t.loan ? ", repaid loan " + fmt(t.loan) + ", net " + signedFmt(t.net) : "") + (t.cashflow ? "; gave up " + signedFmt(t.cashflow) + "/mo." : ".");
+    SFX.play("sell");
+    showToast(state.marketNote, "ok");
+    completeStep(state.marketNote);
+  }
+  function declineBuyout() {
+    var ev = state.pendingEvent;
+    if (!ev || ev.effect !== "buyout" || state.eventResolved) return;
+    var t = buyoutTarget(ev);
+    state.marketNote = t ? "Kept " + t.title + " (said no to " + fmt(t.offer) + ")." : "You don’t own " + (ev.want || "one") + " — news only.";
+    SFX.play("click");
+    showToast(state.marketNote, "ok");
+    completeStep(state.marketNote);
+  }
   function sellGrowth(key) {
     if (!(state.growthUnits[key] > 0)) return;
     var proceeds = growthValue(key);
@@ -2609,6 +2713,10 @@ select.modal-select {
       state.marketNote = "Flavour only — no change to your books.";
       return;
     }
+    if (ev.effect === "buyout") {   /* Skip 3 / auto-resolve: keep (never auto-sell) */
+      state.marketNote = "Buyout offer not taken.";
+      return;
+    }
     if (ev.effect === "price") {
       var key = ev.assetKey;
       state.priceIndex[key] = Math.max(0.2, +(state.priceIndex[key] * (1 + ev.pct)).toFixed(4));
@@ -2705,6 +2813,7 @@ select.modal-select {
     var ev = state.pendingEvent;
     if (!ev || state.eventResolved) return;
 
+    if (ev.type === "market" && ev.effect === "buyout") { declineBuyout(); return; }
     if (ev.type === "market") {
       applyMarket(ev);
       SFX.play(marketSound(ev));
@@ -2882,6 +2991,21 @@ select.modal-select {
           ' &nbsp;|&nbsp; <span>Full price</span> ' + fmt(ev.price || ev.cost || 0) + "</div>";
         copy = ev.copy || "";
       }
+    } else if (ev.type === "market" && ev.effect === "buyout") {
+      var bt = buyoutTarget(ev);
+      if (bt && !state.eventResolved) {
+        amountText = "Offer " + fmt(bt.offer) + " (+" + Math.round(ev.premium * 100) + "%)";
+        financeHtml = '<div class="event-finance"><span>For</span> ' + esc(bt.title) +
+          ' &nbsp;|&nbsp; <span>Market value</span> ' + fmt(bt.market) +
+          ' &nbsp;|&nbsp; <span>Loan payoff</span> ' + fmt(bt.loan) +
+          ' &nbsp;|&nbsp; <span>Net cash to you</span> ' + signedFmt(bt.net) +
+          ' &nbsp;|&nbsp; <span>Cashflow you give up</span> ' + (bt.cashflow ? signedFmt(-bt.cashflow) + "/mo" : "$0/mo (no income)") + "</div>";
+        copy = (ev.copy || "") + " They offer " + Math.round(ev.premium * 100) + "% more than market value" +
+          (bt.kind === "growth" ? " for all of it." : " for your " + esc(bt.title) + " (your most valuable match).");
+      } else if (!bt && !state.eventResolved) {
+        amountText = "Buyer looking — you don’t own one";
+        copy = "A buyer is looking for " + esc(ev.want || "this asset") + " — you don’t own one. News only.";
+      } else amountText = "Buyout offer";
     } else if (ev.type === "market" && ev.effect === "price") {
       amountText = ASSET_LABELS[ev.assetKey] + " " + (ev.pct >= 0 ? "+" : "") + Math.round(ev.pct * 100) + "% → index " + indexPct(ev.assetKey) + "%";
     } else if (ev.cost && ev.expenseDelta) {
@@ -2960,6 +3084,14 @@ select.modal-select {
         actions += '<button type="button" class="btn-market" id="btn-trade-done">Done trading</button></div>';
         if (state.marketNote) actions += '<div class="event-copy">' + state.marketNote + "</div>";
         actions += "</div>";
+      } else if (ev.type === "market" && ev.effect === "buyout") {
+        var bto = buyoutTarget(ev);
+        if (bto) {
+          actions = '<div class="event-actions"><button type="button" class="btn-warn" id="btn-buyout-sell" data-tip="Sell to the buyer; loan repaid from the price">Sell (net ' + signedFmt(bto.net) + ")</button>" +
+            '<button type="button" class="btn-secondary" id="btn-buyout-keep" data-tip="Keep it (safe default)">Keep</button></div>';
+        } else {
+          actions = '<div class="event-actions"><button type="button" class="btn-market" id="btn-buyout-ok">OK</button></div>';
+        }
       } else if (ev.type === "market") {
         actions = '<div class="event-actions"><button type="button" class="btn-market" id="btn-resolve" data-tip="Apply this market card">Continue</button></div>';
       } else if (ev.birth) {
@@ -3008,6 +3140,11 @@ select.modal-select {
         if (buy) buy.addEventListener("click", function () { buyOpportunity("cash"); });
         if (buyHI) buyHI.addEventListener("click", function () { buyOpportunity("hi"); });
         if (skip) skip.addEventListener("click", skipOpportunity);
+      } else if (ev.effect === "buyout") {
+        var bs = $("btn-buyout-sell"), bk = $("btn-buyout-keep"), bo = $("btn-buyout-ok");
+        if (bs) bs.addEventListener("click", acceptBuyout);
+        if (bk) bk.addEventListener("click", declineBuyout);
+        if (bo) bo.addEventListener("click", declineBuyout);
       } else if (state.tradePending) {
         var tb = $("btn-trade-buy"), ts = $("btn-trade-sell"), td = $("btn-trade-done");
         if (tb) tb.addEventListener("click", function () { tradeBuy(ev.assetKey); });
@@ -3061,6 +3198,59 @@ select.modal-select {
     return "Finish this month\u2019s events first (event " + (state.eventStep + 1) + " of " + (state.monthEvents.length || 1) + ").";
   }
 
+  /* ---- v5.6 win condition: Financial Freedom ----
+     Checked at payday (after settlement, same point as bankruptcy): passive income ≥ total
+     expenses (P÷E ≥ 100%). First time only: state.wonMonth = that month, and a modal offers
+     See Summary (end now) or Keep Playing (to month 120; never shown again this game).
+     wonMonth is part of the month snapshots, so undo to before the winning payday clears it. */
+  function freedomLabel(m) { return "Month " + m + " — Year " + yearOf(m); }
+  function checkWin() {
+    if (state.wonMonth || state.bankrupt) return false;
+    recomputePassive();
+    var te = totalExpenses();
+    if (!(te > 0 && state.passiveIncome >= te)) return false;
+    state.wonMonth = state.month;
+    state.winStats = { passive: state.passiveIncome, expenses: te, netWorth: netWorth() };
+    state.winModalPending = state.month < TOTAL_MONTHS;
+    return true;
+  }
+  function isWinModalOpen() {
+    var m = $("win-modal");
+    return !!(m && m.classList.contains("show") && !m.hidden);
+  }
+  function openWinModal(withSound) {
+    var m = $("win-modal");
+    if (!m || !state.wonMonth) return;
+    var w = state.winStats || {};
+    $("win-when").textContent = freedomLabel(state.wonMonth);
+    $("win-message").textContent = "Your passive income " + fmt(w.passive || 0) + "/mo now pays all your expenses " + fmt(w.expenses || 0) +
+      "/mo (P÷E " + ((w.expenses ? w.passive / w.expenses : 0) * 100).toFixed(1) + "%). Net worth " + fmt(w.netWorth || 0) +
+      ". You don’t need your job to pay the bills any more!";
+    hideTip();
+    m.hidden = false;
+    m.classList.add("show");
+    if (withSound) SFX.play("fanfare");
+    refreshSpaceHint();
+  }
+  function closeWinModal() {
+    var m = $("win-modal");
+    if (m) { m.classList.remove("show"); m.hidden = true; }
+    refreshSpaceHint();
+  }
+  function winKeepPlaying() {
+    state.winModalPending = false;
+    if (monthStartSnap) monthStartSnap.winModalPending = false;   /* undo inside this month won't re-open it */
+    closeWinModal();
+    autoSave();
+    showToast("Keep going! Freedom reached in " + freedomLabel(state.wonMonth) + ".", "ok");
+  }
+  function winSeeSummary() {
+    state.winModalPending = false;
+    state.endedEarlyMonth = state.wonMonth;   /* the payday that was just settled */
+    closeWinModal();
+    endGame();
+  }
+
   function nextMonth() {
     if (!state.eventResolved) {
       showToast(eventsLeftMsg(), "error");
@@ -3075,6 +3265,7 @@ select.modal-select {
       ratio: ratio(), netWorth: netWorth(), children: state.children
     });
     if (checkBankruptcy("settle")) { updateUndoBtn(); return; }
+    var justWon = checkWin();
     if (state.month >= TOTAL_MONTHS) { endGame(); updateUndoBtn(); return; }
     var paid = state.jobIncome + state.passiveIncome;
     advanceRestAfterSettle();
@@ -3084,7 +3275,8 @@ select.modal-select {
     updateUndoBtn();
     showToast("Payday \u2014 " + fmt(paid) + " in, expenses out. Month " + state.month +
       (state.sickMonth ? ": you are sick (no other events)." : ": event 1 of " + state.monthEvents.length + "."), "ok");
-    SFX.play("payday");
+    if (justWon) openWinModal(true);
+    else SFX.play("payday");
   }
 
   function autoResolve(ev) {
@@ -3147,9 +3339,10 @@ select.modal-select {
     settleMonthCashflow();
     state.history.push({ month: state.month, cash: state.cash, passive: state.passiveIncome, ratio: ratio(), netWorth: netWorth(), children: state.children });
     if (checkBankruptcy("skip")) { updateUndoBtn(); return; }
+    var justWon = checkWin();
     if (state.month >= TOTAL_MONTHS) { endGame(); updateUndoBtn(); return; }
 
-    for (var k = 0; k < 2; k++) {
+    for (var k = 0; k < 2 && !justWon; k++) {   /* v5.6: a win stops Skip 3 so the player sees it */
       advanceRestAfterSettle();
       state.month += 1;
       if (state.month > TOTAL_MONTHS) { state.month = TOTAL_MONTHS; endGame(); updateUndoBtn(); return; }
@@ -3161,6 +3354,7 @@ select.modal-select {
       recomputePassive();
       state.history.push({ month: state.month, cash: state.cash, passive: state.passiveIncome, ratio: ratio(), netWorth: netWorth(), children: state.children });
       if (checkBankruptcy("skip")) { updateUndoBtn(); return; }
+      justWon = checkWin();
       if (state.month >= TOTAL_MONTHS) { endGame(); updateUndoBtn(); return; }
     }
     advanceRestAfterSettle();
@@ -3169,8 +3363,9 @@ select.modal-select {
     beginMonth();
     autoSave();
     updateUndoBtn();
-    showToast("Skipped ahead 3 months.", "ok");
-    SFX.play("payday");
+    showToast(justWon ? "Skipped ahead — stopped: Financial Freedom!" : "Skipped ahead 3 months.", "ok");
+    if (justWon) openWinModal(true);
+    else SFX.play("payday");
   }
 
   var repayUI = { kind: "bank", amount: 0 };
@@ -3284,6 +3479,8 @@ select.modal-select {
     var reasonEl = $("summary-reason");
     var headEl = $("summary-heading");
     hideTip();
+    closeWinModal();
+    state.winModalPending = false;
     SFX.play(isBankrupt || state.bankrupt ? "bankrupt" : "fanfare");
     if (isBankrupt || state.bankrupt) {
       state.bankrupt = true;
@@ -3291,7 +3488,7 @@ select.modal-select {
       if (headEl) headEl.textContent = "Bankruptcy";
       if (reasonEl) { reasonEl.style.display = "block"; reasonEl.textContent = state.endReason; }
     } else {
-      if (headEl) headEl.textContent = "10-Year Summary";
+      if (headEl) headEl.textContent = state.endedEarlyMonth ? "Financial Freedom! — Summary" : "10-Year Summary";
       if (reasonEl) { reasonEl.style.display = "none"; reasonEl.textContent = ""; }
     }
     $("month-bar-fill").style.width = "100%";
@@ -3301,18 +3498,23 @@ select.modal-select {
     var pct = (r * 100).toFixed(1);
     var pass = r >= 0.5 && !state.bankrupt;   /* v5.5: never "Strong run" when bankrupt */
     $("summary-career").textContent =
-      ((state.career && state.career.name) || "—") + " · " + capitalize(state.difficulty || "normal") + " · " + (state.bankrupt ? ("Bankrupt at month " + state.month + " · ") : "120 months (10 years) complete · ") + "Children: " + state.children;
+      ((state.career && state.career.name) || "—") + " · " + capitalize(state.difficulty || "normal") + " · " + (state.bankrupt ? ("Bankrupt at month " + state.month + " · ") : state.endedEarlyMonth ? ("Ended after month " + state.endedEarlyMonth + " (Year " + yearOf(state.endedEarlyMonth) + ") · ") : "120 months (10 years) complete · ") + "Children: " + state.children;
+    var freeHtml = state.wonMonth
+      ? '<span class="win-badge gold">🏆 Financial Freedom in month ' + state.wonMonth + " (Year " + yearOf(state.wonMonth) + ")</span> "
+      : "";
     $("summary-badge").innerHTML = state.bankrupt
-      ? '<span class="win-badge fail">' + esc(BANKRUPT_REASON) + " · Passive ÷ Expenses = " + pct + "%</span>"
-      : '<span class="win-badge ' + (pass ? "pass" : "fail") + '">' +
-        (pass ? "Strong run — " : "Keep building — ") +
-        "Passive ÷ Expenses = " + pct + "%</span>";
+      ? freeHtml + '<span class="win-badge fail">' + esc(BANKRUPT_REASON) + " · Passive ÷ Expenses = " + pct + "%</span>" +
+        (state.wonMonth ? '<div class="event-copy" style="margin-top:0.35rem">You reached Financial Freedom in month ' + state.wonMonth + ", but later lost it.</div>" : "")
+      : freeHtml + '<span class="win-badge ' + (state.wonMonth || pass ? "pass" : "fail") + '">' +
+        (state.wonMonth ? "" : pass ? "Strong run — " : "Keep building — ") +
+        "Final Passive ÷ Expenses = " + pct + "%" + (state.wonMonth ? "" : " (100% = Financial Freedom)") + "</span>";
     $("summary-grid").innerHTML =
       sumStat(fmt(state.cash), "Final cash") +
       sumStat(fmt(state.jobIncome) + "/mo", "Paycheck") +
       sumStat(fmt(state.passiveIncome) + "/mo", "Passive") +
       sumStat(fmt(totalExpenses()) + "/mo", "Total expenses") +
-      sumStat(pct + "%", "Win metric") +
+      sumStat(pct + "%", "P÷E (win at 100%)") +
+      (state.wonMonth ? sumStat("Month " + state.wonMonth, "Financial Freedom") : "") +
       sumStat(fmt(netWorth()), "Net worth") +
       sumStat(String(state.children), "Children") +
       sumStat(fmt(state.bankLoan), "Bank loan") +
@@ -3371,6 +3573,8 @@ select.modal-select {
     state.lastIllnessMonth = null;
     state.bankrupt = false;
     state.endReason = "";
+    state.wonMonth = null; state.winStats = null; state.winModalPending = false; state.endedEarlyMonth = null;   /* v5.6 */
+    state.settleBorrowed = false;
     state.ccInterestThisMonth = 0;
   }
 
@@ -3496,6 +3700,8 @@ select.modal-select {
   $("btn-next").addEventListener("click", nextMonth);
   $("btn-skip3").addEventListener("click", skipThreeMonths);
   $("btn-prev-month").addEventListener("click", previousMonth);
+  $("win-keep").addEventListener("click", winKeepPlaying);
+  $("win-summary").addEventListener("click", winSeeSummary);
   ["btn-sound", "btn-sound-title"].forEach(function (id) { var b = $(id); if (b) b.addEventListener("click", function () { SFX.toggle(); b.blur(); }); });
   SFX.syncButtons();
   $("btn-pay-bank").addEventListener("click", function () { payLiability("bank"); });
@@ -3543,6 +3749,8 @@ select.modal-select {
 
   function hotkeyAccept() {
     if (state.eventResolved) return;
+    if ($("btn-buyout-keep")) { $("btn-buyout-keep").click(); return; }   /* v5.6: keys never auto-sell */
+    if ($("btn-buyout-ok")) { $("btn-buyout-ok").click(); return; }
     if ($("btn-buy")) { $("btn-buy").click(); return; }
     if ($("btn-buy-hi")) { $("btn-buy-hi").click(); return; }
     if ($("btn-birth-accept")) { $("btn-birth-accept").click(); return; }
@@ -3567,6 +3775,7 @@ select.modal-select {
       finishTrade();
       return;
     }
+    if (ev.effect === "buyout") { declineBuyout(); return; }
     if (ev.type === "opportunity" && $("btn-skip-event")) {
       skipOpportunity();
       return;
@@ -3592,6 +3801,11 @@ select.modal-select {
     if (isConfirmModalOpen()) {
       if (e.key === "Escape") { e.preventDefault(); closeConfirm(false); return; }
       if (!typing && spaceOrEnter) { e.preventDefault(); if (!e.repeat) closeConfirm(true); return; }
+      return;
+    }
+    if (isWinModalOpen()) {
+      /* Space / Enter / Esc = Keep Playing (never ends the game by accident) */
+      if (e.key === "Escape" || (!typing && spaceOrEnter)) { e.preventDefault(); if (!e.repeat) winKeepPlaying(); }
       return;
     }
     if (isRepayModalOpen()) {
@@ -3662,7 +3876,7 @@ select.modal-select {
   window.SMARTER_DOLLAR = {
     CAREERS: CAREERS, OPPORTUNITY: OPPORTUNITY, SPENDING: SPENDING, LIFE: LIFE, MARKET: MARKET,
     DECKS: DECKS, DIFFICULTIES: DIFFICULTIES,
-    rollDeal: rollDeal, renderHud: renderHud, structuralCashflow: structuralCashflow, bankruptcyStatus: bankruptcyStatus, checkBankruptcy: checkBankruptcy, hideTip: hideTip, BANKRUPT_REASON: BANKRUPT_REASON, settleMonthCashflow: settleMonthCashflow, drawFromDeck: drawFromDeck, dealRoiPct: dealRoiPct,
+    rollDeal: rollDeal, buyoutTarget: buyoutTarget, checkWin: checkWin, isWinModalOpen: isWinModalOpen, nextMonth: nextMonth, acceptBuyout: acceptBuyout, declineBuyout: declineBuyout, renderEvent: renderEvent, renderHud: renderHud, structuralCashflow: structuralCashflow, bankruptcyStatus: bankruptcyStatus, checkBankruptcy: checkBankruptcy, hideTip: hideTip, BANKRUPT_REASON: BANKRUPT_REASON, settleMonthCashflow: settleMonthCashflow, drawFromDeck: drawFromDeck, dealRoiPct: dealRoiPct,
     SFX: SFX, drawMonthEvents: drawMonthEvents, isOnceOnly: isOnceOnly, deckCards: deckCards, canDrawIllness: canDrawIllness,
     monthlyTaxFromGross: monthlyTaxFromGross, monthlyGrossFromRate: monthlyGrossFromRate,
     effectiveTaxRate: effectiveTaxRate, round10: round10, state: state,
