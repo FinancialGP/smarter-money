@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SMARTER $ — NZ Financial Literacy Game (v5.7)</title>
+<title>SMARTER $ — NZ Financial Literacy Game (v5.8)</title>
 <style>
 :root {
   --bg: #0f172a; --surface: #1e293b; --surface2: #334155; --text: #f1f5f9; --muted: #94a3b8;
@@ -153,6 +153,14 @@ select.modal-select {
 .win-badge { display: inline-block; padding: 0.35rem 0.85rem; border-radius: 999px; font-weight: 700; font-size: 0.9rem; }
 .win-badge.pass { background: rgba(34,197,94,0.2); color: var(--accent); }
 .index-update { color: #7dd3fc; }
+.qty-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; width: 100%; }
+.qty-row label { font-size: 0.85rem; color: var(--muted); }
+.qty-input { width: 5.5rem; font-size: 16px; padding: 0.35rem 0.4rem; border-radius: 6px; border: 1px solid var(--surface2); background: var(--surface); color: var(--text); text-align: center; }
+.qty-step { min-width: 44px; min-height: 44px; font-size: 1.2rem; }
+.qty-row .btn-ghost.btn-sm { min-height: 44px; min-width: 44px; }
+.qty-input { min-height: 44px; }
+.trade-total { width: 100%; font-size: 0.85rem; color: var(--text); }
+.trade-total.trade-warn { color: #fca5a5; }
 .win-badge.gold { background: rgba(251,191,36,0.22); color: #fcd34d; border: 1px solid #fbbf24; font-size: 1.05rem; }
 .win-panel { text-align: center; border: 2px solid #fbbf24; }
 .win-panel h3 { color: #fcd34d; font-size: 1.5rem; }
@@ -460,7 +468,7 @@ select.modal-select {
     <h1>SMARTER <span class="logo-dollar">$</span></h1>
     <p>A New Zealand classroom game about income, tax, expenses, markets, debt, and building passive income — over <strong>10 years</strong> (120 months).</p>
     <p><strong>Win goal:</strong> Financial Freedom — passive income ≥ total expenses (P÷E ≥ 100%) at a payday. The sooner, the better. Then see your summary or keep playing to month 120.</p>
-    <p class="subtitle" style="margin-top:0.25rem"><strong>Each month:</strong> monthly index update (US Index ETF price moves), then 4 events in order — 1 Market news · 2 Opportunity · 3 Life / spending · 4 Wildcard — then <strong>Next Month = payday</strong>. Get sick? No other events that month.</p>
+    <p class="subtitle" style="margin-top:0.25rem"><strong>Each month:</strong> monthly index update (Gold/Silver, Bitcoin and US Index ETF prices move), then 4 events in order — 1 Market news · 2 Opportunity · 3 Life / spending · 4 Wildcard — then <strong>Next Month = payday</strong>. Get sick? No other events that month.</p>
     <div class="center-actions" style="justify-content:center;flex-wrap:wrap">
       <button type="button" class="btn-primary" id="btn-start" data-tip="Choose difficulty, then career">Start Game</button>
       <button type="button" class="btn-secondary" id="btn-continue" data-tip="Resume the latest auto-save" hidden>Continue</button>
@@ -477,7 +485,7 @@ select.modal-select {
 
 <section id="screen-difficulty" class="screen" aria-label="Choose difficulty">
   <h2>Choose Difficulty</h2>
-  <p class="subtitle">Every month: index update (US Index ETF) → 1 market news → 2 deal → 3 life/spending → 4 wildcard (deal or life). Harder levels mean more spending, fewer deals, more illness and a tougher start. Each deck (64 cards; market 76) is shuffled; a card comes back only after the whole deck is used. Permanent cost rises happen at most once per game.</p>
+  <p class="subtitle">Every month: index update (all 3 ETFs) → 1 market news → 2 deal → 3 life/spending → 4 wildcard (deal or life). Harder levels mean more spending, fewer deals, more illness and a tougher start. Each deck (64 cards; market 76) is shuffled; a card comes back only after the whole deck is used. Permanent cost rises happen at most once per game.</p>
   <div class="card-grid" id="difficulty-grid" role="group" aria-label="Difficulty options"></div>
   <div class="center-actions">
     <button type="button" class="btn-ghost" id="btn-diff-back">Back</button>
@@ -718,27 +726,29 @@ select.modal-select {
 
   var DIFFICULTIES = [
     /* v5.4: spendingShare = chance event 3 is a SPENDING card (else life); illness = monthly
-       illness chance (checked once, before events; 12-month gap); startCashBonus / startCc =
-       starting position. weights.opportunity/life still set the event-4 wildcard mix. */
-    { id: "easy", label: "Easy", spendingShare: 0.50, illness: 0.03, startCashBonus: 3000, startCc: 0,
-      desc: "Start +$3,000 cash. Wildcard (event 4) ≈47% deals. Event 3: 50% spending / 50% life. Illness 3% a month.",
+       illness chance (checked once, before events; 12-month gap); startCc = starting
+       credit-card debt (v5.8: same starting cash on every level; Easy $0 / Normal $10k / Hard $20k card debt). weights.opportunity/life still set the event-4 wildcard mix. */
+    { id: "easy", label: "Easy", spendingShare: 0.50, illness: 0.03, startCashBonus: 0, startCc: 0,
+      desc: "No credit-card debt at the start. Wildcard (event 4) ≈47% deals. Event 3: 50% spending / 50% life. Illness 3% a month.",
       weights: { opportunity: 0.18, spending: 0.22, life: 0.20, market: 0.40 }, cls: "diff-easy" },
-    { id: "normal", label: "Normal", spendingShare: 2 / 3, illness: 0.06, startCashBonus: 0, startCc: 0,
-      desc: "Standard start. Wildcard ≈35% deals. Event 3: 2/3 spending / 1/3 life. Illness 6% a month.",
+    { id: "normal", label: "Normal", spendingShare: 2 / 3, illness: 0.06, startCashBonus: 0, startCc: 10000,
+      desc: "Start with $10,000 credit-card debt (24% p.a.). Wildcard ≈35% deals. Event 3: 2/3 spending / 1/3 life. Illness 6% a month.",
       weights: { opportunity: 0.12, spending: 0.28, life: 0.22, market: 0.38 }, cls: "diff-normal" },
-    { id: "hard", label: "Hard", spendingShare: 0.85, illness: 0.09, startCashBonus: 0, startCc: 3000,
-      desc: "Start with $3,000 credit-card debt (24% p.a.; net worth still starts ≥ $1,500). Wildcard ≈24% deals. Event 3: 85% spending. Illness 9% a month.",
+    { id: "hard", label: "Hard", spendingShare: 0.85, illness: 0.09, startCashBonus: 0, startCc: 20000,
+      desc: "Start with $20,000 credit-card debt (24% p.a. — card maxed out). Wildcard ≈24% deals. Event 3: 85% spending. Illness 9% a month.",
       weights: { opportunity: 0.08, spending: 0.35, life: 0.25, market: 0.32 }, cls: "diff-hard" }
   ];
 
   /* v5.7: index / ETF assets start at NZD 100 per ETF unit (US Index was one $6,000 unit; now 60 ETF
-     units of $100 = same money). Gold/Silver and Bitcoin are commodity/coin units, not ETFs: unchanged.
+     units of $100 = same money). (v5.7 kept Gold/Silver and Bitcoin as $3,000 / $8,000 units — see v5.8.)
      Price moves are still % changes of priceIndex, so values behave exactly as before. */
-  var BASE_UNIT = { metals: 3000, bitcoin: 8000, usindex: 100 };
-  var ETF_KEYS = ["usindex"];
+  /* v5.8: Gold/Silver and Bitcoin are ETFs too — every growth asset starts at NZD 100 per ETF unit
+     (Gold/Silver was $3,000/unit = 30 ETF units; Bitcoin $8,000/unit = 80 ETF units). */
+  var BASE_UNIT = { metals: 100, bitcoin: 100, usindex: 100 };
+  var ETF_KEYS = ["metals", "bitcoin", "usindex"];
   var ETF_UNIT_NZD = 100;
   var ETF_OLD_UNIT = 6000;                         /* pre-v5.7 US Index unit, for save migration */
-  var TRADE_LOT = { metals: 1, bitcoin: 1, usindex: 60 };   /* trade buttons: ~$6,000 of US Index, as before */
+  var OLD_UNIT_V57 = { metals: 3000, bitcoin: 8000 };   /* pre-v5.8 Gold/Silver + Bitcoin units, for save migration */
   function isEtf(key) { return ETF_KEYS.indexOf(key) >= 0; }
   function unitPriceExact(key, st) { st = st || state; return BASE_UNIT[key] * st.priceIndex[key]; }
   function fmtUnitPrice(key, st) {
@@ -749,7 +759,11 @@ select.modal-select {
      cards) every index / ETF price moves by a random monthly return: normal(mean, sd), clamped,
      rounded to 0.1%. Market news cards still move prices on top of this. The move is stored in
      state.indexUpdate and in the month-start snapshot, so undo / save-load replay it exactly. */
-  var MONTHLY_INDEX_MODEL = { usindex: { mean: 0.007, sd: 0.045, min: -0.15, max: 0.15 } };   /* ~+8.7%/yr, ~15.6%/yr vol (S&P 500-like) */
+  var MONTHLY_INDEX_MODEL = {
+    usindex: { mean: 0.007, sd: 0.045, min: -0.15, max: 0.15 },   /* ~+8.7%/yr, ~15.6%/yr vol (S&P 500-like) */
+    metals:  { mean: 0.005, sd: 0.040, min: -0.15, max: 0.15 },   /* ~+6%/yr, ~14%/yr vol (gold-like) */
+    bitcoin: { mean: 0.015, sd: 0.150, min: -0.40, max: 0.50 }    /* ~+20%/yr arithmetic, ~52%/yr vol (crypto) */
+  };
   function randNormal() {
     var u = 0, v = 0;
     while (u === 0) u = Math.random();
@@ -773,7 +787,7 @@ select.modal-select {
     if (!u || u.month !== state.month || !u.moves || !u.moves.length) return "";
     return u.moves.map(function (mv) {
       var pct = (mv.pct >= 0 ? "+" : "\u2212") + Math.abs(mv.pct * 100).toFixed(1) + "%";
-      return ASSET_LABELS[mv.key] + " " + pct + " \u2192 " + (short ? "$" + mv.price.toFixed(2) + "/ETF unit" : "NZD " + mv.price.toFixed(2) + " per ETF unit");
+      return ASSET_LABELS[mv.key] + " " + pct + (short ? "" : " \u2192 NZD " + mv.price.toFixed(2) + " per ETF unit");
     }).join(", ");
   }
   function unitWord(key, n) { return isEtf(key) ? (n === 1 ? "ETF unit" : "ETF units") : (n === 1 ? "unit" : "units"); }
@@ -813,18 +827,18 @@ select.modal-select {
     {"id": "o25", "type": "opportunity", "kind": "cashflow", "title": "NZ Dividend Shares", "copy": "NZX shares that pay dividends.", "cost": 16000, "passive": 93, "label": "Cashflow"},
     {"id": "o26", "type": "opportunity", "kind": "cashflow", "title": "Lawnmower Round", "copy": "Buy mowers. Hire a student.", "cost": 9500, "passive": 55, "label": "Cashflow"},
     {"id": "o27", "type": "opportunity", "kind": "cashflow", "title": "Student Room Sublet", "copy": "Sublet a room near campus.", "cost": 12000, "passive": 70, "label": "Cashflow"},
-    {"id": "og1", "type": "opportunity", "kind": "growth", "title": "Gold/Silver Bullion", "copy": "Physical gold/silver unit. No passive — market value only.", "cost": 3000, "assetKey": "metals", "units": 1, "label": "Growth"},
-    {"id": "og2", "type": "opportunity", "kind": "growth", "title": "Gold/Silver Coins", "copy": "Bullion coins lot. Market price only.", "cost": 3000, "assetKey": "metals", "units": 1, "label": "Growth"},
-    {"id": "og3", "type": "opportunity", "kind": "growth", "title": "Bitcoin (classroom unit)", "copy": "Simplified BTC. Zero passive until sold.", "cost": 8000, "assetKey": "bitcoin", "units": 1, "label": "Growth"},
+    {"id": "og1", "type": "opportunity", "kind": "growth", "title": "Gold/Silver Bullion", "copy": "Gold/silver ETF units. No passive — market value only.", "cost": 3000, "assetKey": "metals", "units": 30, "label": "Growth · 30 ETF units"},
+    {"id": "og2", "type": "opportunity", "kind": "growth", "title": "Gold/Silver Coins", "copy": "Bullion coins lot. Market price only.", "cost": 3000, "assetKey": "metals", "units": 30, "label": "Growth · 30 ETF units"},
+    {"id": "og3", "type": "opportunity", "kind": "growth", "title": "Bitcoin ETF (classroom)", "copy": "Classroom bitcoin ETF. Zero passive until sold.", "cost": 8000, "assetKey": "bitcoin", "units": 80, "label": "Growth · 80 ETF units"},
     {"id": "og4", "type": "opportunity", "kind": "growth", "title": "US Index Fund", "copy": "Fund tracking a US share index — capital gains vibe.", "cost": 6000, "assetKey": "usindex", "units": 60, "label": "Growth · 60 ETF units"},
-    {"id": "og5", "type": "opportunity", "kind": "growth", "title": "Extra Gold/Silver Lot", "copy": "Another bullion tranche.", "cost": 6000, "assetKey": "metals", "units": 2, "label": "Growth ×2"},
+    {"id": "og5", "type": "opportunity", "kind": "growth", "title": "Extra Gold/Silver Lot", "copy": "Another bullion tranche.", "cost": 6000, "assetKey": "metals", "units": 60, "label": "Growth · 60 ETF units"},
     {"id": "og6", "type": "opportunity", "kind": "growth", "title": "US Index Top-Up", "copy": "Add to your US Index holding.", "cost": 15000, "assetKey": "usindex", "units": 120, "label": "Growth · 120 ETF units"},
-    {"id": "og7", "type": "opportunity", "kind": "growth", "title": "Silver Coins", "copy": "A small lot of silver coins.", "cost": 3000, "assetKey": "metals", "units": 1, "label": "Growth"},
-    {"id": "og8", "type": "opportunity", "kind": "growth", "title": "Small Gold Bar", "copy": "A tiny gold bar. No income.", "cost": 3000, "assetKey": "metals", "units": 1, "label": "Growth"},
-    {"id": "og9", "type": "opportunity", "kind": "growth", "title": "Precious Metals Fund", "copy": "A fund that holds gold and silver.", "cost": 6000, "assetKey": "metals", "units": 2, "label": "Growth ×2"},
-    {"id": "og10", "type": "opportunity", "kind": "growth", "title": "Bitcoin Starter", "copy": "Buy one classroom unit of bitcoin.", "cost": 8000, "assetKey": "bitcoin", "units": 1, "label": "Growth"},
-    {"id": "og11", "type": "opportunity", "kind": "growth", "title": "Bitcoin Dip Buy", "copy": "The price fell. Buy the dip?", "cost": 8000, "assetKey": "bitcoin", "units": 1, "label": "Growth"},
-    {"id": "og12", "type": "opportunity", "kind": "growth", "title": "Crypto App Bundle", "copy": "Mostly bitcoin, bought in an app.", "cost": 8000, "assetKey": "bitcoin", "units": 1, "label": "Growth"},
+    {"id": "og7", "type": "opportunity", "kind": "growth", "title": "Silver Coins", "copy": "A small lot of silver coins.", "cost": 3000, "assetKey": "metals", "units": 30, "label": "Growth · 30 ETF units"},
+    {"id": "og8", "type": "opportunity", "kind": "growth", "title": "Small Gold Bar", "copy": "A tiny gold bar. No income.", "cost": 3000, "assetKey": "metals", "units": 30, "label": "Growth · 30 ETF units"},
+    {"id": "og9", "type": "opportunity", "kind": "growth", "title": "Precious Metals Fund", "copy": "A fund that holds gold and silver.", "cost": 6000, "assetKey": "metals", "units": 60, "label": "Growth · 60 ETF units"},
+    {"id": "og10", "type": "opportunity", "kind": "growth", "title": "Bitcoin Starter", "copy": "Buy some bitcoin ETF units.", "cost": 8000, "assetKey": "bitcoin", "units": 80, "label": "Growth · 80 ETF units"},
+    {"id": "og11", "type": "opportunity", "kind": "growth", "title": "Bitcoin Dip Buy", "copy": "The price fell. Buy the dip?", "cost": 8000, "assetKey": "bitcoin", "units": 80, "label": "Growth · 80 ETF units"},
+    {"id": "og12", "type": "opportunity", "kind": "growth", "title": "Crypto App Bundle", "copy": "Mostly bitcoin, bought in an app.", "cost": 8000, "assetKey": "bitcoin", "units": 80, "label": "Growth · 80 ETF units"},
     {"id": "og13", "type": "opportunity", "kind": "growth", "title": "S&P 500 ETF", "copy": "A fund of 500 big US companies.", "cost": 6000, "assetKey": "usindex", "units": 60, "label": "Growth · 60 ETF units"},
     {"id": "og14", "type": "opportunity", "kind": "growth", "title": "US Tech Shares Fund", "copy": "A fund of US tech companies.", "cost": 6000, "assetKey": "usindex", "units": 60, "label": "Growth · 60 ETF units"},
     {"id": "og15", "type": "opportunity", "kind": "growth", "title": "US Index Monthly Plan", "copy": "Invest in a US index fund.", "cost": 6000, "assetKey": "usindex", "units": 60, "label": "Growth · 60 ETF units"},
@@ -1081,7 +1095,7 @@ select.modal-select {
     bankLoan: 0, hiLoan: 0, ccBalance: 0, bankApr: BANK_APR_DEFAULT,
     bankInterestThisMonth: 0, hiInterestThisMonth: 0, ccInterestThisMonth: 0,
     priceIndex: { metals: 1, bitcoin: 1, usindex: 1, property: 1, business: 1 },
-    growthUnits: { metals: 0, bitcoin: 0, usindex: 0 }, etfUnitNzd: 100,
+    growthUnits: { metals: 0, bitcoin: 0, usindex: 0 }, etfUnitNzd: 100, etfAll: true,
     assets: [], properties: [], businesses: [],
     lastBirthMonth: null,
     lastIllnessMonth: null,
@@ -1976,13 +1990,18 @@ select.modal-select {
       var basis = gU * 4500 + sU * 1200;
       var val = gU * 4500 * gI + sU * 1200 * sI;
       if (pi.metals == null) pi.metals = basis > 0 ? +(val / basis).toFixed(4) : +((gI * 0.8) + (sI * 0.2)).toFixed(4);
-      if (gu.metals == null) gu.metals = basis > 0 ? +(basis / BASE_UNIT.metals).toFixed(4) : 0;
+      if (gu.metals == null) gu.metals = basis > 0 ? +(basis / OLD_UNIT_V57.metals).toFixed(4) : 0;   /* old $3,000 units; ×30 below */
     }
     if (pi.usindex == null) pi.usindex = pi.stocks != null ? pi.stocks : 1;
     if (gu.usindex == null) gu.usindex = gu.stocks || 0;
     if (st.etfUnitNzd !== ETF_UNIT_NZD) {   /* pre-v5.7 save: 1 old $6,000 unit = 60 ETF units of NZD 100 (value unchanged) */
       gu.usindex = +((gu.usindex || 0) * ETF_OLD_UNIT / ETF_UNIT_NZD).toFixed(4);
       st.etfUnitNzd = ETF_UNIT_NZD;
+    }
+    if (!st.etfAll) {   /* pre-v5.8 save: Gold/Silver $3,000 unit = 30 ETF units, Bitcoin $8,000 unit = 80 ETF units (value unchanged) */
+      gu.metals = +((gu.metals || 0) * OLD_UNIT_V57.metals / ETF_UNIT_NZD).toFixed(4);
+      gu.bitcoin = +((gu.bitcoin || 0) * OLD_UNIT_V57.bitcoin / ETF_UNIT_NZD).toFixed(4);
+      st.etfAll = true;
     }
     ["gold", "silver", "stocks"].forEach(function (k) { delete pi[k]; delete gu[k]; });
     INDEX_KEYS.forEach(function (k) { if (pi[k] == null) pi[k] = 1; });
@@ -2337,7 +2356,7 @@ select.modal-select {
   function renderIndexStrip() {
     var keys = INDEX_KEYS;
     var upd = indexUpdateText(true);
-    var updHtml = "<span class='index-update' data-tip='Monthly index update: every month after payday each index/ETF moves by a random monthly return (US Index: average +0.7%, usually within \u00b19%). Market news cards can move it again.'><strong>Monthly index update:</strong> " +
+    var updHtml = "<span class='index-update' data-tip='Monthly index update: every month after payday each index/ETF moves by a random monthly return (US Index avg +0.7%, usually within \u00b19%; Gold/Silver avg +0.5%, usually \u00b18%; Bitcoin avg +1.5%, usually \u00b130%). Market news cards can move them again.'><strong>Monthly index update:</strong> " +
       (upd ? esc(upd) : state.month <= 1 ? "first update after month 1 payday" : "\u2014") + "</span> | ";
     $("index-strip").innerHTML = updHtml + keys.map(function (k) {
       return "<span" + (isEtf(k) ? " data-tip='" + fmtUnitPrice(k) + " (started at NZD 100.00)'" : "") + "><strong>" + ASSET_LABELS[k] + "</strong> <span class='" + indexClass(k) + "'>" + indexPct(k) + "%" +
@@ -2816,37 +2835,115 @@ select.modal-select {
     }
   }
 
-  function tradeBuy(key) {
+  /* v5.8 ETF trading: any whole number of ETF units (min 1). Buying uses cash only (as before —
+     trades never borrow on CC/HI); selling is limited to what you hold. "Sell all" also sells any
+     fractional units left from old-save conversion. */
+  var tradeQty = 1, tradeQtyFor = "";
+  function tradeCost(key, qty) { return Math.round(unitPriceExact(key) * qty); }
+  function maxAffordable(key) {
+    var px = unitPriceExact(key);
+    if (!(px > 0)) return 0;
+    var n = Math.floor(Math.max(0, state.cash) / px);
+    while (n > 0 && tradeCost(key, n) > state.cash) n--;
+    return n;
+  }
+  function wholeHeld(key) { return Math.floor((state.growthUnits[key] || 0) + 1e-9); }
+  function parseQty(v) {
+    var t = String(v == null ? "" : v).trim();
+    if (!/^[0-9]+$/.test(t)) return 0;
+    var n = parseInt(t, 10);
+    return n >= 1 && n <= 1e7 ? n : 0;
+  }
+  function tradeBuy(key, qty) {
     if (!BASE_UNIT[key]) return;
-    var lot = TRADE_LOT[key] || 1;
-    var unitPrice = Math.round(unitPriceExact(key) * lot);
-    if (state.cash < unitPrice) {
-      showToast("Need " + fmt(unitPrice) + " cash to buy " + lot + " " + unitWord(key, lot) + ".", "error");
+    qty = qty == null ? tradeQty : qty;
+    if (!(qty >= 1) || Math.floor(qty) !== qty) { showToast("Enter a whole number of ETF units (1 or more).", "error"); return; }
+    var cost = tradeCost(key, qty);
+    if (state.cash < cost) {
+      showToast("Need " + fmt(cost) + " cash to buy " + qty + " " + unitWord(key, qty) + " (max " + maxAffordable(key) + ").", "error");
       return;
     }
-    state.cash -= unitPrice;
-    state.growthUnits[key] = +(state.growthUnits[key] + lot).toFixed(4);
-    state.stepNote += " Bought " + lot + " " + unitWord(key, lot) + " @ " + fmtUnitPrice(key) + " = " + fmt(unitPrice) + ".";
-    showToast("Bought " + lot + " " + ASSET_LABELS[key] + " " + unitWord(key, lot) + " = " + fmt(unitPrice) + ".", "ok");
+    state.cash -= cost;
+    state.growthUnits[key] = +(state.growthUnits[key] + qty).toFixed(4);
+    state.stepNote += " Bought " + qty + " " + unitWord(key, qty) + " @ " + fmtUnitPrice(key) + " = " + fmt(cost) + ".";
+    showToast("Bought " + qty + " " + ASSET_LABELS[key] + " " + unitWord(key, qty) + " = " + fmt(cost) + ".", "ok");
     SFX.play("buy");
     renderHud();
     renderEvent();
   }
-  function tradeSell(key) {
+  function tradeSell(key, qty) {
     if (!BASE_UNIT[key] || !(state.growthUnits[key] > 0)) {
       showToast("No units to sell.", "error");
       return;
     }
-    var sellUnits = Math.min(TRADE_LOT[key] || 1, state.growthUnits[key]);
-    var unitPrice = Math.round(unitPriceExact(key) * sellUnits);
-    state.growthUnits[key] = +(state.growthUnits[key] - sellUnits).toFixed(4);
+    var held = state.growthUnits[key];
+    var sellUnits;
+    if (qty === "all") sellUnits = held;
+    else {
+      qty = qty == null ? tradeQty : qty;
+      if (!(qty >= 1) || Math.floor(qty) !== qty) { showToast("Enter a whole number of ETF units (1 or more).", "error"); return; }
+      if (qty > held + 1e-9) { showToast("You only hold " + fmtUnits(held) + " " + unitWord(key, held) + ".", "error"); return; }
+      sellUnits = qty;
+    }
+    var proceeds = tradeCost(key, sellUnits);
+    state.growthUnits[key] = +(held - sellUnits).toFixed(4);
     if (state.growthUnits[key] < 0.0001) state.growthUnits[key] = 0;
-    state.cash += unitPrice;
-    state.stepNote += " Sold " + fmtUnits(sellUnits) + " " + unitWord(key, sellUnits) + " = " + fmt(unitPrice) + ".";
-    showToast("Sold " + fmtUnits(sellUnits) + " " + ASSET_LABELS[key] + " " + unitWord(key, sellUnits) + " = " + fmt(unitPrice) + ".", "ok");
+    state.cash += proceeds;
+    state.stepNote += " Sold " + fmtUnits(sellUnits) + " " + unitWord(key, sellUnits) + " = " + fmt(proceeds) + ".";
+    showToast("Sold " + fmtUnits(sellUnits) + " " + ASSET_LABELS[key] + " " + unitWord(key, sellUnits) + " = " + fmt(proceeds) + ".", "ok");
     SFX.play("sell");
     renderHud();
     renderEvent();
+  }
+  /* Live update of the quantity box (no re-render, so the iPad keyboard stays open). */
+  function syncTradeBox(key) {
+    var inp = $("trade-qty");
+    if (!inp) return;
+    var q = parseQty(inp.value);
+    if (q) tradeQty = q;
+    var px = unitPriceExact(key), held = state.growthUnits[key] || 0, mx = maxAffordable(key);
+    var buy = $("btn-trade-buy"), sell = $("btn-trade-sell"), tot = $("trade-total"), mxb = $("trade-q-max");
+    var cost = q ? tradeCost(key, q) : 0;
+    if (buy) {
+      buy.disabled = !q || cost > state.cash;
+      buy.textContent = "Buy " + (q || "?") + " = " + (q ? fmt(cost) : "\u2014");
+    }
+    if (sell) {
+      sell.disabled = !q || q > held + 1e-9;
+      sell.textContent = "Sell " + (q || "?") + " = " + (q ? fmt(cost) : "\u2014");
+    }
+    if (mxb) mxb.textContent = "Max (" + mx + ")";
+    var minus = $("trade-minus");
+    if (minus) minus.disabled = !q || q <= 1;
+    if (tot) {
+      var msg;
+      if (!q) msg = "Enter a whole number of ETF units (1 or more).";
+      else {
+        msg = q + " \u00d7 NZD " + px.toFixed(2) + " = " + fmt(cost) + " \u00b7 Cash " + fmt(state.cash) + " (max " + mx + ") \u00b7 You hold " + fmtUnits(held);
+        if (cost > state.cash) msg += " \u2014 not enough cash to buy " + q + ".";
+        else if (q > held + 1e-9 && held > 0) msg += " \u2014 you can sell up to " + wholeHeld(key) + ".";
+      }
+      tot.textContent = msg;
+      tot.classList.toggle("trade-warn", !q || cost > state.cash);
+    }
+  }
+  function bindTradeBox(key) {
+    var inp = $("trade-qty");
+    if (!inp) return;
+    function setQ(n) { n = Math.max(1, Math.floor(n) || 1); tradeQty = n; inp.value = String(n); syncTradeBox(key); }
+    inp.addEventListener("input", function () { syncTradeBox(key); });
+    inp.addEventListener("change", function () { var q = parseQty(inp.value); if (!q) setQ(tradeQty); else syncTradeBox(key); });
+    inp.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") { e.preventDefault(); inp.blur(); }   /* Enter just closes the keypad; Buy/Sell need a tap */
+    });
+    $("trade-minus").addEventListener("click", function () { setQ((parseQty(inp.value) || tradeQty) - 1); });
+    $("trade-plus").addEventListener("click", function () { setQ((parseQty(inp.value) || tradeQty) + 1); });
+    $("trade-q-1").addEventListener("click", function () { setQ(1); });
+    $("trade-q-10").addEventListener("click", function () { setQ(10); });
+    $("trade-q-max").addEventListener("click", function () { var m = maxAffordable(key); if (m < 1) { showToast("Not enough cash for 1 ETF unit.", "error"); return; } setQ(m); });
+    var sa = $("trade-sell-all");
+    if (sa) sa.addEventListener("click", function () { tradeSell(key, "all"); });
+    syncTradeBox(key);
   }
   function finishTrade() {
     if (state.eventResolved) return;
@@ -3125,13 +3222,25 @@ select.modal-select {
         var key = ev.assetKey;
         actions = '<div class="trade-box"><strong>Trade on this move</strong><div class="event-actions" style="margin-top:0.5rem">';
         if (BASE_UNIT[key]) {
-          var lotN = TRADE_LOT[key] || 1, pxu = unitPriceExact(key);
-          actions += '<button type="button" class="btn-primary btn-sm" id="btn-trade-buy" data-tip="' + fmtUnitPrice(key) + '">Buy ' + lotN + (isEtf(key) ? " ETF units" : "") + ' = ' + fmt(Math.round(pxu * lotN)) + "</button>";
-          if (state.growthUnits[key] > 0) {
-            var su = Math.min(lotN, state.growthUnits[key]);
-            actions += '<button type="button" class="btn-secondary btn-sm" id="btn-trade-sell">Sell ' + fmtUnits(su) + (isEtf(key) ? " ETF units" : "") + ' = ' + fmt(Math.round(pxu * su)) + "</button>";
+          var tqKey = state.month + ":" + state.eventStep + ":" + ev.id;
+          if (tradeQtyFor !== tqKey) { tradeQty = 1; tradeQtyFor = tqKey; }
+          var heldN = state.growthUnits[key] || 0;
+          actions += '<div class="event-copy" style="width:100%">' + ASSET_LABELS[key] + " ETF: <strong>" + fmtUnitPrice(key) + "</strong> \u00b7 min 1 unit, any whole number</div>";
+          actions += '<div class="qty-row" role="group" aria-label="ETF units to trade">' +
+            '<label for="trade-qty">Units</label>' +
+            '<button type="button" class="btn-secondary btn-sm qty-step" id="trade-minus" aria-label="One fewer">\u2212</button>' +
+            '<input id="trade-qty" class="qty-input" type="number" inputmode="numeric" pattern="[0-9]*" min="1" step="1" value="' + tradeQty + '" aria-describedby="trade-total">' +
+            '<button type="button" class="btn-secondary btn-sm qty-step" id="trade-plus" aria-label="One more">+</button>' +
+            '<button type="button" class="btn-ghost btn-sm" id="trade-q-1">1</button>' +
+            '<button type="button" class="btn-ghost btn-sm" id="trade-q-10">10</button>' +
+            '<button type="button" class="btn-ghost btn-sm" id="trade-q-max" data-tip="Most whole units your cash can buy">Max</button>' +
+            "</div>";
+          actions += '<div class="trade-total" id="trade-total" aria-live="polite"></div>';
+          actions += '<button type="button" class="btn-primary btn-sm" id="btn-trade-buy" data-tip="Pay cash (trades never borrow)">Buy</button>';
+          if (heldN > 0) {
+            actions += '<button type="button" class="btn-secondary btn-sm" id="btn-trade-sell">Sell</button>';
+            actions += '<button type="button" class="btn-ghost btn-sm" id="trade-sell-all">Sell all (' + fmtUnits(heldN) + " = " + fmt(tradeCost(key, heldN)) + ")</button>";
           }
-          actions += '<span class="event-copy">' + ASSET_LABELS[key] + ": " + fmtUnitPrice(key) + "</span>";
         }
         if (key === "property" && state.properties.length) {
           actions += '<span class="event-copy">Property index updated — sell from Holdings if you want out.</span>';
@@ -3207,6 +3316,7 @@ select.modal-select {
         var tb = $("btn-trade-buy"), ts = $("btn-trade-sell"), td = $("btn-trade-done");
         if (tb) tb.addEventListener("click", function () { tradeBuy(ev.assetKey); });
         if (ts) ts.addEventListener("click", function () { tradeSell(ev.assetKey); });
+        bindTradeBox(ev.assetKey);
         if (td) td.addEventListener("click", finishTrade);
       } else if (ev.birth) {
         var ba = $("btn-birth-accept"), bd = $("btn-birth-decline");
@@ -3603,6 +3713,7 @@ select.modal-select {
   function resetEconomyFlags() {
     state.growthUnits = { metals: 0, bitcoin: 0, usindex: 0 };
     state.etfUnitNzd = ETF_UNIT_NZD;
+    state.etfAll = true;
     state.indexUpdate = null;
     state.priceIndex = { metals: 1, bitcoin: 1, usindex: 1, property: 1, business: 1 };
     state.assets = [];
@@ -3650,11 +3761,9 @@ select.modal-select {
     var monthlyNetPay = state.baseGross - monthlyTaxFromGross(state.baseGross);
     state.cash = startingCash(Math.max(500, monthlyNetPay));
     var dd = DIFFICULTIES.find(function (d) { return d.id === state.difficulty; }) || DIFFICULTIES[1];
-    state.cash += dd.startCashBonus || 0;   /* Easy: +$3,000 */
-    state.ccBalance = dd.startCc || 0;      /* Hard: $3,000 on the credit card (24% p.a.) */
-    /* Net worth must start above $0 (bankrupt = net worth < $0 at payday): with a starting card
-       debt, cash is at least the debt + $1,500 (matters only for low-pay careers). */
-    if (state.ccBalance) state.cash = Math.max(state.cash, state.ccBalance + 1500);
+    /* v5.8: starting cash is the same on every level (career's normal start); the level sets the
+       starting credit-card debt: Easy $0, Normal $10,000, Hard $20,000 (24% p.a., existing CC rules). */
+    state.ccBalance = dd.startCc || 0;
     $("play-career-title").textContent =
       c.name + " · " + fmt(c.rate) + "/hr · " + fmt(state.baseGross) + "/mo gross";
   }
@@ -3886,6 +3995,9 @@ select.modal-select {
       return;
     }
     if (typing) return;
+    /* v5.8: Enter on a focused trade-box button (steppers, 1/10/Max, Buy, Sell) presses THAT button;
+       Space stays the safe default (Done trading). */
+    if (e.key === "Enter" && e.target && e.target.tagName === "BUTTON" && e.target.closest && e.target.closest(".trade-box")) return;
     if (spaceOrEnter) {
       if (state.screen === "summary") return;
       e.preventDefault();
@@ -3938,7 +4050,7 @@ select.modal-select {
   window.SMARTER_DOLLAR = {
     CAREERS: CAREERS, OPPORTUNITY: OPPORTUNITY, SPENDING: SPENDING, LIFE: LIFE, MARKET: MARKET,
     DECKS: DECKS, DIFFICULTIES: DIFFICULTIES,
-    rollDeal: rollDeal, buyoutTarget: buyoutTarget, MONTHLY_INDEX_MODEL: MONTHLY_INDEX_MODEL, monthlyIndexUpdate: monthlyIndexUpdate, indexUpdateText: indexUpdateText, unitPriceExact: unitPriceExact, fmtUnitPrice: fmtUnitPrice, TRADE_LOT: TRADE_LOT, checkWin: checkWin, isWinModalOpen: isWinModalOpen, nextMonth: nextMonth, acceptBuyout: acceptBuyout, declineBuyout: declineBuyout, renderEvent: renderEvent, renderHud: renderHud, structuralCashflow: structuralCashflow, bankruptcyStatus: bankruptcyStatus, checkBankruptcy: checkBankruptcy, hideTip: hideTip, BANKRUPT_REASON: BANKRUPT_REASON, settleMonthCashflow: settleMonthCashflow, drawFromDeck: drawFromDeck, dealRoiPct: dealRoiPct,
+    rollDeal: rollDeal, buyoutTarget: buyoutTarget, MONTHLY_INDEX_MODEL: MONTHLY_INDEX_MODEL, monthlyIndexUpdate: monthlyIndexUpdate, indexUpdateText: indexUpdateText, unitPriceExact: unitPriceExact, fmtUnitPrice: fmtUnitPrice, tradeBuy: tradeBuy, tradeSell: tradeSell, maxAffordable: maxAffordable, tradeCost: tradeCost, checkWin: checkWin, isWinModalOpen: isWinModalOpen, nextMonth: nextMonth, acceptBuyout: acceptBuyout, declineBuyout: declineBuyout, renderEvent: renderEvent, renderHud: renderHud, structuralCashflow: structuralCashflow, bankruptcyStatus: bankruptcyStatus, checkBankruptcy: checkBankruptcy, hideTip: hideTip, BANKRUPT_REASON: BANKRUPT_REASON, settleMonthCashflow: settleMonthCashflow, drawFromDeck: drawFromDeck, dealRoiPct: dealRoiPct,
     SFX: SFX, drawMonthEvents: drawMonthEvents, isOnceOnly: isOnceOnly, deckCards: deckCards, canDrawIllness: canDrawIllness,
     monthlyTaxFromGross: monthlyTaxFromGross, monthlyGrossFromRate: monthlyGrossFromRate,
     effectiveTaxRate: effectiveTaxRate, round10: round10, state: state,
