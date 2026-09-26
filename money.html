@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SMARTER $ — NZ Financial Literacy Game (v4)</title>
+<title>SMARTER $ — NZ Financial Literacy Game (v5.4)</title>
 <style>
 :root {
   --bg: #0f172a; --surface: #1e293b; --surface2: #334155; --text: #f1f5f9; --muted: #94a3b8;
@@ -403,6 +403,8 @@ select.modal-select {
 .month-log { list-style: none; margin: 0; padding: 0; font-size: 0.8rem; color: var(--muted); display: flex; flex-direction: column; gap: 0.12rem; }
 .month-log b { color: var(--text); font-weight: 700; }
 .event-prev { font-size: 0.76rem; color: var(--muted); border-top: 1px dashed var(--surface2); padding-top: 0.2rem; }
+.btn-sound { min-width: 2.4rem; }
+.btn-sound.muted { opacity: 0.55; }
 .deal-note { display: block; font-size: 0.8em; color: #cbd5e1; opacity: 0.85; margin-top: 0.15rem; }
 .linked-note { display: inline-block; font-size: 0.8em; color: #a5f3fc; background: rgba(34,211,238,0.12); border-radius: 6px; padding: 0 0.35rem; }
 .scaled-note { display: inline-block; font-size: 0.78em; color: #fde68a; background: rgba(251,191,36,0.12); border-radius: 6px; padding: 0 0.35rem; }
@@ -453,6 +455,7 @@ select.modal-select {
       <button type="button" class="btn-secondary" id="btn-continue" data-tip="Resume the latest auto-save" hidden>Continue</button>
       <button type="button" class="btn-secondary" id="btn-load-title" data-tip="Choose a save slot (1–5) or the Auto save">Load game</button>
       <button type="button" class="btn-ghost" id="btn-load-file" data-tip="Load a SMARTER save JSON file">Load file</button>
+      <button type="button" class="btn-ghost btn-sound" id="btn-sound-title" data-tip="Sound on/off (hotkey M)" aria-label="Sound on/off">🔊</button>
     </div>
     <p id="continue-meta" class="subtitle" style="margin-top:0.5rem;display:none"></p>
     <p id="storage-note" class="subtitle" style="margin-top:0.5rem;display:none">On OneDrive preview, use Save to download a file — or download this HTML and open in Chrome for auto-save.</p>
@@ -463,7 +466,7 @@ select.modal-select {
 
 <section id="screen-difficulty" class="screen" aria-label="Choose difficulty">
   <h2>Choose Difficulty</h2>
-  <p class="subtitle">Harder decks weight more spending &amp; life events. Market cards are common and often move prices you can trade.</p>
+  <p class="subtitle">Every month: 1 market news → 2 deal → 3 life/spending → 4 wildcard (deal or life). Harder levels mean more spending, fewer deals, more illness and a tougher start. Each deck (64 cards) is shuffled; a card comes back only after the whole deck is used. Permanent cost rises happen at most once per game.</p>
   <div class="card-grid" id="difficulty-grid" role="group" aria-label="Difficulty options"></div>
   <div class="center-actions">
     <button type="button" class="btn-ghost" id="btn-diff-back">Back</button>
@@ -497,6 +500,7 @@ select.modal-select {
       <button type="button" class="btn-secondary btn-sm" id="btn-load" data-tip="Choose a save slot (or Auto) to load — overwrites current run">Load</button>
       <button type="button" class="btn-ghost btn-sm" id="btn-load-file-play" data-tip="Load a SMARTER save JSON file (overwrites current run)">Load file</button>
       <button type="button" class="btn-ghost btn-sm" id="btn-restart" data-tip="Return to title and lose progress">Restart</button>
+      <button type="button" class="btn-ghost btn-sm btn-sound" id="btn-sound" data-tip="Sound on/off (hotkey M)" aria-label="Sound on/off">🔊</button>
     </div>
   </div>
   <div class="month-bar" aria-hidden="true"><div class="month-bar-fill" id="month-bar-fill" style="width:0%"></div></div>
@@ -665,7 +669,13 @@ select.modal-select {
   var SLOT_NAMES = ["Market news", "Opportunity", "Life / spending", "Wildcard"];
   /* 4x more cards per month: permanent "+$/mo living" cards are drawn less often so the
      10-year expense creep stays close to the old one-event-a-month game. */
-  var PERMANENT_COST_WEIGHT = 0.35; /* also used for IRD catch-up bills */
+  /* v5.4 real decks: every deck is a shuffled pile of 64 distinct cards, drawn in order without
+     replacement and reshuffled only when empty (state.decks, saved + rewound by undo).
+     Permanent-expense cards (expenseDelta / tax_bill — 4 of the 64 spending cards) happen at most
+     ONCE per game: once drawn they are retired (state.usedOnce) and never shuffled back in.
+     v5.3 drew them at 0.35x weight among 15 cards (~15% of spending draws, repeatable); now they are
+     4 single cards per game (~1/3 as many permanent rises over 10 years). */
+  function isOnceOnly(c) { return !!c && (!!c.expenseDelta || c.effect === "tax_bill"); }
 
   var CAREERS = [
     { id: 1, name: "Café Worker", rate: 25, guide: "$23–$30" },
@@ -681,11 +691,17 @@ select.modal-select {
   ];
 
   var DIFFICULTIES = [
-    { id: "easy", label: "Easy", desc: "More opportunities. Markets still common.",
+    /* v5.4: spendingShare = chance event 3 is a SPENDING card (else life); illness = monthly
+       illness chance (checked once, before events; 12-month gap); startCashBonus / startCc =
+       starting position. weights.opportunity/life still set the event-4 wildcard mix. */
+    { id: "easy", label: "Easy", spendingShare: 0.50, illness: 0.03, startCashBonus: 3000, startCc: 0,
+      desc: "Start +$3,000 cash. Wildcard (event 4) ≈47% deals. Event 3: 50% spending / 50% life. Illness 3% a month.",
       weights: { opportunity: 0.18, spending: 0.22, life: 0.20, market: 0.40 }, cls: "diff-easy" },
-    { id: "normal", label: "Normal", desc: "Balanced mix. Opportunities rarer.",
+    { id: "normal", label: "Normal", spendingShare: 2 / 3, illness: 0.06, startCashBonus: 0, startCc: 0,
+      desc: "Standard start. Wildcard ≈35% deals. Event 3: 2/3 spending / 1/3 life. Illness 6% a month.",
       weights: { opportunity: 0.12, spending: 0.28, life: 0.22, market: 0.38 }, cls: "diff-normal" },
-    { id: "hard", label: "Hard", desc: "Heavy spending & life. Few deals.",
+    { id: "hard", label: "Hard", spendingShare: 0.85, illness: 0.09, startCashBonus: 0, startCc: 3000,
+      desc: "Start with $3,000 credit-card debt (24% p.a.; net worth still starts ≥ $1,500). Wildcard ≈24% deals. Event 3: 85% spending. Illness 9% a month.",
       weights: { opportunity: 0.08, spending: 0.35, life: 0.25, market: 0.32 }, cls: "diff-hard" }
   ];
 
@@ -697,95 +713,277 @@ select.modal-select {
     property: "Property", business: "Business"
   };
 
+  /* v5.4 decks: each deck has 64 distinct cards, shuffled and drawn without replacement (see drawFromDeck). */
   var OPPORTUNITY = [
-    { id: "o1", type: "opportunity", kind: "cashflow", title: "Term Deposit Slice", copy: "NZ bank term deposit (returns vary).", cost: 8000, passive: 27, label: "+$27/mo" },
-    { id: "o2", type: "opportunity", kind: "cashflow", title: "Dividend ETF Nibble", copy: "NZ/AU dividend ETF (cash yield varies).", cost: 12000, passive: 50, label: "+$50/mo" },
-    { id: "o3", type: "opportunity", kind: "cashflow", title: "Online Course Pack", copy: "Record once, royalty drip.", cost: 5000, passive: 42, label: "+$42/mo" },
-    { id: "o4", type: "opportunity", kind: "cashflow", title: "Side Hustle Gear", copy: "Tools for weekend gigs.", cost: 6500, passive: 45, label: "+$45/mo" },
-    { id: "o5", type: "opportunity", kind: "cashflow", title: "Parking Spot Share", copy: "CBD park sublet.", cost: 18000, passive: 120, label: "+$120/mo" },
-    { id: "o6", type: "opportunity", kind: "cashflow", title: "Vending Route Share", copy: "Snack machine stake.", cost: 25000, passive: 146, label: "+$146/mo" },
-    { id: "o7", type: "opportunity", kind: "cashflow", title: "Laundry Card Biz", copy: "Coin laundry in a student block.", cost: 35000, passive: 175, label: "+$175/mo" },
-    { id: "o8", type: "opportunity", kind: "cashflow", title: "Storage Unit Slice", copy: "Lease a unit, rent shelves.", cost: 28000, passive: 163, label: "+$163/mo" },
-    { id: "o9", type: "opportunity", kind: "cashflow", title: "Solar Co-op Buy-In", copy: "Community solar credits.", cost: 40000, passive: 167, label: "+$167/mo" },
-    { id: "o10", type: "opportunity", kind: "cashflow", title: "E-Bike Fleet Slice", copy: "Campus e-bike share.", cost: 30000, passive: 150, label: "+$150/mo" },
-    { id: "og1", type: "opportunity", kind: "growth", title: "Gold/Silver Bullion", copy: "Physical gold/silver unit. No passive — market value only.", cost: 3000, assetKey: "metals", units: 1, label: "Growth" },
-    { id: "og2", type: "opportunity", kind: "growth", title: "Gold/Silver Coins", copy: "Bullion coins lot. Market price only.", cost: 3000, assetKey: "metals", units: 1, label: "Growth" },
-    { id: "og3", type: "opportunity", kind: "growth", title: "Bitcoin (classroom unit)", copy: "Simplified BTC. Zero passive until sold.", cost: 8000, assetKey: "bitcoin", units: 1, label: "Growth" },
-    { id: "og4", type: "opportunity", kind: "growth", title: "US Index Fund", copy: "Fund tracking a US share index — capital gains vibe.", cost: 6000, assetKey: "usindex", units: 1, label: "Growth" },
-    { id: "og5", type: "opportunity", kind: "growth", title: "Extra Gold/Silver Lot", copy: "Another bullion tranche.", cost: 6000, assetKey: "metals", units: 2, label: "Growth ×2" },
-    { id: "og6", type: "opportunity", kind: "growth", title: "US Index Top-Up", copy: "Add to your US Index holding.", cost: 15000, assetKey: "usindex", units: 2, label: "Growth ×2" },
-    { id: "op1", type: "opportunity", kind: "property", title: "Starter Rental Flat", copy: "Provincial flat. Down payment from cash/CC/HI; rest is a bank loan. Rent scales with property index.", price: 320000, downPayment: 32000, passive: 450, label: "Property" },
-    { id: "op2", type: "opportunity", kind: "property", title: "Townhouse Rental", copy: "Two-bed townhouse. Bank finances after down payment.", price: 480000, downPayment: 48000, passive: 720, label: "Property" },
-    { id: "op3", type: "opportunity", kind: "property", title: "City Unit Slice", copy: "Apartment share. Higher rent, bigger loan.", price: 550000, downPayment: 55000, passive: 850, label: "Property" },
-    { id: "op4", type: "opportunity", kind: "property", title: "Duplex Opportunity", copy: "Duplex — stronger cashflow if you can fund the deposit.", price: 620000, downPayment: 62000, passive: 1100, label: "Property" },
-    { id: "ob1", type: "opportunity", kind: "business", title: "Café Franchise Slice", copy: "Small café stake. Down payment + bank loan. Draw scales with business index.", price: 180000, downPayment: 36000, passive: 600, label: "Business" },
-    { id: "ob2", type: "opportunity", kind: "business", title: "Lawn & Garden Crew", copy: "Buy into a local crew. Equipment financed.", price: 95000, downPayment: 20000, passive: 380, label: "Business" },
-    { id: "ob3", type: "opportunity", kind: "business", title: "Mobile Mechanic Van", copy: "Fitted van + tools. Deposit then bank loan.", price: 120000, downPayment: 25000, passive: 520, label: "Business" },
-    { id: "ob4", type: "opportunity", kind: "business", title: "Online Store Stake", copy: "Inventory + ads. Deposit, bank for the rest.", price: 80000, downPayment: 20000, passive: 340, label: "Business" }
+    {"id": "o1", "type": "opportunity", "kind": "cashflow", "title": "Term Deposit Slice", "copy": "NZ bank term deposit (returns vary).", "cost": 8000, "passive": 47, "label": "Cashflow"},
+    {"id": "o2", "type": "opportunity", "kind": "cashflow", "title": "Dividend ETF Nibble", "copy": "NZ/AU dividend ETF (cash yield varies).", "cost": 12000, "passive": 70, "label": "Cashflow"},
+    {"id": "o3", "type": "opportunity", "kind": "cashflow", "title": "Online Course Pack", "copy": "Record once, royalty drip.", "cost": 5000, "passive": 29, "label": "Cashflow"},
+    {"id": "o4", "type": "opportunity", "kind": "cashflow", "title": "Side Hustle Gear", "copy": "Tools for weekend gigs.", "cost": 6500, "passive": 38, "label": "Cashflow"},
+    {"id": "o5", "type": "opportunity", "kind": "cashflow", "title": "Parking Spot Share", "copy": "CBD park sublet.", "cost": 18000, "passive": 105, "label": "Cashflow"},
+    {"id": "o6", "type": "opportunity", "kind": "cashflow", "title": "Vending Route Share", "copy": "Snack machine stake.", "cost": 25000, "passive": 146, "label": "Cashflow"},
+    {"id": "o7", "type": "opportunity", "kind": "cashflow", "title": "Laundry Card Biz", "copy": "Coin laundry in a student block.", "cost": 35000, "passive": 204, "label": "Cashflow"},
+    {"id": "o8", "type": "opportunity", "kind": "cashflow", "title": "Storage Unit Slice", "copy": "Lease a unit, rent shelves.", "cost": 28000, "passive": 163, "label": "Cashflow"},
+    {"id": "o9", "type": "opportunity", "kind": "cashflow", "title": "Solar Co-op Buy-In", "copy": "Community solar credits.", "cost": 40000, "passive": 233, "label": "Cashflow"},
+    {"id": "o10", "type": "opportunity", "kind": "cashflow", "title": "E-Bike Fleet Slice", "copy": "Campus e-bike share.", "cost": 30000, "passive": 175, "label": "Cashflow"},
+    {"id": "o11", "type": "opportunity", "kind": "cashflow", "title": "Coffee Cart Share", "copy": "A share in a weekend coffee cart.", "cost": 15000, "passive": 88, "label": "Cashflow"},
+    {"id": "o12", "type": "opportunity", "kind": "cashflow", "title": "Car Wash Machine", "copy": "Coin car wash at a petrol station.", "cost": 22000, "passive": 128, "label": "Cashflow"},
+    {"id": "o13", "type": "opportunity", "kind": "cashflow", "title": "Rent Out Your Garage", "copy": "Fit it out. Rent it to a neighbour.", "cost": 7000, "passive": 41, "label": "Cashflow"},
+    {"id": "o14", "type": "opportunity", "kind": "cashflow", "title": "Guest Room Kit", "copy": "Furnish a spare room for visitors.", "cost": 9000, "passive": 53, "label": "Cashflow"},
+    {"id": "o15", "type": "opportunity", "kind": "cashflow", "title": "Food Truck Stake", "copy": "A small share in a food truck.", "cost": 20000, "passive": 117, "label": "Cashflow"},
+    {"id": "o16", "type": "opportunity", "kind": "cashflow", "title": "Bond Fund", "copy": "An NZ bond fund pays interest.", "cost": 10000, "passive": 58, "label": "Cashflow"},
+    {"id": "o17", "type": "opportunity", "kind": "cashflow", "title": "Trailer for Hire", "copy": "Buy a trailer. Rent it out.", "cost": 6000, "passive": 35, "label": "Cashflow"},
+    {"id": "o18", "type": "opportunity", "kind": "cashflow", "title": "Photo Booth Hire", "copy": "A photo booth for parties.", "cost": 11000, "passive": 64, "label": "Cashflow"},
+    {"id": "o19", "type": "opportunity", "kind": "cashflow", "title": "Peer-to-Peer Loans", "copy": "Lend online to small borrowers.", "cost": 8000, "passive": 47, "label": "Cashflow"},
+    {"id": "o20", "type": "opportunity", "kind": "cashflow", "title": "Beach Ice Cream Stall", "copy": "A summer stall at the beach.", "cost": 5000, "passive": 29, "label": "Cashflow"},
+    {"id": "o21", "type": "opportunity", "kind": "cashflow", "title": "Phone Repair Kit", "copy": "Fix phones for cash.", "cost": 4000, "passive": 23, "label": "Cashflow"},
+    {"id": "o22", "type": "opportunity", "kind": "cashflow", "title": "Kiwifruit Orchard Share", "copy": "A tiny share in an orchard.", "cost": 30000, "passive": 175, "label": "Cashflow"},
+    {"id": "o23", "type": "opportunity", "kind": "cashflow", "title": "Carpet Cleaner Hire", "copy": "Hire a machine out to friends.", "cost": 3500, "passive": 20, "label": "Cashflow"},
+    {"id": "o24", "type": "opportunity", "kind": "cashflow", "title": "Tiny Home Rental", "copy": "A small cabin on a farm.", "cost": 38000, "passive": 222, "label": "Cashflow"},
+    {"id": "o25", "type": "opportunity", "kind": "cashflow", "title": "NZ Dividend Shares", "copy": "NZX shares that pay dividends.", "cost": 16000, "passive": 93, "label": "Cashflow"},
+    {"id": "o26", "type": "opportunity", "kind": "cashflow", "title": "Lawnmower Round", "copy": "Buy mowers. Hire a student.", "cost": 9500, "passive": 55, "label": "Cashflow"},
+    {"id": "o27", "type": "opportunity", "kind": "cashflow", "title": "Student Room Sublet", "copy": "Sublet a room near campus.", "cost": 12000, "passive": 70, "label": "Cashflow"},
+    {"id": "og1", "type": "opportunity", "kind": "growth", "title": "Gold/Silver Bullion", "copy": "Physical gold/silver unit. No passive — market value only.", "cost": 3000, "assetKey": "metals", "units": 1, "label": "Growth"},
+    {"id": "og2", "type": "opportunity", "kind": "growth", "title": "Gold/Silver Coins", "copy": "Bullion coins lot. Market price only.", "cost": 3000, "assetKey": "metals", "units": 1, "label": "Growth"},
+    {"id": "og3", "type": "opportunity", "kind": "growth", "title": "Bitcoin (classroom unit)", "copy": "Simplified BTC. Zero passive until sold.", "cost": 8000, "assetKey": "bitcoin", "units": 1, "label": "Growth"},
+    {"id": "og4", "type": "opportunity", "kind": "growth", "title": "US Index Fund", "copy": "Fund tracking a US share index — capital gains vibe.", "cost": 6000, "assetKey": "usindex", "units": 1, "label": "Growth"},
+    {"id": "og5", "type": "opportunity", "kind": "growth", "title": "Extra Gold/Silver Lot", "copy": "Another bullion tranche.", "cost": 6000, "assetKey": "metals", "units": 2, "label": "Growth ×2"},
+    {"id": "og6", "type": "opportunity", "kind": "growth", "title": "US Index Top-Up", "copy": "Add to your US Index holding.", "cost": 15000, "assetKey": "usindex", "units": 2, "label": "Growth ×2"},
+    {"id": "og7", "type": "opportunity", "kind": "growth", "title": "Silver Coins", "copy": "A small lot of silver coins.", "cost": 3000, "assetKey": "metals", "units": 1, "label": "Growth"},
+    {"id": "og8", "type": "opportunity", "kind": "growth", "title": "Small Gold Bar", "copy": "A tiny gold bar. No income.", "cost": 3000, "assetKey": "metals", "units": 1, "label": "Growth"},
+    {"id": "og9", "type": "opportunity", "kind": "growth", "title": "Precious Metals Fund", "copy": "A fund that holds gold and silver.", "cost": 6000, "assetKey": "metals", "units": 2, "label": "Growth ×2"},
+    {"id": "og10", "type": "opportunity", "kind": "growth", "title": "Bitcoin Starter", "copy": "Buy one classroom unit of bitcoin.", "cost": 8000, "assetKey": "bitcoin", "units": 1, "label": "Growth"},
+    {"id": "og11", "type": "opportunity", "kind": "growth", "title": "Bitcoin Dip Buy", "copy": "The price fell. Buy the dip?", "cost": 8000, "assetKey": "bitcoin", "units": 1, "label": "Growth"},
+    {"id": "og12", "type": "opportunity", "kind": "growth", "title": "Crypto App Bundle", "copy": "Mostly bitcoin, bought in an app.", "cost": 8000, "assetKey": "bitcoin", "units": 1, "label": "Growth"},
+    {"id": "og13", "type": "opportunity", "kind": "growth", "title": "S&P 500 ETF", "copy": "A fund of 500 big US companies.", "cost": 6000, "assetKey": "usindex", "units": 1, "label": "Growth"},
+    {"id": "og14", "type": "opportunity", "kind": "growth", "title": "US Tech Shares Fund", "copy": "A fund of US tech companies.", "cost": 6000, "assetKey": "usindex", "units": 1, "label": "Growth"},
+    {"id": "og15", "type": "opportunity", "kind": "growth", "title": "US Index Monthly Plan", "copy": "Invest in a US index fund.", "cost": 6000, "assetKey": "usindex", "units": 1, "label": "Growth"},
+    {"id": "og16", "type": "opportunity", "kind": "growth", "title": "Global Shares Fund", "copy": "Two units of a world share fund.", "cost": 12000, "assetKey": "usindex", "units": 2, "label": "Growth ×2"},
+    {"id": "op1", "type": "opportunity", "kind": "property", "title": "Starter Rental Flat", "copy": "Provincial flat. Down payment from cash/CC/HI; rest is a bank loan. Rent scales with property index.", "price": 320000, "downPayment": 32000, "passive": 450, "label": "Property"},
+    {"id": "op2", "type": "opportunity", "kind": "property", "title": "Townhouse Rental", "copy": "Two-bed townhouse. Bank finances after down payment.", "price": 480000, "downPayment": 48000, "passive": 680, "label": "Property"},
+    {"id": "op3", "type": "opportunity", "kind": "property", "title": "City Unit Slice", "copy": "Apartment share. Higher rent, bigger loan.", "price": 550000, "downPayment": 55000, "passive": 780, "label": "Property"},
+    {"id": "op4", "type": "opportunity", "kind": "property", "title": "Duplex Opportunity", "copy": "Duplex — stronger cashflow if you can fund the deposit.", "price": 620000, "downPayment": 62000, "passive": 880, "label": "Property"},
+    {"id": "op5", "type": "opportunity", "kind": "property", "title": "Two-Bed Unit", "copy": "A unit in Hamilton. Bank loan for the rest.", "price": 420000, "downPayment": 42000, "passive": 600, "label": "Property"},
+    {"id": "op6", "type": "opportunity", "kind": "property", "title": "Holiday Bach", "copy": "A bach rented to holiday visitors.", "price": 380000, "downPayment": 38000, "passive": 540, "label": "Property"},
+    {"id": "op7", "type": "opportunity", "kind": "property", "title": "Granny Flat", "copy": "A small flat behind a house.", "price": 250000, "downPayment": 25000, "passive": 350, "label": "Property"},
+    {"id": "op8", "type": "opportunity", "kind": "property", "title": "Student Flat", "copy": "A flat near the university in Dunedin.", "price": 450000, "downPayment": 45000, "passive": 640, "label": "Property"},
+    {"id": "op9", "type": "opportunity", "kind": "property", "title": "Corner Shop Building", "copy": "A small shop building with a tenant.", "price": 520000, "downPayment": 78000, "passive": 740, "label": "Property"},
+    {"id": "op10", "type": "opportunity", "kind": "property", "title": "Three-Bed House", "copy": "A family house in Palmerston North.", "price": 500000, "downPayment": 50000, "passive": 710, "label": "Property"},
+    {"id": "ob1", "type": "opportunity", "kind": "business", "title": "Café Franchise Slice", "copy": "Small café stake. Down payment + bank loan. Draw scales with business index.", "price": 180000, "downPayment": 36000, "passive": 260, "label": "Business"},
+    {"id": "ob2", "type": "opportunity", "kind": "business", "title": "Lawn & Garden Crew", "copy": "Buy into a local crew. Equipment financed.", "price": 95000, "downPayment": 20000, "passive": 130, "label": "Business"},
+    {"id": "ob3", "type": "opportunity", "kind": "business", "title": "Mobile Mechanic Van", "copy": "Fitted van + tools. Deposit then bank loan.", "price": 120000, "downPayment": 25000, "passive": 170, "label": "Business"},
+    {"id": "ob4", "type": "opportunity", "kind": "business", "title": "Online Store Stake", "copy": "Inventory + ads. Deposit, bank for the rest.", "price": 80000, "downPayment": 20000, "passive": 110, "label": "Business"},
+    {"id": "ob5", "type": "opportunity", "kind": "business", "title": "Cleaning Company Share", "copy": "A share in an office cleaning firm.", "price": 60000, "downPayment": 15000, "passive": 90, "label": "Business"},
+    {"id": "ob6", "type": "opportunity", "kind": "business", "title": "Takeaway Shop Stake", "copy": "A share in a fish and chip shop.", "price": 150000, "downPayment": 30000, "passive": 210, "label": "Business"},
+    {"id": "ob7", "type": "opportunity", "kind": "business", "title": "Hair Salon Share", "copy": "A share in a busy salon.", "price": 90000, "downPayment": 20000, "passive": 130, "label": "Business"},
+    {"id": "ob8", "type": "opportunity", "kind": "business", "title": "Courier Van Business", "copy": "A van with delivery contracts.", "price": 70000, "downPayment": 15000, "passive": 100, "label": "Business"},
+    {"id": "ob9", "type": "opportunity", "kind": "business", "title": "Car Detailing Shop", "copy": "Clean and polish cars for cash.", "price": 85000, "downPayment": 18000, "passive": 120, "label": "Business"},
+    {"id": "ob10", "type": "opportunity", "kind": "business", "title": "Childcare Centre Stake", "copy": "A share in a small childcare centre.", "price": 200000, "downPayment": 40000, "passive": 280, "label": "Business"},
+    {"id": "ob11", "type": "opportunity", "kind": "business", "title": "Phone Repair Shop", "copy": "A small shop in a mall.", "price": 65000, "downPayment": 15000, "passive": 90, "label": "Business"}
   ];
 
   var SPENDING = [
-    { id: "s1", type: "spending", title: "Flat Bond Top-Up", copy: "Bond rose. Landlord wants the difference today.", cost: 800, label: "−$800" },
-    { id: "s2", type: "spending", title: "WOF + Rego", copy: "Car check failed a bulb — plus rego due.", cost: 350, label: "−$350" },
-    { id: "s3", type: "spending", title: "Phone Upgrade FOMO", copy: "New phone — cash out now.", cost: 600, label: "−$600" },
-    { id: "s4", type: "spending", title: "Festival Weekend", copy: "Tickets, rides, and overpriced chips.", cost: 280, label: "−$280" },
-    { id: "s5", type: "spending", title: "Vet Bill", copy: "Dog ate a sock. Clinic saved the day.", cost: 450, label: "−$450" },
-    { id: "s6", type: "spending", title: "Broken Laptop", copy: "Screen crack. Need it for work.", cost: 900, label: "−$900" },
-    { id: "s7", type: "spending", title: "Power Spike", copy: "Cold snap — heater non-stop.", expenseDelta: 80, label: "+$80/mo" },
-    { id: "s8", type: "spending", title: "Uber Habit", copy: "Late shifts = rides home.", expenseDelta: 70, label: "+$70/mo" },
-    { id: "s9", type: "spending", title: "Takeaways Creep", copy: "Too tired to cook. Again.", expenseDelta: 100, label: "+$100/mo" },
-    { id: "s10", type: "spending", title: "Gym Annual", copy: "Membership paid upfront.", cost: 500, label: "−$500" },
-    { id: "s11", type: "spending", title: "Mate's Wedding Koha", copy: "Big koha + outfit.", cost: 400, label: "−$400" },
-    { id: "s12", type: "spending", title: "Stolen Bike", copy: "U-lock wasn't enough.", cost: 350, expenseDelta: 50, label: "−$350 & +$50/mo" },
-    { id: "s13", type: "spending", title: "Insurance Excess", copy: "Claim approved — excess still hurts.", cost: 550, label: "−$550" },
-    { id: "s14", type: "spending", title: "Streaming Stack", copy: "Four apps. One couch.", expenseDelta: 40, label: "+$40/mo" },
-    { id: "s15", type: "spending", title: "Impulse Online Cart", copy: "Late-night checkout.", cost: 220, label: "−$220" }
+    {"id": "s1", "type": "spending", "title": "Flat Bond Top-Up", "copy": "Bond rose. Landlord wants the difference today.", "cost": 800, "label": "−$800"},
+    {"id": "s2", "type": "spending", "title": "WOF + Rego", "copy": "Car check failed a bulb — plus rego due.", "cost": 350, "label": "−$350"},
+    {"id": "s3", "type": "spending", "title": "Phone Upgrade FOMO", "copy": "New phone — cash out now.", "cost": 600, "label": "−$600"},
+    {"id": "s4", "type": "spending", "title": "Festival Weekend", "copy": "Tickets, rides, and overpriced chips.", "cost": 280, "label": "−$280"},
+    {"id": "s5", "type": "spending", "title": "Vet Bill", "copy": "Dog ate a sock. Clinic saved the day.", "cost": 450, "label": "−$450"},
+    {"id": "s6", "type": "spending", "title": "Broken Laptop", "copy": "Screen crack. Need it for work.", "cost": 900, "label": "−$900"},
+    {"id": "s7", "type": "spending", "title": "Power Spike", "copy": "Cold snap — a huge power bill this month.", "cost": 250, "label": "−$250"},
+    {"id": "s8", "type": "spending", "title": "Uber Habit", "copy": "Late shifts = rides home, every week.", "expenseDelta": 70, "label": "+$70/mo"},
+    {"id": "s9", "type": "spending", "title": "Takeaways Creep", "copy": "Too tired to cook. Again.", "expenseDelta": 100, "label": "+$100/mo"},
+    {"id": "s10", "type": "spending", "title": "Gym Annual", "copy": "Membership paid upfront.", "cost": 500, "label": "−$500"},
+    {"id": "s11", "type": "spending", "title": "Mate's Wedding Koha", "copy": "Big koha + outfit.", "cost": 400, "label": "−$400"},
+    {"id": "s12", "type": "spending", "title": "Stolen Bike", "copy": "U-lock wasn't enough. Now you bus to work.", "cost": 350, "expenseDelta": 50, "label": "−$350 & +$50/mo"},
+    {"id": "s13", "type": "spending", "title": "Insurance Excess", "copy": "Claim approved — excess still hurts.", "cost": 550, "label": "−$550"},
+    {"id": "s14", "type": "spending", "title": "Streaming Stack", "copy": "Four apps. One couch.", "expenseDelta": 40, "label": "+$40/mo"},
+    {"id": "s15", "type": "spending", "title": "Impulse Online Cart", "copy": "Late-night checkout.", "cost": 220, "label": "−$220"},
+    {"id": "s16", "type": "spending", "title": "Dentist Visit", "copy": "A filling. Not fun.", "cost": 380, "label": "−$380"},
+    {"id": "s17", "type": "spending", "title": "Glasses Broke", "copy": "New lenses for work.", "cost": 420, "label": "−$420"},
+    {"id": "s18", "type": "spending", "title": "Car Battery Dead", "copy": "Flat battery on a cold morning.", "cost": 260, "label": "−$260"},
+    {"id": "s19", "type": "spending", "title": "New Tyres", "copy": "Two tyres are worn out.", "cost": 480, "label": "−$480"},
+    {"id": "s20", "type": "spending", "title": "Birthday Gifts", "copy": "Three birthdays this month.", "cost": 200, "label": "−$200"},
+    {"id": "s21", "type": "spending", "title": "Washing Machine Dies", "copy": "Buy a second-hand one.", "cost": 550, "label": "−$550"},
+    {"id": "s22", "type": "spending", "title": "Fridge Repair", "copy": "The fridge stopped cooling.", "cost": 320, "label": "−$320"},
+    {"id": "s23", "type": "spending", "title": "Doctor Visit", "copy": "GP visit and a prescription.", "cost": 120, "label": "−$120"},
+    {"id": "s24", "type": "spending", "title": "Flight to Auckland", "copy": "Family event up north.", "cost": 450, "label": "−$450"},
+    {"id": "s25", "type": "spending", "title": "Car Service", "copy": "Oil, filters and brakes.", "cost": 390, "label": "−$390"},
+    {"id": "s26", "type": "spending", "title": "Moving Flat", "copy": "Van, boxes and cleaning.", "cost": 700, "label": "−$700"},
+    {"id": "s27", "type": "spending", "title": "New Work Boots", "copy": "Safety boots for the job.", "cost": 180, "label": "−$180"},
+    {"id": "s28", "type": "spending", "title": "Laptop Charger", "copy": "Lost it. Need a new one.", "cost": 110, "label": "−$110"},
+    {"id": "s29", "type": "spending", "title": "Christmas Presents", "copy": "Gifts for the whole whānau.", "cost": 500, "label": "−$500"},
+    {"id": "s30", "type": "spending", "title": "Haircut and Beauty", "copy": "Getting ready for a big night.", "cost": 150, "label": "−$150"},
+    {"id": "s31", "type": "spending", "title": "Kitchen Gadget", "copy": "An air fryer on sale.", "cost": 190, "label": "−$190"},
+    {"id": "s32", "type": "spending", "title": "Concert Tickets", "copy": "Your favourite band is in town.", "cost": 260, "label": "−$260"},
+    {"id": "s33", "type": "spending", "title": "Car Window Smashed", "copy": "Broken window. Glass repair.", "cost": 340, "label": "−$340"},
+    {"id": "s34", "type": "spending", "title": "Late Fee", "copy": "You paid a bill late.", "cost": 60, "label": "−$60"},
+    {"id": "s35", "type": "spending", "title": "Phone Screen Cracked", "copy": "Dropped it on the footpath.", "cost": 280, "label": "−$280"},
+    {"id": "s36", "type": "spending", "title": "Bike Repair", "copy": "Gears and brakes fixed.", "cost": 140, "label": "−$140"},
+    {"id": "s37", "type": "spending", "title": "New Couch", "copy": "A sale too good to miss.", "cost": 650, "label": "−$650"},
+    {"id": "s38", "type": "spending", "title": "Weekend Away", "copy": "Two nights in Rotorua.", "cost": 480, "label": "−$480"},
+    {"id": "s39", "type": "spending", "title": "Driving Lessons", "copy": "Lessons for your full licence.", "cost": 300, "label": "−$300"},
+    {"id": "s40", "type": "spending", "title": "Passport Renewal", "copy": "Your passport expired.", "cost": 230, "label": "−$230"},
+    {"id": "s41", "type": "spending", "title": "Work Software", "copy": "A year of software for work.", "cost": 240, "label": "−$240"},
+    {"id": "s42", "type": "spending", "title": "Pet Food", "copy": "A big bag of dog food.", "cost": 130, "label": "−$130"},
+    {"id": "s43", "type": "spending", "title": "Lost Wallet", "copy": "Cash gone. Cards replaced.", "cost": 160, "label": "−$160"},
+    {"id": "s44", "type": "spending", "title": "Locked Out", "copy": "Locksmith call-out fee.", "cost": 180, "label": "−$180"},
+    {"id": "s45", "type": "spending", "title": "Sports Fees", "copy": "Club fees for the season.", "cost": 220, "label": "−$220"},
+    {"id": "s46", "type": "spending", "title": "Dinner Shout", "copy": "Dinner with friends — you pay.", "cost": 140, "label": "−$140"},
+    {"id": "s47", "type": "spending", "title": "New Heater", "copy": "Buy a heater for winter.", "cost": 170, "label": "−$170"},
+    {"id": "s48", "type": "spending", "title": "Short Course", "copy": "A course for work skills.", "cost": 350, "label": "−$350"},
+    {"id": "s49", "type": "spending", "title": "Car Towing", "copy": "Car broke down on the motorway.", "cost": 250, "label": "−$250"},
+    {"id": "s50", "type": "spending", "title": "Tangi Travel", "copy": "Travel for a family funeral.", "cost": 400, "label": "−$400"},
+    {"id": "s51", "type": "spending", "title": "Gaming Console", "copy": "Impulse buy on sale.", "cost": 600, "label": "−$600"},
+    {"id": "s52", "type": "spending", "title": "New Mattress", "copy": "Back pain. Time for a new bed.", "cost": 750, "label": "−$750"},
+    {"id": "s53", "type": "spending", "title": "Hospital Parking", "copy": "Visiting family in hospital.", "cost": 90, "label": "−$90"},
+    {"id": "s54", "type": "spending", "title": "Old Speeding Ticket", "copy": "An old fine finally arrives.", "cost": 230, "label": "−$230"},
+    {"id": "s55", "type": "spending", "title": "Bank Fees", "copy": "Overdraft and card fees.", "cost": 70, "label": "−$70"},
+    {"id": "s56", "type": "spending", "title": "Winter Clothes", "copy": "A warm jacket and shoes.", "cost": 260, "label": "−$260"},
+    {"id": "s57", "type": "spending", "title": "Coffee Every Day", "copy": "Café coffee all month.", "cost": 120, "label": "−$120"},
+    {"id": "s58", "type": "spending", "title": "Toolkit", "copy": "Basic tools for the house.", "cost": 200, "label": "−$200"},
+    {"id": "s59", "type": "spending", "title": "Cousin's Party", "copy": "You help pay for the party.", "cost": 300, "label": "−$300"},
+    {"id": "s60", "type": "spending", "title": "IRD Catch-Up Bill", "copy": "A small tax bill to pay.", "cost": 600, "label": "−$600"},
+    {"id": "s61", "type": "spending", "title": "Bond Deduction", "copy": "Old landlord keeps part of the bond.", "cost": 450, "label": "−$450"},
+    {"id": "s62", "type": "spending", "title": "Car Insurance", "copy": "Pay the yearly premium.", "cost": 850, "label": "−$850"},
+    {"id": "s63", "type": "spending", "title": "Contents Insurance", "copy": "Pay the yearly premium.", "cost": 320, "label": "−$320"},
+    {"id": "s64", "type": "spending", "title": "Baby Shower Gift", "copy": "A gift for a friend's baby.", "cost": 90, "label": "−$90"}
   ];
 
   var LIFE = [
-    { id: "l1", type: "life", title: "Overtime Month", copy: "Short-staffed — extra hours.", cashDelta: 600, label: "+$600", wage: true },
-    { id: "l2", type: "life", title: "IRD Tax Refund", copy: "Small PAYE wash-up lands.", cashDelta: 320, label: "+$320" },
-    { id: "l3", type: "life", title: "Flatmate Moves Out", copy: "Rent share jumps.", expenseDelta: 150, label: "+$150/mo" },
-    { id: "l4", type: "life", title: "Win on Lotto Scratchie", copy: "Not life-changing — but nice.", cashDelta: 50, label: "+$50" },
-    { id: "l5", type: "life", title: "Whanau Koha In", copy: "Family chips in for a hard month.", cashDelta: 250, label: "+$250" },
-    { id: "l6", type: "life", title: "Parking Fine", copy: "P-meter ran out.", cashDelta: -80, label: "−$80" },
-    { id: "l7", type: "life", title: "Community Market Stall", copy: "Sold baking at the market.", cashDelta: 180, label: "+$180" },
-    { id: "l8", type: "life", title: "Rent Review", copy: "Landlord: rent up from next month.", expenseDelta: 120, label: "+$120/mo" },
-    { id: "l9", type: "life", title: "Work Bonus", copy: "Spot bonus for covering roster.", cashDelta: 500, label: "+$500", wage: true },
-    { id: "l10", type: "life", title: "Flooded Laundry", copy: "Hose burst — replace gear.", cashDelta: -300, label: "−$300" },
-    { id: "l11", type: "life", title: "Scholarship / Grant", copy: "Study or training grant hits.", cashDelta: 600, label: "+$600" },
-    { id: "l12", type: "life", title: "Public Transport Strike", copy: "More fuel / rides this month.", cashDelta: -200, label: "−$200" },
-    { id: "l13", type: "life", title: "Neighbour Pays for Help", copy: "Mowed lawns — cash in hand.", cashDelta: 150, label: "+$150" },
-    { id: "li1", type: "life", title: "Workplace Injury", copy: "ACC vibe: you need rest. Duration rolled 1–3 months. First month may use your yearly paid leave.", offWork: true, label: "Off work 1–3 mo" },
-    { id: "li2", type: "life", title: "Serious Illness", copy: "Doctor orders rest. Duration 1–3 months. Paid leave (1 mo/year) covers the first month if still available.", offWork: true, label: "Off work 1–3 mo" },
-    { id: "li3", type: "life", title: "Accident Recovery", copy: "Crash / fall — recovery time. Rest 1–3 months; expenses continue.", offWork: true, label: "Off work 1–3 mo" },
-    { id: "lc1", type: "life", title: "Having a Child", copy: "New family member! Permanent living increase per child, based on your income ($40/week + 3% of weekly pay, $80–$180/week).", birth: true, label: "New child" }
+    {"id": "l1", "type": "life", "title": "Overtime Month", "copy": "Short-staffed — extra hours.", "cashDelta": 600, "label": "+$600", "wage": true},
+    {"id": "l2", "type": "life", "title": "IRD Tax Refund", "copy": "Small PAYE wash-up lands.", "cashDelta": 320, "label": "+$320"},
+    {"id": "l3", "type": "life", "title": "Flatmate Moves Out", "copy": "You cover their rent share this month.", "cashDelta": -300, "label": "−$300"},
+    {"id": "l4", "type": "life", "title": "Win on Lotto Scratchie", "copy": "Not life-changing — but nice.", "cashDelta": 50, "label": "+$50"},
+    {"id": "l5", "type": "life", "title": "Whanau Koha In", "copy": "Family chips in for a hard month.", "cashDelta": 250, "label": "+$250"},
+    {"id": "l6", "type": "life", "title": "Parking Fine", "copy": "P-meter ran out.", "cashDelta": -80, "label": "−$80"},
+    {"id": "l7", "type": "life", "title": "Community Market Stall", "copy": "Sold baking at the market.", "cashDelta": 180, "label": "+$180"},
+    {"id": "l8", "type": "life", "title": "Rent Top-Up", "copy": "Landlord fixed the roof. One-off charge.", "cashDelta": -250, "label": "−$250"},
+    {"id": "l9", "type": "life", "title": "Work Bonus", "copy": "Spot bonus for covering roster.", "cashDelta": 500, "label": "+$500", "wage": true},
+    {"id": "l10", "type": "life", "title": "Flooded Laundry", "copy": "Hose burst — replace gear.", "cashDelta": -300, "label": "−$300"},
+    {"id": "l11", "type": "life", "title": "Scholarship / Grant", "copy": "Study or training grant hits.", "cashDelta": 600, "label": "+$600"},
+    {"id": "l12", "type": "life", "title": "Public Transport Strike", "copy": "More fuel / rides this month.", "cashDelta": -200, "label": "−$200"},
+    {"id": "l13", "type": "life", "title": "Neighbour Pays for Help", "copy": "Mowed lawns — cash in hand.", "cashDelta": 150, "label": "+$150"},
+    {"id": "l14", "type": "life", "title": "Garage Sale", "copy": "Sold old things on Saturday.", "cashDelta": 220, "label": "+$220"},
+    {"id": "l15", "type": "life", "title": "Birthday Money", "copy": "Family sends a gift.", "cashDelta": 150, "label": "+$150"},
+    {"id": "l16", "type": "life", "title": "Extra Shift", "copy": "You cover a mate's shift.", "cashDelta": 300, "label": "+$300", "wage": true},
+    {"id": "l17", "type": "life", "title": "Found Money", "copy": "Cash in an old jacket.", "cashDelta": 40, "label": "+$40"},
+    {"id": "l18", "type": "life", "title": "Power Credit", "copy": "Refund for paying too much.", "cashDelta": 120, "label": "+$120"},
+    {"id": "l19", "type": "life", "title": "Quiz Night Win", "copy": "Your team wins the prize.", "cashDelta": 100, "label": "+$100"},
+    {"id": "l20", "type": "life", "title": "Sold Old Phone", "copy": "Trade-in for cash.", "cashDelta": 180, "label": "+$180"},
+    {"id": "l21", "type": "life", "title": "Babysitting", "copy": "You look after a friend's kids.", "cashDelta": 120, "label": "+$120"},
+    {"id": "l22", "type": "life", "title": "Holiday Pay Top-Up", "copy": "Holiday pay wash-up.", "cashDelta": 400, "label": "+$400", "wage": true},
+    {"id": "l23", "type": "life", "title": "Referral Bonus", "copy": "A friend joins your work.", "cashDelta": 300, "label": "+$300"},
+    {"id": "l24", "type": "life", "title": "Cashback Offer", "copy": "Supermarket cashback.", "cashDelta": 60, "label": "+$60"},
+    {"id": "l25", "type": "life", "title": "Insurance Payout", "copy": "An old claim is paid.", "cashDelta": 350, "label": "+$350"},
+    {"id": "l26", "type": "life", "title": "Sold Car Parts", "copy": "Old wheels sold online.", "cashDelta": 250, "label": "+$250"},
+    {"id": "l27", "type": "life", "title": "Tutoring Job", "copy": "You teach maths to a neighbour's kid.", "cashDelta": 160, "label": "+$160"},
+    {"id": "l28", "type": "life", "title": "Delivery Weekend", "copy": "Delivered food for extra cash.", "cashDelta": 200, "label": "+$200"},
+    {"id": "l29", "type": "life", "title": "Training Grant", "copy": "Your employer pays you to study.", "cashDelta": 400, "label": "+$400"},
+    {"id": "l30", "type": "life", "title": "Community Grant", "copy": "A small grant for your project.", "cashDelta": 300, "label": "+$300"},
+    {"id": "l31", "type": "life", "title": "Tax Credit", "copy": "A government top-up arrives.", "cashDelta": 250, "label": "+$250"},
+    {"id": "l32", "type": "life", "title": "Rent Refund", "copy": "Landlord returns an overpayment.", "cashDelta": 200, "label": "+$200"},
+    {"id": "l33", "type": "life", "title": "Sold Artwork", "copy": "A painting sold at the market.", "cashDelta": 180, "label": "+$180"},
+    {"id": "l34", "type": "life", "title": "Pay Rise Backpay", "copy": "Backpay from your pay rise.", "cashDelta": 350, "label": "+$350", "wage": true},
+    {"id": "l35", "type": "life", "title": "Mate Repays Loan", "copy": "Your friend pays you back.", "cashDelta": 200, "label": "+$200"},
+    {"id": "l36", "type": "life", "title": "Savings Bonus", "copy": "The bank pays a bonus.", "cashDelta": 60, "label": "+$60"},
+    {"id": "l37", "type": "life", "title": "Survey Money", "copy": "You did online surveys.", "cashDelta": 50, "label": "+$50"},
+    {"id": "l38", "type": "life", "title": "Cleaning Job", "copy": "Cash for a big house clean.", "cashDelta": 150, "label": "+$150"},
+    {"id": "l39", "type": "life", "title": "Moving Help", "copy": "You help friends move house.", "cashDelta": 120, "label": "+$120"},
+    {"id": "l40", "type": "life", "title": "Recycling Cash", "copy": "Cans and bottles.", "cashDelta": 30, "label": "+$30"},
+    {"id": "l41", "type": "life", "title": "Flight Refund", "copy": "The airline pays for a delay.", "cashDelta": 220, "label": "+$220"},
+    {"id": "l42", "type": "life", "title": "Petrol Voucher", "copy": "You win a voucher at work.", "cashDelta": 80, "label": "+$80"},
+    {"id": "l43", "type": "life", "title": "Club Refund", "copy": "Season cancelled. Fees back.", "cashDelta": 100, "label": "+$100"},
+    {"id": "l44", "type": "life", "title": "Car Repair", "copy": "The mechanic finds a problem.", "cashDelta": -350, "label": "−$350"},
+    {"id": "l45", "type": "life", "title": "Speeding Fine", "copy": "A camera caught you.", "cashDelta": -120, "label": "−$120"},
+    {"id": "l46", "type": "life", "title": "Lost Phone", "copy": "You left it on the bus.", "cashDelta": -300, "label": "−$300"},
+    {"id": "l47", "type": "life", "title": "Sick Pet", "copy": "The cat needs a check-up.", "cashDelta": -180, "label": "−$180"},
+    {"id": "l48", "type": "life", "title": "Family Overseas", "copy": "You send money to family.", "cashDelta": -400, "label": "−$400"},
+    {"id": "l49", "type": "life", "title": "Loan to a Friend", "copy": "You lend money. It won't come back.", "cashDelta": -250, "label": "−$250"},
+    {"id": "l50", "type": "life", "title": "Short Week", "copy": "Fewer hours at work this week.", "cashDelta": -200, "label": "−$200"},
+    {"id": "l51", "type": "life", "title": "Broken Tooth", "copy": "Emergency dentist.", "cashDelta": -450, "label": "−$450"},
+    {"id": "l52", "type": "life", "title": "Stolen Wallet", "copy": "Cash and cards gone.", "cashDelta": -150, "label": "−$150"},
+    {"id": "l53", "type": "life", "title": "Late Rent Fee", "copy": "Rent was late. Fee added.", "cashDelta": -90, "label": "−$90"},
+    {"id": "l54", "type": "life", "title": "Power Cut", "copy": "Freezer food spoiled.", "cashDelta": -120, "label": "−$120"},
+    {"id": "l55", "type": "life", "title": "Water Leak", "copy": "A leak ruined your things.", "cashDelta": -280, "label": "−$280"},
+    {"id": "l56", "type": "life", "title": "Unpaid Day Off", "copy": "School holidays — one day unpaid.", "cashDelta": -180, "label": "−$180"},
+    {"id": "l57", "type": "life", "title": "Towed Away", "copy": "Parked in the wrong place.", "cashDelta": -220, "label": "−$220"},
+    {"id": "l58", "type": "life", "title": "Scam Text", "copy": "You clicked a bad link.", "cashDelta": -300, "label": "−$300"},
+    {"id": "l59", "type": "life", "title": "Wedding Flights", "copy": "Flights for a family wedding.", "cashDelta": -380, "label": "−$380"},
+    {"id": "l60", "type": "life", "title": "Uniform Cost", "copy": "You pay for a new uniform.", "cashDelta": -90, "label": "−$90"},
+    {"id": "l61", "type": "life", "title": "Broken Glasses", "copy": "You sat on them.", "cashDelta": -200, "label": "−$200"},
+    {"id": "l62", "type": "life", "title": "Specialist Bill", "copy": "A private specialist visit.", "cashDelta": -350, "label": "−$350"},
+    {"id": "l63", "type": "life", "title": "Storm Damage", "copy": "Wind broke the fence. You share the cost.", "cashDelta": -160, "label": "−$160"},
+    {"id": "l64", "type": "life", "title": "Library Fine", "copy": "Late library books.", "cashDelta": -25, "label": "−$25"},
+    {"id": "li1", "type": "life", "title": "Workplace Injury", "copy": "ACC vibe: you need rest. Duration rolled 1–3 months. First month may use your yearly paid leave.", "offWork": true, "label": "Off work 1–3 mo"},
+    {"id": "li2", "type": "life", "title": "Serious Illness", "copy": "Doctor orders rest. Duration 1–3 months. Paid leave (1 mo/year) covers the first month if still available.", "offWork": true, "label": "Off work 1–3 mo"},
+    {"id": "li3", "type": "life", "title": "Accident Recovery", "copy": "Crash / fall — recovery time. Rest 1–3 months; expenses continue.", "offWork": true, "label": "Off work 1–3 mo"},
+    {"id": "lc1", "type": "life", "title": "Having a Child", "copy": "New family member! Permanent living increase per child, based on your income ($40/week + 3% of weekly pay, $80–$180/week).", "birth": true, "label": "New child"}
   ];
 
   var MARKET = [
-    { id: "mg1", type: "market", title: "Gold/Silver Rallies", copy: "Safe-haven buying.", effect: "price", assetKey: "metals", pct: 0.12, label: "Gold/Silver +12%", trade: true },
-    { id: "mg2", type: "market", title: "Gold/Silver Softens", copy: "Profit-taking.", effect: "price", assetKey: "metals", pct: -0.08, label: "Gold/Silver −8%", trade: true },
-    { id: "mg3", type: "market", title: "Gold/Silver Surge", copy: "Industrial demand for silver lifts precious metals.", effect: "price", assetKey: "metals", pct: 0.15, label: "Gold/Silver +15%", trade: true },
-    { id: "mg4", type: "market", title: "Gold/Silver Slips", copy: "Correction.", effect: "price", assetKey: "metals", pct: -0.10, label: "Gold/Silver −10%", trade: true },
-    { id: "mg5", type: "market", title: "Bitcoin Rally", copy: "Risk-on mood.", effect: "price", assetKey: "bitcoin", pct: 0.25, label: "BTC +25%", trade: true },
-    { id: "mg6", type: "market", title: "Bitcoin Crash", copy: "Volatility reminder.", effect: "price", assetKey: "bitcoin", pct: -0.30, label: "BTC −30%", trade: true },
-    { id: "mg7", type: "market", title: "US Index Bounces", copy: "US share index lifts.", effect: "price", assetKey: "usindex", pct: 0.15, label: "US Index +15%", trade: true },
-    { id: "mg8", type: "market", title: "US Index Sell-Off", copy: "Risk-off week on Wall Street.", effect: "price", assetKey: "usindex", pct: -0.20, label: "US Index −20%", trade: true },
-    { id: "mp1", type: "market", title: "Property Boom", copy: "Listings heat up. Property index rises.", effect: "price", assetKey: "property", pct: 0.08, label: "Property +8%", trade: true },
-    { id: "mp2", type: "market", title: "Property Soft Patch", copy: "Values ease.", effect: "price", assetKey: "property", pct: -0.06, label: "Property −6%", trade: true },
-    { id: "mb1", type: "market", title: "Small Business Confidence Up", copy: "Buyers optimistic. Business values mark up.", effect: "price", assetKey: "business", pct: 0.10, label: "Business +10%", trade: true },
-    { id: "mb2", type: "market", title: "Business Sentiment Soft", copy: "Margins squeezed. Values ease.", effect: "price", assetKey: "business", pct: -0.08, label: "Business −8%", trade: true },
-    { id: "mt1", type: "market", title: "IRD Catch-Up Bill", copy: "Unexpected tax wash-up due now (one-time expense).", effect: "tax_bill", amount: 1200, label: "−$1,200" },
-    { id: "mt2", type: "market", title: "IRD Catch-Up (Larger)", copy: "Bigger wash-up from prior year.", effect: "tax_bill", amount: 2500, label: "−$2,500" },
-    { id: "mi1", type: "market", title: "RBNZ Hikes OCR", copy: "Bank loan rate +1% p.a. High-interest loan stays 120% p.a.", effect: "rate", bankDelta: 0.01, label: "Bank rate +1%" },
-    { id: "mi2", type: "market", title: "RBNZ Cuts OCR", copy: "Bank loan rate −1% p.a. (floor 5%). HI stays 120%.", effect: "rate", bankDelta: -0.01, label: "Bank rate −1%" },
-    { id: "mr1", type: "market", title: "Rental Vacancy Spike", copy: "If you own rental property, lose one month of that rent as a cash hit (passive stays for future months).", effect: "rental_vacancy", label: "Vacancy" },
-    { id: "mr2", type: "market", title: "Rental Boom", copy: "If you own property, collect a one-month rent bonus in cash (passive unchanged).", effect: "rental_boom", label: "Rent boom" },
-    { id: "mw1", type: "market", title: "Wage Freeze", copy: "Rare: morale hit to cash; paycheck rate unchanged.", effect: "wage_note", cashDelta: -100, label: "Wage freeze" },
-    { id: "mw2", type: "market", title: "Rare Spot Bonus", copy: "Employer surprise bonus.", effect: "wage_note", cashDelta: 800, label: "+$800 bonus" },
-    { id: "mf1", type: "market", title: "All Blacks Win Weekend", copy: "Nation smiles. Merch sales spike — not yours.", effect: "noop", label: "Flavour" },
-    { id: "mf2", type: "market", title: "Farmers Market Thrives", copy: "Local produce flying off tables.", effect: "noop", label: "Flavour" },
-    { id: "mf3", type: "market", title: "Wellington Cycleway Opens", copy: "Commute vibes improve for some.", effect: "noop", label: "Flavour" }
+    {"id": "mg1", "type": "market", "title": "Gold/Silver Rallies", "copy": "Safe-haven buying.", "effect": "price", "assetKey": "metals", "pct": 0.12, "label": "Gold/Silver +12%", "trade": true},
+    {"id": "mg2", "type": "market", "title": "Gold/Silver Softens", "copy": "Profit-taking.", "effect": "price", "assetKey": "metals", "pct": -0.08, "label": "Gold/Silver −8%", "trade": true},
+    {"id": "mg3", "type": "market", "title": "Gold/Silver Surge", "copy": "Industrial demand for silver lifts precious metals.", "effect": "price", "assetKey": "metals", "pct": 0.15, "label": "Gold/Silver +15%", "trade": true},
+    {"id": "mg4", "type": "market", "title": "Gold/Silver Slips", "copy": "Correction.", "effect": "price", "assetKey": "metals", "pct": -0.1, "label": "Gold/Silver −10%", "trade": true},
+    {"id": "mg9", "type": "market", "title": "Gold Cools Off", "copy": "Investors sell some gold.", "effect": "price", "assetKey": "metals", "pct": -0.06, "label": "Gold/Silver −6%", "trade": true},
+    {"id": "mg5", "type": "market", "title": "Bitcoin Rally", "copy": "Risk-on mood.", "effect": "price", "assetKey": "bitcoin", "pct": 0.25, "label": "BTC +25%", "trade": true},
+    {"id": "mg6", "type": "market", "title": "Bitcoin Crash", "copy": "Volatility reminder.", "effect": "price", "assetKey": "bitcoin", "pct": -0.3, "label": "BTC −30%", "trade": true},
+    {"id": "mg10", "type": "market", "title": "Bitcoin Fund News", "copy": "A big fund starts buying bitcoin.", "effect": "price", "assetKey": "bitcoin", "pct": 0.2, "label": "BTC +20%", "trade": true},
+    {"id": "mg7", "type": "market", "title": "US Index Bounces", "copy": "US share index lifts.", "effect": "price", "assetKey": "usindex", "pct": 0.15, "label": "US Index +15%", "trade": true},
+    {"id": "mg8", "type": "market", "title": "US Index Sell-Off", "copy": "Risk-off week on Wall Street.", "effect": "price", "assetKey": "usindex", "pct": -0.2, "label": "US Index −20%", "trade": true},
+    {"id": "mu1", "type": "market", "title": "Tech Stocks Rally", "copy": "US tech companies do well.", "effect": "price", "assetKey": "usindex", "pct": 0.08, "label": "US Index +8%", "trade": true},
+    {"id": "mu2", "type": "market", "title": "Wall Street Wobble", "copy": "A nervous week for US shares.", "effect": "price", "assetKey": "usindex", "pct": -0.06, "label": "US Index −6%", "trade": true},
+    {"id": "mu3", "type": "market", "title": "Strong US Jobs", "copy": "More Americans find work.", "effect": "price", "assetKey": "usindex", "pct": 0.07, "label": "US Index +7%", "trade": true},
+    {"id": "mu4", "type": "market", "title": "US Recession Fears", "copy": "People worry the US economy will shrink.", "effect": "price", "assetKey": "usindex", "pct": -0.08, "label": "US Index −8%", "trade": true},
+    {"id": "mu5", "type": "market", "title": "US Shares Record High", "copy": "The US index hits a new high.", "effect": "price", "assetKey": "usindex", "pct": 0.1, "label": "US Index +10%", "trade": true},
+    {"id": "mu6", "type": "market", "title": "Trade War Worries", "copy": "New tariffs worry investors.", "effect": "price", "assetKey": "usindex", "pct": -0.05, "label": "US Index −5%", "trade": true},
+    {"id": "mu7", "type": "market", "title": "US Rate Cut", "copy": "The US central bank cuts rates.", "effect": "price", "assetKey": "usindex", "pct": 0.06, "label": "US Index +6%", "trade": true},
+    {"id": "mu8", "type": "market", "title": "Profit Warnings", "copy": "Big US companies expect lower profits.", "effect": "price", "assetKey": "usindex", "pct": -0.04, "label": "US Index −4%", "trade": true},
+    {"id": "mp1", "type": "market", "title": "Property Boom", "copy": "Listings heat up. Property index rises.", "effect": "price", "assetKey": "property", "pct": 0.08, "label": "Property +8%", "trade": true},
+    {"id": "mp2", "type": "market", "title": "Property Soft Patch", "copy": "Values ease.", "effect": "price", "assetKey": "property", "pct": -0.06, "label": "Property −6%", "trade": true},
+    {"id": "mp3", "type": "market", "title": "House Prices Up", "copy": "Auckland prices lead the way.", "effect": "price", "assetKey": "property", "pct": 0.05, "label": "Property +5%", "trade": true},
+    {"id": "mp4", "type": "market", "title": "Fewer Buyers", "copy": "Open homes are quiet.", "effect": "price", "assetKey": "property", "pct": -0.04, "label": "Property −4%", "trade": true},
+    {"id": "mp5", "type": "market", "title": "Migration Boost", "copy": "More people move to NZ.", "effect": "price", "assetKey": "property", "pct": 0.03, "label": "Property +3%", "trade": true},
+    {"id": "mp6", "type": "market", "title": "Mortgage Stress", "copy": "Owners struggle with repayments.", "effect": "price", "assetKey": "property", "pct": -0.05, "label": "Property −5%", "trade": true},
+    {"id": "mp7", "type": "market", "title": "Housing Shortage", "copy": "Not enough houses for sale.", "effect": "price", "assetKey": "property", "pct": 0.06, "label": "Property +6%", "trade": true},
+    {"id": "mp8", "type": "market", "title": "New Builds Everywhere", "copy": "Lots of new houses for sale.", "effect": "price", "assetKey": "property", "pct": -0.03, "label": "Property −3%", "trade": true},
+    {"id": "mp9", "type": "market", "title": "Regional Growth", "copy": "Towns outside Auckland grow.", "effect": "price", "assetKey": "property", "pct": 0.04, "label": "Property +4%", "trade": true},
+    {"id": "mp10", "type": "market", "title": "Tighter Bank Lending", "copy": "Banks lend less for houses.", "effect": "price", "assetKey": "property", "pct": -0.04, "label": "Property −4%", "trade": true},
+    {"id": "mp11", "type": "market", "title": "Spring Selling Season", "copy": "Buyers are back in spring.", "effect": "price", "assetKey": "property", "pct": 0.03, "label": "Property +3%", "trade": true},
+    {"id": "mp12", "type": "market", "title": "Winter Slowdown", "copy": "Fewer sales in winter.", "effect": "price", "assetKey": "property", "pct": -0.03, "label": "Property −3%", "trade": true},
+    {"id": "mb1", "type": "market", "title": "Small Business Confidence Up", "copy": "Buyers optimistic. Business values mark up.", "effect": "price", "assetKey": "business", "pct": 0.1, "label": "Business +10%", "trade": true},
+    {"id": "mb2", "type": "market", "title": "Business Sentiment Soft", "copy": "Margins squeezed. Values ease.", "effect": "price", "assetKey": "business", "pct": -0.08, "label": "Business −8%", "trade": true},
+    {"id": "mb3", "type": "market", "title": "Tourists Are Back", "copy": "Cafés and shops are busy.", "effect": "price", "assetKey": "business", "pct": 0.05, "label": "Business +5%", "trade": true},
+    {"id": "mb4", "type": "market", "title": "Shoppers Spend Less", "copy": "People save more and spend less.", "effect": "price", "assetKey": "business", "pct": -0.05, "label": "Business −5%", "trade": true},
+    {"id": "mb5", "type": "market", "title": "Local Business Awards", "copy": "Good news for small firms.", "effect": "price", "assetKey": "business", "pct": 0.04, "label": "Business +4%", "trade": true},
+    {"id": "mb6", "type": "market", "title": "Higher Wage Costs", "copy": "The minimum wage goes up.", "effect": "price", "assetKey": "business", "pct": -0.06, "label": "Business −6%", "trade": true},
+    {"id": "mb7", "type": "market", "title": "Small Business Tax Cut", "copy": "The government cuts business tax.", "effect": "price", "assetKey": "business", "pct": 0.06, "label": "Business +6%", "trade": true},
+    {"id": "mb8", "type": "market", "title": "Supply Delays", "copy": "Shipping delays hurt small firms.", "effect": "price", "assetKey": "business", "pct": -0.04, "label": "Business −4%", "trade": true},
+    {"id": "mb9", "type": "market", "title": "Busy Summer", "copy": "Holiday spending lifts sales.", "effect": "price", "assetKey": "business", "pct": 0.03, "label": "Business +3%", "trade": true},
+    {"id": "mb10", "type": "market", "title": "Quiet Winter", "copy": "Sales slow in winter.", "effect": "price", "assetKey": "business", "pct": -0.03, "label": "Business −3%", "trade": true},
+    {"id": "mi1", "type": "market", "title": "RBNZ Hikes OCR", "copy": "Bank loan rate +1% p.a. High-interest loan stays 120% p.a.", "effect": "rate", "bankDelta": 0.01, "label": "Bank rate +1%"},
+    {"id": "mi2", "type": "market", "title": "RBNZ Cuts OCR", "copy": "Bank loan rate −1% p.a. (floor 5%). HI stays 120%.", "effect": "rate", "bankDelta": -0.01, "label": "Bank rate −1%"},
+    {"id": "mi3", "type": "market", "title": "Inflation Surprise", "copy": "Prices rise fast. The RBNZ lifts rates: bank loan +1% p.a.", "effect": "rate", "bankDelta": 0.01, "label": "Bank rate +1%"},
+    {"id": "mi4", "type": "market", "title": "Economy Slows", "copy": "The RBNZ cuts rates: bank loan −1% p.a.", "effect": "rate", "bankDelta": -0.01, "label": "Bank rate −1%"},
+    {"id": "mi5", "type": "market", "title": "Banks Raise Rates", "copy": "Bank loan rate +0.5% p.a.", "effect": "rate", "bankDelta": 0.005, "label": "Bank rate +0.5%"},
+    {"id": "mi6", "type": "market", "title": "Banks Compete", "copy": "Bank loan rate −0.5% p.a.", "effect": "rate", "bankDelta": -0.005, "label": "Bank rate −0.5%"},
+    {"id": "mr1", "type": "market", "title": "Rental Vacancy Spike", "copy": "If you own rental property, lose one month of that rent as a cash hit (passive stays for future months).", "effect": "rental_vacancy", "label": "Vacancy"},
+    {"id": "mr3", "type": "market", "title": "Tenant Moves Out", "copy": "Your tenant leaves. If you own rentals, lose one month of rent.", "effect": "rental_vacancy", "label": "Vacancy"},
+    {"id": "mr5", "type": "market", "title": "Repairs Between Tenants", "copy": "If you own rentals, one month of rent goes on repairs.", "effect": "rental_vacancy", "label": "Vacancy"},
+    {"id": "mr2", "type": "market", "title": "Rental Boom", "copy": "If you own property, collect a one-month rent bonus in cash (passive unchanged).", "effect": "rental_boom", "label": "Rent boom"},
+    {"id": "mr4", "type": "market", "title": "Rents Rise Fast", "copy": "If you own rentals, collect a one-month rent bonus.", "effect": "rental_boom", "label": "Rent boom"},
+    {"id": "mr6", "type": "market", "title": "Rental Shortage", "copy": "Tenants compete. If you own rentals, get a one-month bonus.", "effect": "rental_boom", "label": "Rent boom"},
+    {"id": "mw1", "type": "market", "title": "Wage Freeze", "copy": "Rare: morale hit to cash; paycheck rate unchanged.", "effect": "wage_note", "cashDelta": -100, "label": "−$100"},
+    {"id": "mw2", "type": "market", "title": "Rare Spot Bonus", "copy": "Employer surprise bonus.", "effect": "wage_note", "cashDelta": 800, "label": "+$800"},
+    {"id": "mw3", "type": "market", "title": "Cost of Living Payment", "copy": "A one-off government payment.", "effect": "wage_note", "cashDelta": 300, "label": "+$300"},
+    {"id": "mw4", "type": "market", "title": "Petrol Price Spike", "copy": "Fuel costs jump this month.", "effect": "wage_note", "cashDelta": -150, "label": "−$150"},
+    {"id": "mf1", "type": "market", "title": "All Blacks Win Weekend", "copy": "Nation smiles. Merch sales spike — not yours.", "effect": "noop", "label": "NZ news"},
+    {"id": "mf2", "type": "market", "title": "Farmers Market Thrives", "copy": "Local produce flying off tables.", "effect": "noop", "label": "NZ news"},
+    {"id": "mf3", "type": "market", "title": "Wellington Cycleway Opens", "copy": "Commute vibes improve for some.", "effect": "noop", "label": "NZ news"},
+    {"id": "mf4", "type": "market", "title": "NZ Economy Grows", "copy": "GDP grew a little this quarter.", "effect": "noop", "label": "NZ news"},
+    {"id": "mf5", "type": "market", "title": "Dairy Prices Up", "copy": "Good news for farmers.", "effect": "noop", "label": "NZ news"},
+    {"id": "mf6", "type": "market", "title": "Unemployment Rises", "copy": "More people are looking for work.", "effect": "noop", "label": "NZ news"},
+    {"id": "mf7", "type": "market", "title": "Tourism Record", "copy": "A busy summer for visitors.", "effect": "noop", "label": "NZ news"},
+    {"id": "mf8", "type": "market", "title": "Inflation Eases", "copy": "Prices rise more slowly now.", "effect": "noop", "label": "NZ news"}
   ];
 
   var DECKS = { opportunity: OPPORTUNITY, spending: SPENDING, life: LIFE, market: MARKET };
@@ -805,10 +1003,85 @@ select.modal-select {
     lastIllnessMonth: null,
     pendingEvent: null, eventResolved: true, tradePending: false,
     monthEvents: [], eventStep: 0, monthLog: [], sickMonth: false, stepNote: "",
-    marketNote: "", history: [], bankrupt: false, endReason: ""
+    marketNote: "", history: [], bankrupt: false, endReason: "", usedOnce: [], decks: null
   };
 
   function $(id) { return document.getElementById(id); }
+  /* ---- v5.4 sound effects: Web Audio synth only (no files, works offline / file:// / iPad).
+     AudioContext is created + resumed on the first user gesture (iOS unlock). Never throws when
+     Web Audio is missing. Silent for ~0.4 s after Load / Undo so replays make no noise. ---- */
+  var SFX = (function () {
+    var KEY = "smarter-dollar-sound", MASTER = 0.18;
+    var ctx = null, master = null, hushUntil = 0, on = true, unlocked = false;
+    try { on = localStorage.getItem(KEY) !== "off"; } catch (e) { on = true; }
+    function now() { return Date.now(); }
+    function unlock() {
+      try {
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return;
+        var first = !ctx;
+        if (first) { ctx = new AC(); master = ctx.createGain(); master.gain.value = MASTER; master.connect(ctx.destination); }
+        if (ctx.state === "suspended" && ctx.resume) ctx.resume();
+        if (first || !unlocked) {   /* one silent blip inside a gesture = iOS unlock */
+          var o = ctx.createOscillator(), g = ctx.createGain(); g.gain.value = 0; o.connect(g); g.connect(master);
+          o.start(); o.stop(ctx.currentTime + 0.01);
+          unlocked = ctx.state === "running" || first;
+        }
+      } catch (e) { ctx = null; }
+    }
+    ["pointerdown", "touchend", "keydown", "mousedown"].forEach(function (ev) {
+      try { document.addEventListener(ev, unlock, { passive: true }); } catch (e) {}
+    });
+    function tone(f, at, dur, type, vol) {
+      var t0 = ctx.currentTime + at;
+      var o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = type || "sine"; o.frequency.setValueAtTime(f, t0);
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(vol || 0.6, t0 + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      o.connect(g); g.connect(master); o.start(t0); o.stop(t0 + dur + 0.02);
+    }
+    function seq(notes, step, dur, type, vol) { notes.forEach(function (f, i) { tone(f, i * step, dur, type, vol); }); }
+    var SOUNDS = {
+      payday: function () { tone(1318.5, 0, 0.35, "sine", 0.55); tone(1760, 0.07, 0.45, "sine", 0.4); },
+      buy: function () { tone(880, 0, 0.07, "triangle", 0.6); tone(1320, 0.07, 0.12, "triangle", 0.6); },
+      sell: function () { tone(1320, 0, 0.07, "triangle", 0.55); tone(990, 0.07, 0.14, "triangle", 0.55); },
+      negative: function () { tone(196, 0, 0.22, "triangle", 0.7); },
+      positive: function () { seq([784, 988, 1175], 0.07, 0.3, "sine", 0.45); },
+      up: function () { tone(523, 0, 0.14, "sine", 0.5); tone(784, 0.12, 0.22, "sine", 0.5); },
+      down: function () { tone(784, 0, 0.14, "sine", 0.5); tone(523, 0.12, 0.22, "sine", 0.5); },
+      baby: function () { seq([1047, 1319, 1568, 2093], 0.09, 0.35, "sine", 0.35); },
+      illness: function () { tone(330, 0, 0.3, "sine", 0.5); tone(262, 0.25, 0.45, "sine", 0.5); },
+      click: function () { tone(1200, 0, 0.04, "sine", 0.3); },
+      bankrupt: function () { seq([392, 349, 311, 262], 0.22, 0.4, "triangle", 0.55); },
+      fanfare: function () { seq([523, 659, 784], 0.12, 0.2, "triangle", 0.5); tone(1047, 0.36, 0.7, "triangle", 0.5); tone(784, 0.36, 0.7, "sine", 0.3); tone(659, 0.36, 0.7, "sine", 0.3); }
+    };
+    function play(name) {
+      try {
+        if (!on || now() < hushUntil || !ctx || !master || !SOUNDS[name]) return;
+        if (ctx.state === "suspended" && ctx.resume) ctx.resume();
+        SOUNDS[name]();
+      } catch (e) { /* never break the game for a sound */ }
+    }
+    function syncButtons() {
+      ["btn-sound", "btn-sound-title"].forEach(function (id) {
+        var b = document.getElementById(id);
+        if (!b) return;
+        b.textContent = on ? "\uD83D\uDD0A" : "\uD83D\uDD07";
+        b.classList.toggle("muted", !on);
+        b.setAttribute("aria-pressed", on ? "false" : "true");
+      });
+    }
+    function toggle() {
+      on = !on;
+      try { localStorage.setItem(KEY, on ? "on" : "off"); } catch (e) {}
+      syncButtons();
+      if (on) { unlock(); play("click"); }
+      return on;
+    }
+    return { play: play, toggle: toggle, syncButtons: syncButtons, hush: function (ms) { hushUntil = now() + (ms || 400); },
+      isOn: function () { return on; }, hasContext: function () { return !!ctx; } };
+  })();
   function fmt(n) {
     var sign = n < 0 ? "\u2212" : "";
     return sign + "$" + Math.abs(Math.round(n)).toLocaleString("en-NZ");
@@ -1082,6 +1355,7 @@ select.modal-select {
   }
 
   function previousMonth() {
+    SFX.hush(500);
     if (state.screen !== "play" || state.bankrupt) return;
     if (!undoStack.length) {
       showToast("Nothing to undo — already at earliest month.", "error");
@@ -1592,6 +1866,13 @@ select.modal-select {
      (units may become fractional). Works on any state object (saves and undo snapshots). */
   function migrateAssetState(st) {
     if (!st || typeof st !== "object") return st;
+    if (Array.isArray(st.usedOnce)) st.usedOnce = st.usedOnce.filter(function (id) { return isOnceOnly(findCardById(id)); });
+    if (!Array.isArray(st.usedOnce)) {   /* pre-v5.4 saves: start the once-per-game list from this month's cards */
+      st.usedOnce = [];
+      (st.monthEvents || []).concat(st.pendingEvent ? [st.pendingEvent] : []).forEach(function (c) {
+        if (isOnceOnly(c) && st.usedOnce.indexOf(c.id) < 0) st.usedOnce.push(c.id);
+      });
+    }
     var pi = st.priceIndex || (st.priceIndex = {});
     var gu = st.growthUnits || (st.growthUnits = {});
     if (pi.metals == null || gu.metals == null) {
@@ -1638,6 +1919,7 @@ select.modal-select {
   }
 
   function applyLoadedState(savedState) {
+    SFX.hush(500);
     var payloadState = savedState && savedState.state && typeof savedState.state === "object" ? savedState.state : savedState;
     var clone = deepCloneState(payloadState);
     Object.keys(state).forEach(function (k) { delete state[k]; });
@@ -1760,21 +2042,15 @@ select.modal-select {
     if (state.lastIllnessMonth == null) return true;
     return monthsSinceLastIllness() >= MIN_MONTHS_BETWEEN_ILLNESS;
   }
-  function illnessChance(w) {
-    /* Same per-month chance as the old game (life weight × 3 illness cards / 17 life cards),
-       checked ONCE per month. */
-    return w.life * 3 / 17;
+  function illnessChance(diff) {
+    /* v5.4: explicit per difficulty (Easy 3%, Normal 6%, Hard 9%), checked ONCE per month. */
+    return diff && diff.illness != null ? diff.illness : 0.06;
   }
   function birthChance(w) { return 1 / 12 + w.life / 17; }
-  /* Dedicated Gold/Silver and Bitcoin news cards are drawn at 0.4x weight (rarer); those assets
-     mostly move through LINKED moves on the general market cards (see linkedMovesFor). */
-  var NO_CASHFLOW_NEWS_WEIGHT = 0.4;
+  /* Dedicated Gold/Silver (5) and Bitcoin (3) news cards are only 8 of the 64 market cards (12.5%,
+     like v5.3's 0.4x weight); those assets mostly move through LINKED moves on the general market
+     cards (see linkedMovesFor). */
   var LINKED_MOVE_CHANCE = 0.30;
-  function cardWeight(c) {
-    if (c.expenseDelta || c.effect === "tax_bill") return PERMANENT_COST_WEIGHT;
-    if (c.type === "market" && c.effect === "price" && (c.assetKey === "metals" || c.assetKey === "bitcoin")) return NO_CASHFLOW_NEWS_WEIGHT;
-    return 1;
-  }
   /* Wildcard (event 4): opportunity or life only (by difficulty weights). Never spending (event 3
      already has it) and never market news (market news = once a month, event 1 only). */
   function pickWildcardType(w) {
@@ -1804,17 +2080,54 @@ select.modal-select {
   }
   /* One card of a type; never illness / baby (they have their own once-a-month checks);
      avoids repeating a card already drawn this month. */
+  function onceUsed(id) { return Array.isArray(state.usedOnce) && state.usedOnce.indexOf(id) >= 0; }
+  var DECK_TYPES = ["market", "opportunity", "spending", "life"];
+  function deckCards(type) { return DECKS[type].filter(function (c) { return !c.offWork && !c.birth; }); }
+  function findInDeck(type, id) {
+    var d = DECKS[type];
+    for (var i = 0; i < d.length; i++) if (d[i].id === id && !d[i].offWork && !d[i].birth) return d[i];
+    return null;
+  }
+  function shuffleIds(a) {
+    for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+  }
+  function freshOrder(type) {
+    return shuffleIds(deckCards(type).filter(function (c) { return !(isOnceOnly(c) && onceUsed(c.id)); })
+      .map(function (c) { return c.id; }));
+  }
+  function ensureDecks() {
+    if (!state.decks || typeof state.decks !== "object") state.decks = {};
+    DECK_TYPES.forEach(function (t) {
+      var d = state.decks[t];
+      if (!d || !Array.isArray(d.order) || typeof d.pos !== "number") state.decks[t] = { order: freshOrder(t), pos: 0, cycle: 1 };
+    });
+  }
+  /* Next card of a shuffled deck (no replacement). usedIds = cards already in this month, so a
+     month never shows the same card twice (only possible right after a reshuffle): such a card is
+     swapped further down the pile. Retired permanent-expense cards / unknown ids are dropped. */
   function drawFromDeck(type, usedIds) {
-    var deck = DECKS[type].filter(function (c) { return !c.offWork && !c.birth && usedIds.indexOf(c.id) < 0; });
-    if (!deck.length) deck = DECKS[type].filter(function (c) { return !c.offWork && !c.birth; });
-    var total = 0;
-    deck.forEach(function (c) { total += cardWeight(c); });
-    var r = Math.random() * total;
-    for (var i = 0; i < deck.length; i++) {
-      r -= cardWeight(deck[i]);
-      if (r <= 0) return rollDeal(scaleCard(Object.assign({}, deck[i])));
+    ensureDecks();
+    var d = state.decks[type];
+    for (var round = 0; round < 3; round++) {
+      for (var i = d.pos; i < d.order.length; i++) {
+        var id = d.order[i];
+        var c = findInDeck(type, id);
+        if (!c || (isOnceOnly(c) && onceUsed(id))) { d.order.splice(i, 1); i--; continue; }
+        if (usedIds.indexOf(id) >= 0) continue;
+        d.order[i] = d.order[d.pos]; d.order[d.pos] = id; d.pos++;
+        if (isOnceOnly(c)) {
+          if (!Array.isArray(state.usedOnce)) state.usedOnce = [];
+          state.usedOnce.push(id);
+        }
+        var out = rollDeal(scaleCard(Object.assign({}, c)));
+        out.deckCycle = d.cycle || 1;   /* which pass through the deck (1 = first shuffle) */
+        return out;
+      }
+      d.order = freshOrder(type); d.pos = 0; d.cycle = (d.cycle || 1) + 1;   /* pile empty: reshuffle */
     }
-    return rollDeal(scaleCard(Object.assign({}, deck[deck.length - 1])));
+    var any = deckCards(type).filter(function (c) { return !isOnceOnly(c); });
+    return rollDeal(scaleCard(Object.assign({}, any[Math.floor(Math.random() * any.length)])));
   }
   /* The month's cards, drawn at payday (so undo / save replay the same cards).
      Fixed order: 1 Market news (prices move first, so you can trade) → 2 Opportunity (a deal
@@ -1823,7 +2136,8 @@ select.modal-select {
   function drawMonthEvents() {
     var diff = DIFFICULTIES.find(function (d) { return d.id === state.difficulty; }) || DIFFICULTIES[1];
     var w = diff.weights;
-    if (canDrawIllness() && Math.random() < illnessChance(w)) {
+    if (!Array.isArray(state.usedOnce)) state.usedOnce = [];
+    if (canDrawIllness() && Math.random() < illnessChance(diff)) {
       var sick = LIFE.filter(function (c) { return c.offWork; });
       var card = Object.assign({}, sick[Math.floor(Math.random() * sick.length)]);
       card.slot = "Illness";
@@ -1842,7 +2156,8 @@ select.modal-select {
     if (canHaveChild() && !state.offWork && Math.random() < birthChance(w)) {
       add(Object.assign({}, LIFE.find(function (c) { return c.birth; })), 2);
     } else {
-      add(drawFromDeck(Math.random() < w.spending / (w.spending + w.life) ? "spending" : "life", used), 2);
+      var share = diff.spendingShare != null ? diff.spendingShare : 2 / 3;
+      add(drawFromDeck(Math.random() < share ? "spending" : "life", used), 2);
     }
     add(drawFromDeck(pickWildcardType(w), used), 3);
     return out;
@@ -2103,6 +2418,7 @@ select.modal-select {
     state.cash += proceeds;
     state.growthUnits[key] = 0;
     showToast("Sold " + ASSET_LABELS[key] + " for " + fmt(proceeds) + ".", "ok");
+    SFX.play("sell");
     renderHud();
   }
   function sellProperty(idx) {
@@ -2116,6 +2432,7 @@ select.modal-select {
     state.properties.splice(idx, 1);
     recomputePassive();
     showToast("Sold property. Net " + fmt(net) + " after loan " + fmt(loanShare) + ".", "ok");
+    SFX.play("sell");
     renderHud();
   }
   function sellBusiness(idx) {
@@ -2129,6 +2446,7 @@ select.modal-select {
     state.businesses.splice(idx, 1);
     recomputePassive();
     showToast("Sold business. Net " + fmt(net) + " after loan " + fmt(loanShare) + ".", "ok");
+    SFX.play("sell");
     renderHud();
   }
 
@@ -2182,6 +2500,7 @@ select.modal-select {
 
     state.tradePending = false;
     state.marketNote = "";
+    SFX.play("buy");
     completeStep(ev.kind === "cashflow" ? "Bought (" + signedFmt(dealPassiveAtBuy(ev)) + "/mo)" :
       ev.kind === "growth" ? "Bought " + (ev.units || 1) + " unit" + ((ev.units || 1) > 1 ? "s" : "") :
       "Bought (bank loan " + fmt(ev.price - ev.downPayment) + ")");
@@ -2192,6 +2511,7 @@ select.modal-select {
     state.tradePending = false;
     state.marketNote = "";
     showToast("Skipped opportunity.", "");
+    SFX.play("click");
     completeStep("Skipped");
   }
 
@@ -2288,6 +2608,7 @@ select.modal-select {
     state.growthUnits[key] += 1;
     state.stepNote += " Bought 1 @ " + fmt(unitPrice) + ".";
     showToast("Bought 1 " + ASSET_LABELS[key] + " @ " + fmt(unitPrice) + ".", "ok");
+    SFX.play("buy");
     renderHud();
     renderEvent();
   }
@@ -2303,6 +2624,7 @@ select.modal-select {
     state.cash += unitPrice;
     state.stepNote += " Sold " + fmtUnits(sellUnits) + " @ " + fmt(unitPrice) + ".";
     showToast("Sold " + fmtUnits(sellUnits) + " " + ASSET_LABELS[key] + " @ " + fmt(unitPrice) + ".", "ok");
+    SFX.play("sell");
     renderHud();
     renderEvent();
   }
@@ -2310,15 +2632,25 @@ select.modal-select {
     if (state.eventResolved) return;
     state.tradePending = false;
     showToast(state.marketNote || "Market noted.", "ok");
+    SFX.play("click");
     completeStep((state.marketNote || "Noted") + (state.stepNote || ""));
   }
 
+  function marketSound(ev) {
+    if (ev.effect === "price") return ev.pct >= 0 ? "up" : "down";
+    if (ev.effect === "rate") return ev.bankDelta > 0 ? "down" : "up";
+    if (ev.effect === "rental_vacancy" || ev.effect === "tax_bill") return "negative";
+    if (ev.effect === "rental_boom") return "positive";
+    if (ev.effect === "wage_note") return (ev.cashDelta || 0) < 0 ? "negative" : "positive";
+    return "click";
+  }
   function resolveNonOpportunity() {
     var ev = state.pendingEvent;
     if (!ev || state.eventResolved) return;
 
     if (ev.type === "market") {
       applyMarket(ev);
+      SFX.play(marketSound(ev));
       if (state.tradePending) {
         renderHud();
         renderEvent();
@@ -2330,6 +2662,7 @@ select.modal-select {
     }
 
     if (ev.offWork) {
+      SFX.play("illness");
       var dur = 1 + Math.floor(Math.random() * 3);
       startRest(dur);
       var paidBits = state.restQueue.map(function (m, i) {
@@ -2343,7 +2676,7 @@ select.modal-select {
 
     if (ev.birth) {
       if (!canHaveChild()) state.marketNote = "Too soon after last birth (need " + MIN_MONTHS_BETWEEN_BIRTHS + " months) — skipped.";
-      else doBirth();
+      else { doBirth(); SFX.play("baby"); }
       showToast(state.marketNote || "Birth applied.", "ok");
       completeStep(state.marketNote || "Birth applied");
       return;
@@ -2355,6 +2688,7 @@ select.modal-select {
       recomputeLiving();
     }
     if (ev.cashDelta) state.cash += ev.cashDelta;
+    SFX.play((ev.cost || ev.expenseDelta || (ev.cashDelta || 0) < 0) ? "negative" : "positive");
     var cov = coverShortfall();
     if (cov) showToast("Shortfall covered via " + cov + " (CC first, then HI ceil $1,000).", "error");
     else showToast("Event applied.", "ok");
@@ -2693,6 +3027,7 @@ select.modal-select {
     updateUndoBtn();
     showToast("Payday \u2014 " + fmt(paid) + " in, expenses out. Month " + state.month +
       (state.sickMonth ? ": you are sick (no other events)." : ": event 1 of " + state.monthEvents.length + "."), "ok");
+    SFX.play("payday");
   }
 
   function autoResolve(ev) {
@@ -2778,6 +3113,7 @@ select.modal-select {
     autoSave();
     updateUndoBtn();
     showToast("Skipped ahead 3 months.", "ok");
+    SFX.play("payday");
   }
 
   var repayUI = { kind: "bank", amount: 0 };
@@ -2890,6 +3226,7 @@ select.modal-select {
   function endGame(isBankrupt) {
     var reasonEl = $("summary-reason");
     var headEl = $("summary-heading");
+    SFX.play(isBankrupt || state.bankrupt ? "bankrupt" : "fanfare");
     if (isBankrupt || state.bankrupt) {
       state.bankrupt = true;
       if (!state.endReason) state.endReason = "Bankrupt — Net Worth below $0";
@@ -2969,6 +3306,8 @@ select.modal-select {
     state.sickMonth = false;
     state.stepNote = "";
     state.ccBalance = 0;
+    state.usedOnce = [];
+    state.decks = null;   /* fresh shuffle on the first draw */
     state.lastBirthMonth = null;
     state.lastIllnessMonth = null;
     state.bankrupt = false;
@@ -2985,6 +3324,12 @@ select.modal-select {
     applyPayStatus();
     var monthlyNetPay = state.baseGross - monthlyTaxFromGross(state.baseGross);
     state.cash = startingCash(Math.max(500, monthlyNetPay));
+    var dd = DIFFICULTIES.find(function (d) { return d.id === state.difficulty; }) || DIFFICULTIES[1];
+    state.cash += dd.startCashBonus || 0;   /* Easy: +$3,000 */
+    state.ccBalance = dd.startCc || 0;      /* Hard: $3,000 on the credit card (24% p.a.) */
+    /* Net worth must start above $0 (bankrupt = net worth < $0 at payday): with a starting card
+       debt, cash is at least the debt + $1,500 (matters only for low-pay careers). */
+    if (state.ccBalance) state.cash = Math.max(state.cash, state.ccBalance + 1500);
     $("play-career-title").textContent =
       c.name + " · " + fmt(c.rate) + "/hr · " + fmt(state.baseGross) + "/mo gross";
   }
@@ -3092,6 +3437,8 @@ select.modal-select {
   $("btn-next").addEventListener("click", nextMonth);
   $("btn-skip3").addEventListener("click", skipThreeMonths);
   $("btn-prev-month").addEventListener("click", previousMonth);
+  ["btn-sound", "btn-sound-title"].forEach(function (id) { var b = $(id); if (b) b.addEventListener("click", function () { SFX.toggle(); b.blur(); }); });
+  SFX.syncButtons();
   $("btn-pay-bank").addEventListener("click", function () { payLiability("bank"); });
   $("btn-pay-hi").addEventListener("click", function () { payLiability("hi"); });
   $("btn-pay-cc").addEventListener("click", function () { payLiability("cc"); });
@@ -3211,6 +3558,11 @@ select.modal-select {
       pressSpaceDefault();
       return;
     }
+    if ((e.key === "m" || e.key === "M") && !e.ctrlKey && !e.metaKey && !e.altKey && !isTypingTarget(e.target)) {
+      e.preventDefault();
+      if (!e.repeat) { SFX.toggle(); showToast(SFX.isOn() ? "Sound on" : "Sound off", ""); }
+      return;
+    }
     if (state.screen !== "play" || state.bankrupt) return;
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     if (e.key === "a" || e.key === "A") {
@@ -3252,6 +3604,7 @@ select.modal-select {
     CAREERS: CAREERS, OPPORTUNITY: OPPORTUNITY, SPENDING: SPENDING, LIFE: LIFE, MARKET: MARKET,
     DECKS: DECKS, DIFFICULTIES: DIFFICULTIES,
     rollDeal: rollDeal, drawFromDeck: drawFromDeck, dealRoiPct: dealRoiPct,
+    SFX: SFX, drawMonthEvents: drawMonthEvents, isOnceOnly: isOnceOnly, deckCards: deckCards, canDrawIllness: canDrawIllness,
     monthlyTaxFromGross: monthlyTaxFromGross, monthlyGrossFromRate: monthlyGrossFromRate,
     effectiveTaxRate: effectiveTaxRate, round10: round10, state: state,
     TOTAL_MONTHS: TOTAL_MONTHS, HOURS: HOURS, HI_APR: HI_APR,
