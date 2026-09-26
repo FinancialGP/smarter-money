@@ -403,6 +403,7 @@ select.modal-select {
 .month-log { list-style: none; margin: 0; padding: 0; font-size: 0.8rem; color: var(--muted); display: flex; flex-direction: column; gap: 0.12rem; }
 .month-log b { color: var(--text); font-weight: 700; }
 .event-prev { font-size: 0.76rem; color: var(--muted); border-top: 1px dashed var(--surface2); padding-top: 0.2rem; }
+.deal-note { display: block; font-size: 0.8em; color: #cbd5e1; opacity: 0.85; margin-top: 0.15rem; }
 .linked-note { display: inline-block; font-size: 0.8em; color: #a5f3fc; background: rgba(34,211,238,0.12); border-radius: 6px; padding: 0 0.35rem; }
 .scaled-note { display: inline-block; font-size: 0.78em; color: #fde68a; background: rgba(251,191,36,0.12); border-radius: 6px; padding: 0 0.35rem; }
 .h3-note { font-weight: 500; color: var(--muted); font-size: 0.75em; }
@@ -697,16 +698,16 @@ select.modal-select {
   };
 
   var OPPORTUNITY = [
-    { id: "o1", type: "opportunity", kind: "cashflow", title: "Term Deposit Slice", copy: "NZ bank term deposit (~4% p.a.).", cost: 8000, passive: 27, label: "+$27/mo" },
-    { id: "o2", type: "opportunity", kind: "cashflow", title: "Dividend ETF Nibble", copy: "NZ/AU dividend ETF (~5% cash yield).", cost: 12000, passive: 50, label: "+$50/mo" },
+    { id: "o1", type: "opportunity", kind: "cashflow", title: "Term Deposit Slice", copy: "NZ bank term deposit (returns vary).", cost: 8000, passive: 27, label: "+$27/mo" },
+    { id: "o2", type: "opportunity", kind: "cashflow", title: "Dividend ETF Nibble", copy: "NZ/AU dividend ETF (cash yield varies).", cost: 12000, passive: 50, label: "+$50/mo" },
     { id: "o3", type: "opportunity", kind: "cashflow", title: "Online Course Pack", copy: "Record once, royalty drip.", cost: 5000, passive: 42, label: "+$42/mo" },
     { id: "o4", type: "opportunity", kind: "cashflow", title: "Side Hustle Gear", copy: "Tools for weekend gigs.", cost: 6500, passive: 45, label: "+$45/mo" },
-    { id: "o5", type: "opportunity", kind: "cashflow", title: "Parking Spot Share", copy: "CBD park sublet (~8%).", cost: 18000, passive: 120, label: "+$120/mo" },
-    { id: "o6", type: "opportunity", kind: "cashflow", title: "Vending Route Share", copy: "Snack machine stake (~7%).", cost: 25000, passive: 146, label: "+$146/mo" },
-    { id: "o7", type: "opportunity", kind: "cashflow", title: "Laundry Card Biz", copy: "Coin laundry in a student block (~6%).", cost: 35000, passive: 175, label: "+$175/mo" },
-    { id: "o8", type: "opportunity", kind: "cashflow", title: "Storage Unit Slice", copy: "Lease a unit, rent shelves (~7%).", cost: 28000, passive: 163, label: "+$163/mo" },
-    { id: "o9", type: "opportunity", kind: "cashflow", title: "Solar Co-op Buy-In", copy: "Community solar credits (~5%).", cost: 40000, passive: 167, label: "+$167/mo" },
-    { id: "o10", type: "opportunity", kind: "cashflow", title: "E-Bike Fleet Slice", copy: "Campus e-bike share (~6%).", cost: 30000, passive: 150, label: "+$150/mo" },
+    { id: "o5", type: "opportunity", kind: "cashflow", title: "Parking Spot Share", copy: "CBD park sublet.", cost: 18000, passive: 120, label: "+$120/mo" },
+    { id: "o6", type: "opportunity", kind: "cashflow", title: "Vending Route Share", copy: "Snack machine stake.", cost: 25000, passive: 146, label: "+$146/mo" },
+    { id: "o7", type: "opportunity", kind: "cashflow", title: "Laundry Card Biz", copy: "Coin laundry in a student block.", cost: 35000, passive: 175, label: "+$175/mo" },
+    { id: "o8", type: "opportunity", kind: "cashflow", title: "Storage Unit Slice", copy: "Lease a unit, rent shelves.", cost: 28000, passive: 163, label: "+$163/mo" },
+    { id: "o9", type: "opportunity", kind: "cashflow", title: "Solar Co-op Buy-In", copy: "Community solar credits.", cost: 40000, passive: 167, label: "+$167/mo" },
+    { id: "o10", type: "opportunity", kind: "cashflow", title: "E-Bike Fleet Slice", copy: "Campus e-bike share.", cost: 30000, passive: 150, label: "+$150/mo" },
     { id: "og1", type: "opportunity", kind: "growth", title: "Gold/Silver Bullion", copy: "Physical gold/silver unit. No passive — market value only.", cost: 3000, assetKey: "metals", units: 1, label: "Growth" },
     { id: "og2", type: "opportunity", kind: "growth", title: "Gold/Silver Coins", copy: "Bullion coins lot. Market price only.", cost: 3000, assetKey: "metals", units: 1, label: "Growth" },
     { id: "og3", type: "opportunity", kind: "growth", title: "Bitcoin (classroom unit)", copy: "Simplified BTC. Zero passive until sold.", cost: 8000, assetKey: "bitcoin", units: 1, label: "Growth" },
@@ -720,7 +721,7 @@ select.modal-select {
     { id: "ob1", type: "opportunity", kind: "business", title: "Café Franchise Slice", copy: "Small café stake. Down payment + bank loan. Draw scales with business index.", price: 180000, downPayment: 36000, passive: 600, label: "Business" },
     { id: "ob2", type: "opportunity", kind: "business", title: "Lawn & Garden Crew", copy: "Buy into a local crew. Equipment financed.", price: 95000, downPayment: 20000, passive: 380, label: "Business" },
     { id: "ob3", type: "opportunity", kind: "business", title: "Mobile Mechanic Van", copy: "Fitted van + tools. Deposit then bank loan.", price: 120000, downPayment: 25000, passive: 520, label: "Business" },
-    { id: "ob4", type: "opportunity", kind: "business", title: "Online Store Stake", copy: "Inventory + ads. Deposit $20k+, bank for the rest.", price: 80000, downPayment: 20000, passive: 340, label: "Business" }
+    { id: "ob4", type: "opportunity", kind: "business", title: "Online Store Stake", copy: "Inventory + ads. Deposit, bank for the rest.", price: 80000, downPayment: 20000, passive: 340, label: "Business" }
   ];
 
   var SPENDING = [
@@ -923,6 +924,80 @@ select.modal-select {
     if (touched && f !== 1) { out.scaled = f; out.baseLabel = base.label; out.label = cardLabel(out); }
     return out;
   }
+  /* ---- v5.3 random deals ----
+     Every cashflow deal (cashflow asset, property, business) gets its own ROI when drawn:
+     truncated normal, mean 20%, SD 20%, resampled until inside [-10%, 100%].
+     ROI = annual NET cashflow ÷ down payment (net of bank-loan interest), so the card's ROI is
+     what you actually get on the day you buy. Leveraged deals also get a random deposit
+     (0.6–1.4× the card's usual %, rounded to $1,000) and a 3.5% chance of NO deposit
+     (then the ROI draw is applied to the card's usual deposit as a notional base). */
+  var DEAL_ROI_MEAN = 0.20, DEAL_ROI_SD = 0.20, DEAL_ROI_MIN = -0.10, DEAL_ROI_MAX = 1.00;
+  var DEAL_ZERO_DOWN_CHANCE = 0.035, DEAL_DOWN_LO = 0.6, DEAL_DOWN_HI = 1.4;
+  function gaussian() {
+    var u = 0, v = 0;
+    while (u === 0) u = Math.random();
+    while (v === 0) v = Math.random();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  }
+  function drawDealRoi() {
+    for (var i = 0; i < 100; i++) {
+      var r = DEAL_ROI_MEAN + DEAL_ROI_SD * gaussian();
+      if (r >= DEAL_ROI_MIN && r <= DEAL_ROI_MAX) return Math.round(r * 1000) / 1000;
+    }
+    return DEAL_ROI_MEAN;
+  }
+  function rollDeal(c) {
+    if (!c || c.type !== "opportunity" || c.dealRolled) return c;
+    if (c.kind !== "cashflow" && c.kind !== "property" && c.kind !== "business") return c;
+    var roi = drawDealRoi();
+    c.roi = roi;
+    c.dealRolled = true;
+    if (c.kind === "cashflow") {
+      c.netMo = Math.round(roi * c.cost / 12);
+      c.passive = c.netMo;
+      c.label = signedFmt(c.netMo) + "/mo";
+      return c;
+    }
+    var basePct = c.downPayment / c.price;
+    var down;
+    if (Math.random() < DEAL_ZERO_DOWN_CHANCE) down = 0;
+    else {
+      var pct = basePct * (DEAL_DOWN_LO + (DEAL_DOWN_HI - DEAL_DOWN_LO) * Math.random());
+      down = Math.max(1000, Math.round(c.price * pct / 1000) * 1000);
+    }
+    c.notionalDown = down > 0 ? down : c.downPayment;
+    c.downPayment = down;
+    c.zeroDown = down === 0;
+    c.netMo = Math.round(roi * c.notionalDown / 12);
+    return c;
+  }
+  function dealRoiPct(ev) {
+    var base = ev.kind === "cashflow" ? ev.cost : ev.downPayment;
+    return base > 0 ? ev.netMo * 12 / base * 100 : null;
+  }
+  function dealLoanInterest(ev, st) {
+    st = st || state;
+    return Math.round(((ev.price || 0) - (ev.downPayment || 0)) * (st.bankApr / 12));
+  }
+  /* Stored passive (rent / business draw at index 100%) chosen so that, at today's index and
+     bank rate, rent − loan interest = the card's net cashflow. */
+  function dealGross(ev, st) {
+    st = st || state;
+    if (ev.kind === "cashflow") return ev.netMo;
+    return ev.netMo + dealLoanInterest(ev, st);
+  }
+  function dealPassiveAtBuy(ev) {
+    if (!ev.dealRolled) return ev.passive;
+    if (ev.kind === "cashflow") return ev.netMo;
+    var idx = state.priceIndex[ev.kind] || 1;
+    return Math.round(dealGross(ev) / idx);
+  }
+  function dealKeep(c) {
+    if (!c || !c.dealRolled) return {};
+    var k = { dealRolled: true, roi: c.roi, netMo: c.netMo, passive: c.passive, label: c.label };
+    if (c.kind !== "cashflow") { k.downPayment = c.downPayment; k.notionalDown = c.notionalDown; k.zeroDown = c.zeroDown; }
+    return k;
+  }
   function applyPayStatus() {
     if (state.offWork && !state.offWorkPaid) {
       state.jobIncome = 0;
@@ -1058,6 +1133,10 @@ select.modal-select {
     if (state.eventResolved || !state.pendingEvent) return usable($("btn-next")) ? $("btn-next") : null;
     /* Pending event: primary action. Buy only when cash covers it; if the only buy option is
        CC/HI borrowing, the default is Skip (never auto-borrow at 24% / 120%). */
+    /* v5.3: a deal with NEGATIVE net cashflow (ROI < 0) defaults to Skip — even a zero-deposit
+       one, which is always 'affordable' but would cost you money every month. */
+    var pe = state.pendingEvent;
+    if (pe.type === "opportunity" && pe.dealRolled && pe.netMo < 0 && usable($("btn-skip-event"))) return $("btn-skip-event");
     var order = ["btn-buy", "btn-trade-done", "btn-birth-accept", "btn-resolve", "btn-skip-event"];
     for (var i = 0; i < order.length; i++) {
       var el = $(order[i]);
@@ -1530,12 +1609,12 @@ select.modal-select {
     GROWTH_KEYS.forEach(function (k) { if (gu[k] == null) gu[k] = 0; });
     if (st.pendingEvent && st.pendingEvent.id) {
       var fresh = findCardById(st.pendingEvent.id);
-      if (fresh) st.pendingEvent = scaleCard(Object.assign({}, fresh, st.pendingEvent.slot != null ? { slot: st.pendingEvent.slot } : {}, st.pendingEvent.linked ? { linked: st.pendingEvent.linked } : {}), st);
+      if (fresh) st.pendingEvent = scaleCard(Object.assign({}, fresh, st.pendingEvent.slot != null ? { slot: st.pendingEvent.slot } : {}, st.pendingEvent.linked ? { linked: st.pendingEvent.linked } : {}, dealKeep(st.pendingEvent)), st);
     }
     if (Array.isArray(st.monthEvents)) {
       st.monthEvents = st.monthEvents.map(function (c) {
         var f = c && c.id ? findCardById(c.id) : null;
-        return f ? scaleCard(Object.assign({}, f, c.slot != null ? { slot: c.slot } : {}, c.linked ? { linked: c.linked } : {}), st) : c;
+        return f ? scaleCard(Object.assign({}, f, c.slot != null ? { slot: c.slot } : {}, c.linked ? { linked: c.linked } : {}, dealKeep(c)), st) : c;
       });
     }
     return st;
@@ -1733,9 +1812,9 @@ select.modal-select {
     var r = Math.random() * total;
     for (var i = 0; i < deck.length; i++) {
       r -= cardWeight(deck[i]);
-      if (r <= 0) return scaleCard(Object.assign({}, deck[i]));
+      if (r <= 0) return rollDeal(scaleCard(Object.assign({}, deck[i])));
     }
-    return scaleCard(Object.assign({}, deck[deck.length - 1]));
+    return rollDeal(scaleCard(Object.assign({}, deck[deck.length - 1])));
   }
   /* The month's cards, drawn at payday (so undo / save replay the same cards).
      Fixed order: 1 Market news (prices move first, so you can trade) → 2 Opportunity (a deal
@@ -2054,6 +2133,7 @@ select.modal-select {
   }
 
   function financeDownPayment(down) {
+    if (down <= 0) return { ok: true, method: "cash" };
     if (state.cash >= down) {
       state.cash -= down;
       return { ok: true, method: "cash" };
@@ -2081,17 +2161,17 @@ select.modal-select {
         state.growthUnits[ev.assetKey] += (ev.units || 1);
         showToast("Growth asset bought.", "ok");
       } else {
-        state.assets.push({ title: ev.title, passive: ev.passive, cost: cost });
+        state.assets.push({ title: ev.title, passive: dealPassiveAtBuy(ev), cost: cost });
         recomputePassive();
-        showToast("Cashflow asset bought! +" + fmt(ev.passive) + "/mo.", "ok");
+        showToast("Cashflow asset bought! " + signedFmt(dealPassiveAtBuy(ev)) + "/mo.", dealPassiveAtBuy(ev) < 0 ? "error" : "ok");
       }
     } else if (ev.kind === "property" || ev.kind === "business") {
       var down = ev.downPayment;
       var loanAmt = ev.price - down;
-      if (mode === "cash" && state.cash < down) { showToast("Need more for down payment.", "error"); return; }
+      if (mode === "cash" && down > 0 && state.cash < down) { showToast("Need more for down payment.", "error"); return; }
       var fin = financeDownPayment(down);
       state.bankLoan += loanAmt;
-      var entry = { title: ev.title, costBasis: ev.price, downPayment: down, loanAmount: loanAmt, passive: ev.passive };
+      var entry = { title: ev.title, costBasis: ev.price, downPayment: down, loanAmount: loanAmt, passive: dealPassiveAtBuy(ev) };
       if (ev.kind === "property") state.properties.push(entry);
       else state.businesses.push(entry);
       recomputePassive();
@@ -2102,7 +2182,7 @@ select.modal-select {
 
     state.tradePending = false;
     state.marketNote = "";
-    completeStep(ev.kind === "cashflow" ? "Bought (+" + fmt(ev.passive) + "/mo)" :
+    completeStep(ev.kind === "cashflow" ? "Bought (" + signedFmt(dealPassiveAtBuy(ev)) + "/mo)" :
       ev.kind === "growth" ? "Bought " + (ev.units || 1) + " unit" + ((ev.units || 1) > 1 ? "s" : "") :
       "Bought (bank loan " + fmt(ev.price - ev.downPayment) + ")");
   }
@@ -2380,18 +2460,29 @@ select.modal-select {
           ' &nbsp;|&nbsp; <span>Full price</span> ' + fmt(ev.cost) + "</div>";
         copy = ev.copy || "";
       } else if (ev.kind === "cashflow") {
-        amountText = "+" + fmt(ev.passive) + "/mo · ROI " + fmtRoi(annualizedRoiPct(ev.passive, ev.cost));
+        if (ev.dealRolled) {
+          amountText = signedFmt(ev.netMo) + "/mo · ROI " + fmtRoi(dealRoiPct(ev));
+          if (ev.netMo < 0) amountClass = " cost-red";
+        } else amountText = "+" + fmt(ev.passive) + "/mo · ROI " + fmtRoi(annualizedRoiPct(ev.passive, ev.cost));
         financeHtml = '<div class="event-finance"><span>Down payment</span> ' + fmt(ev.cost) +
           ' &nbsp;|&nbsp; <span>Loan needed</span> ' + fmt(0) +
           ' &nbsp;|&nbsp; <span>Full price</span> ' + fmt(ev.cost) + "</div>";
         copy = ev.copy || "";
       } else if (ev.kind === "property" || ev.kind === "business") {
         var loanNeed = ev.price - ev.downPayment;
-        amountText = "+" + fmt(ev.passive) + "/mo · ROI " + fmtRoi(annualizedRoiPct(ev.passive, ev.downPayment)) + " on deposit";
+        if (ev.dealRolled) {
+          amountText = ev.zeroDown ? "No deposit — cashflow " + signedFmt(ev.netMo) + "/mo" :
+            signedFmt(ev.netMo) + "/mo · ROI " + fmtRoi(dealRoiPct(ev)) + " on deposit";
+          if (ev.netMo < 0) amountClass = " cost-red";
+        } else amountText = "+" + fmt(ev.passive) + "/mo · ROI " + fmtRoi(annualizedRoiPct(ev.passive, ev.downPayment)) + " on deposit";
         financeHtml = '<div class="event-finance"><span>Down payment</span> ' + fmt(ev.downPayment) +
           ' &nbsp;|&nbsp; <span>Loan needed</span> ' + fmt(loanNeed) +
           ' &nbsp;|&nbsp; <span>Full price</span> ' + fmt(ev.price) + "</div>";
         copy = ev.copy || "";
+        if (ev.dealRolled) {
+          copy += ' <span class="deal-note">Net cashflow = ' + (ev.kind === "property" ? "rent " : "business draw ") + fmt(dealGross(ev)) + "/mo − loan interest " +
+            fmt(dealLoanInterest(ev)) + "/mo" + (ev.zeroDown ? " (no deposit: ROI on deposit not defined)" : "") + ". Every deal is different.</span>";
+        }
       } else {
         var loan2 = (ev.price || 0) - (ev.downPayment || 0);
         amountText = "+" + fmt(ev.passive || 0) + "/mo";
@@ -2438,7 +2529,9 @@ select.modal-select {
           var down = ev.downPayment;
           var sf = Math.max(0, down - state.cash);
           var hiCover = ceil1000(sf);
-          if (state.cash >= down) {
+          if (down === 0) {
+            actions += '<button type="button" class="btn-primary" id="btn-buy" data-tip="No deposit: the bank loans the full price">Buy (no deposit)</button>';
+          } else if (state.cash >= down) {
             actions += '<button type="button" class="btn-primary" id="btn-buy" data-tip="Deposit from cash; bank loans the rest">Buy (down ' + fmt(down) + " cash)</button>";
           } else {
             actions += '<button type="button" class="btn-warn" id="btn-buy-hi" data-tip="CC then HI for deposit shortfall">Buy — CC/HI covers shortfall</button>';
@@ -2604,12 +2697,14 @@ select.modal-select {
 
   function autoResolve(ev) {
     if (ev.type === "opportunity") {
-      if (ev.kind === "growth" || ev.kind === "cashflow") {
+      if (ev.dealRolled && ev.netMo < 0) {
+        /* auto-skip money-losing deals */
+      } else if (ev.kind === "growth" || ev.kind === "cashflow") {
         if (state.cash >= ev.cost) {
           state.cash -= ev.cost;
           if (ev.kind === "growth") state.growthUnits[ev.assetKey] += (ev.units || 1);
           else {
-            state.assets.push({ title: ev.title, passive: ev.passive, cost: ev.cost });
+            state.assets.push({ title: ev.title, passive: dealPassiveAtBuy(ev), cost: ev.cost });
             recomputePassive();
           }
         }
@@ -2617,7 +2712,7 @@ select.modal-select {
         state.cash -= ev.downPayment;
         var loanAmt = ev.price - ev.downPayment;
         state.bankLoan += loanAmt;
-        var entry = { title: ev.title, costBasis: ev.price, downPayment: ev.downPayment, loanAmount: loanAmt, passive: ev.passive };
+        var entry = { title: ev.title, costBasis: ev.price, downPayment: ev.downPayment, loanAmount: loanAmt, passive: dealPassiveAtBuy(ev) };
         if (ev.kind === "property") state.properties.push(entry);
         else state.businesses.push(entry);
         recomputePassive();
@@ -3156,6 +3251,7 @@ select.modal-select {
   window.SMARTER_DOLLAR = {
     CAREERS: CAREERS, OPPORTUNITY: OPPORTUNITY, SPENDING: SPENDING, LIFE: LIFE, MARKET: MARKET,
     DECKS: DECKS, DIFFICULTIES: DIFFICULTIES,
+    rollDeal: rollDeal, drawFromDeck: drawFromDeck, dealRoiPct: dealRoiPct,
     monthlyTaxFromGross: monthlyTaxFromGross, monthlyGrossFromRate: monthlyGrossFromRate,
     effectiveTaxRate: effectiveTaxRate, round10: round10, state: state,
     TOTAL_MONTHS: TOTAL_MONTHS, HOURS: HOURS, HI_APR: HI_APR,
