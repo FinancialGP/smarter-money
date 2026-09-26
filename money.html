@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SMARTER $ — NZ Financial Literacy Game (v5.6)</title>
+<title>SMARTER $ — NZ Financial Literacy Game (v5.7)</title>
 <style>
 :root {
   --bg: #0f172a; --surface: #1e293b; --surface2: #334155; --text: #f1f5f9; --muted: #94a3b8;
@@ -152,6 +152,7 @@ select.modal-select {
 .reflection li { margin-bottom: 0.5rem; }
 .win-badge { display: inline-block; padding: 0.35rem 0.85rem; border-radius: 999px; font-weight: 700; font-size: 0.9rem; }
 .win-badge.pass { background: rgba(34,197,94,0.2); color: var(--accent); }
+.index-update { color: #7dd3fc; }
 .win-badge.gold { background: rgba(251,191,36,0.22); color: #fcd34d; border: 1px solid #fbbf24; font-size: 1.05rem; }
 .win-panel { text-align: center; border: 2px solid #fbbf24; }
 .win-panel h3 { color: #fcd34d; font-size: 1.5rem; }
@@ -459,7 +460,7 @@ select.modal-select {
     <h1>SMARTER <span class="logo-dollar">$</span></h1>
     <p>A New Zealand classroom game about income, tax, expenses, markets, debt, and building passive income — over <strong>10 years</strong> (120 months).</p>
     <p><strong>Win goal:</strong> Financial Freedom — passive income ≥ total expenses (P÷E ≥ 100%) at a payday. The sooner, the better. Then see your summary or keep playing to month 120.</p>
-    <p class="subtitle" style="margin-top:0.25rem"><strong>Each month:</strong> 4 events in order — 1 Market news · 2 Opportunity · 3 Life / spending · 4 Wildcard — then <strong>Next Month = payday</strong>. Get sick? No other events that month.</p>
+    <p class="subtitle" style="margin-top:0.25rem"><strong>Each month:</strong> monthly index update (US Index ETF price moves), then 4 events in order — 1 Market news · 2 Opportunity · 3 Life / spending · 4 Wildcard — then <strong>Next Month = payday</strong>. Get sick? No other events that month.</p>
     <div class="center-actions" style="justify-content:center;flex-wrap:wrap">
       <button type="button" class="btn-primary" id="btn-start" data-tip="Choose difficulty, then career">Start Game</button>
       <button type="button" class="btn-secondary" id="btn-continue" data-tip="Resume the latest auto-save" hidden>Continue</button>
@@ -476,7 +477,7 @@ select.modal-select {
 
 <section id="screen-difficulty" class="screen" aria-label="Choose difficulty">
   <h2>Choose Difficulty</h2>
-  <p class="subtitle">Every month: 1 market news → 2 deal → 3 life/spending → 4 wildcard (deal or life). Harder levels mean more spending, fewer deals, more illness and a tougher start. Each deck (64 cards; market 76) is shuffled; a card comes back only after the whole deck is used. Permanent cost rises happen at most once per game.</p>
+  <p class="subtitle">Every month: index update (US Index ETF) → 1 market news → 2 deal → 3 life/spending → 4 wildcard (deal or life). Harder levels mean more spending, fewer deals, more illness and a tougher start. Each deck (64 cards; market 76) is shuffled; a card comes back only after the whole deck is used. Permanent cost rises happen at most once per game.</p>
   <div class="card-grid" id="difficulty-grid" role="group" aria-label="Difficulty options"></div>
   <div class="center-actions">
     <button type="button" class="btn-ghost" id="btn-diff-back">Back</button>
@@ -730,7 +731,52 @@ select.modal-select {
       weights: { opportunity: 0.08, spending: 0.35, life: 0.25, market: 0.32 }, cls: "diff-hard" }
   ];
 
-  var BASE_UNIT = { metals: 3000, bitcoin: 8000, usindex: 6000 };
+  /* v5.7: index / ETF assets start at NZD 100 per ETF unit (US Index was one $6,000 unit; now 60 ETF
+     units of $100 = same money). Gold/Silver and Bitcoin are commodity/coin units, not ETFs: unchanged.
+     Price moves are still % changes of priceIndex, so values behave exactly as before. */
+  var BASE_UNIT = { metals: 3000, bitcoin: 8000, usindex: 100 };
+  var ETF_KEYS = ["usindex"];
+  var ETF_UNIT_NZD = 100;
+  var ETF_OLD_UNIT = 6000;                         /* pre-v5.7 US Index unit, for save migration */
+  var TRADE_LOT = { metals: 1, bitcoin: 1, usindex: 60 };   /* trade buttons: ~$6,000 of US Index, as before */
+  function isEtf(key) { return ETF_KEYS.indexOf(key) >= 0; }
+  function unitPriceExact(key, st) { st = st || state; return BASE_UNIT[key] * st.priceIndex[key]; }
+  function fmtUnitPrice(key, st) {
+    var v = unitPriceExact(key, st);
+    return isEtf(key) ? "NZD " + v.toLocaleString("en-NZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + " per ETF unit" : fmt(Math.round(v)) + " per unit";
+  }
+  /* v5.7 monthly index update: at the start of every month (right after payday, before the month's
+     cards) every index / ETF price moves by a random monthly return: normal(mean, sd), clamped,
+     rounded to 0.1%. Market news cards still move prices on top of this. The move is stored in
+     state.indexUpdate and in the month-start snapshot, so undo / save-load replay it exactly. */
+  var MONTHLY_INDEX_MODEL = { usindex: { mean: 0.007, sd: 0.045, min: -0.15, max: 0.15 } };   /* ~+8.7%/yr, ~15.6%/yr vol (S&P 500-like) */
+  function randNormal() {
+    var u = 0, v = 0;
+    while (u === 0) u = Math.random();
+    while (v === 0) v = Math.random();
+    return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v);
+  }
+  function monthlyIndexUpdate() {
+    var moves = [];
+    Object.keys(MONTHLY_INDEX_MODEL).forEach(function (k) {
+      var m = MONTHLY_INDEX_MODEL[k];
+      var r = Math.max(m.min, Math.min(m.max, m.mean + m.sd * randNormal()));
+      r = Math.round(r * 1000) / 1000;
+      state.priceIndex[k] = Math.max(0.2, +(state.priceIndex[k] * (1 + r)).toFixed(4));
+      moves.push({ key: k, pct: r, price: +unitPriceExact(k).toFixed(2) });
+    });
+    state.indexUpdate = { month: state.month, moves: moves };
+    return moves;
+  }
+  function indexUpdateText(short) {
+    var u = state.indexUpdate;
+    if (!u || u.month !== state.month || !u.moves || !u.moves.length) return "";
+    return u.moves.map(function (mv) {
+      var pct = (mv.pct >= 0 ? "+" : "\u2212") + Math.abs(mv.pct * 100).toFixed(1) + "%";
+      return ASSET_LABELS[mv.key] + " " + pct + " \u2192 " + (short ? "$" + mv.price.toFixed(2) + "/ETF unit" : "NZD " + mv.price.toFixed(2) + " per ETF unit");
+    }).join(", ");
+  }
+  function unitWord(key, n) { return isEtf(key) ? (n === 1 ? "ETF unit" : "ETF units") : (n === 1 ? "unit" : "units"); }
   var GROWTH_KEYS = ["metals", "bitcoin", "usindex"];
   var INDEX_KEYS = ["metals", "bitcoin", "usindex", "property", "business"];
   var ASSET_LABELS = {
@@ -770,19 +816,19 @@ select.modal-select {
     {"id": "og1", "type": "opportunity", "kind": "growth", "title": "Gold/Silver Bullion", "copy": "Physical gold/silver unit. No passive — market value only.", "cost": 3000, "assetKey": "metals", "units": 1, "label": "Growth"},
     {"id": "og2", "type": "opportunity", "kind": "growth", "title": "Gold/Silver Coins", "copy": "Bullion coins lot. Market price only.", "cost": 3000, "assetKey": "metals", "units": 1, "label": "Growth"},
     {"id": "og3", "type": "opportunity", "kind": "growth", "title": "Bitcoin (classroom unit)", "copy": "Simplified BTC. Zero passive until sold.", "cost": 8000, "assetKey": "bitcoin", "units": 1, "label": "Growth"},
-    {"id": "og4", "type": "opportunity", "kind": "growth", "title": "US Index Fund", "copy": "Fund tracking a US share index — capital gains vibe.", "cost": 6000, "assetKey": "usindex", "units": 1, "label": "Growth"},
+    {"id": "og4", "type": "opportunity", "kind": "growth", "title": "US Index Fund", "copy": "Fund tracking a US share index — capital gains vibe.", "cost": 6000, "assetKey": "usindex", "units": 60, "label": "Growth · 60 ETF units"},
     {"id": "og5", "type": "opportunity", "kind": "growth", "title": "Extra Gold/Silver Lot", "copy": "Another bullion tranche.", "cost": 6000, "assetKey": "metals", "units": 2, "label": "Growth ×2"},
-    {"id": "og6", "type": "opportunity", "kind": "growth", "title": "US Index Top-Up", "copy": "Add to your US Index holding.", "cost": 15000, "assetKey": "usindex", "units": 2, "label": "Growth ×2"},
+    {"id": "og6", "type": "opportunity", "kind": "growth", "title": "US Index Top-Up", "copy": "Add to your US Index holding.", "cost": 15000, "assetKey": "usindex", "units": 120, "label": "Growth · 120 ETF units"},
     {"id": "og7", "type": "opportunity", "kind": "growth", "title": "Silver Coins", "copy": "A small lot of silver coins.", "cost": 3000, "assetKey": "metals", "units": 1, "label": "Growth"},
     {"id": "og8", "type": "opportunity", "kind": "growth", "title": "Small Gold Bar", "copy": "A tiny gold bar. No income.", "cost": 3000, "assetKey": "metals", "units": 1, "label": "Growth"},
     {"id": "og9", "type": "opportunity", "kind": "growth", "title": "Precious Metals Fund", "copy": "A fund that holds gold and silver.", "cost": 6000, "assetKey": "metals", "units": 2, "label": "Growth ×2"},
     {"id": "og10", "type": "opportunity", "kind": "growth", "title": "Bitcoin Starter", "copy": "Buy one classroom unit of bitcoin.", "cost": 8000, "assetKey": "bitcoin", "units": 1, "label": "Growth"},
     {"id": "og11", "type": "opportunity", "kind": "growth", "title": "Bitcoin Dip Buy", "copy": "The price fell. Buy the dip?", "cost": 8000, "assetKey": "bitcoin", "units": 1, "label": "Growth"},
     {"id": "og12", "type": "opportunity", "kind": "growth", "title": "Crypto App Bundle", "copy": "Mostly bitcoin, bought in an app.", "cost": 8000, "assetKey": "bitcoin", "units": 1, "label": "Growth"},
-    {"id": "og13", "type": "opportunity", "kind": "growth", "title": "S&P 500 ETF", "copy": "A fund of 500 big US companies.", "cost": 6000, "assetKey": "usindex", "units": 1, "label": "Growth"},
-    {"id": "og14", "type": "opportunity", "kind": "growth", "title": "US Tech Shares Fund", "copy": "A fund of US tech companies.", "cost": 6000, "assetKey": "usindex", "units": 1, "label": "Growth"},
-    {"id": "og15", "type": "opportunity", "kind": "growth", "title": "US Index Monthly Plan", "copy": "Invest in a US index fund.", "cost": 6000, "assetKey": "usindex", "units": 1, "label": "Growth"},
-    {"id": "og16", "type": "opportunity", "kind": "growth", "title": "Global Shares Fund", "copy": "Two units of a world share fund.", "cost": 12000, "assetKey": "usindex", "units": 2, "label": "Growth ×2"},
+    {"id": "og13", "type": "opportunity", "kind": "growth", "title": "S&P 500 ETF", "copy": "A fund of 500 big US companies.", "cost": 6000, "assetKey": "usindex", "units": 60, "label": "Growth · 60 ETF units"},
+    {"id": "og14", "type": "opportunity", "kind": "growth", "title": "US Tech Shares Fund", "copy": "A fund of US tech companies.", "cost": 6000, "assetKey": "usindex", "units": 60, "label": "Growth · 60 ETF units"},
+    {"id": "og15", "type": "opportunity", "kind": "growth", "title": "US Index Monthly Plan", "copy": "Invest in a US index fund.", "cost": 6000, "assetKey": "usindex", "units": 60, "label": "Growth · 60 ETF units"},
+    {"id": "og16", "type": "opportunity", "kind": "growth", "title": "Global Shares Fund", "copy": "120 ETF units of a world share fund.", "cost": 12000, "assetKey": "usindex", "units": 120, "label": "Growth · 120 ETF units"},
     {"id": "op1", "type": "opportunity", "kind": "property", "title": "Starter Rental Flat", "copy": "Provincial flat. Down payment from cash/CC/HI; rest is a bank loan. Rent scales with property index.", "price": 320000, "downPayment": 32000, "passive": 450, "label": "Property"},
     {"id": "op2", "type": "opportunity", "kind": "property", "title": "Townhouse Rental", "copy": "Two-bed townhouse. Bank finances after down payment.", "price": 480000, "downPayment": 48000, "passive": 680, "label": "Property"},
     {"id": "op3", "type": "opportunity", "kind": "property", "title": "City Unit Slice", "copy": "Apartment share. Higher rent, bigger loan.", "price": 550000, "downPayment": 55000, "passive": 780, "label": "Property"},
@@ -1035,7 +1081,7 @@ select.modal-select {
     bankLoan: 0, hiLoan: 0, ccBalance: 0, bankApr: BANK_APR_DEFAULT,
     bankInterestThisMonth: 0, hiInterestThisMonth: 0, ccInterestThisMonth: 0,
     priceIndex: { metals: 1, bitcoin: 1, usindex: 1, property: 1, business: 1 },
-    growthUnits: { metals: 0, bitcoin: 0, usindex: 0 },
+    growthUnits: { metals: 0, bitcoin: 0, usindex: 0 }, etfUnitNzd: 100,
     assets: [], properties: [], businesses: [],
     lastBirthMonth: null,
     lastIllnessMonth: null,
@@ -1934,6 +1980,10 @@ select.modal-select {
     }
     if (pi.usindex == null) pi.usindex = pi.stocks != null ? pi.stocks : 1;
     if (gu.usindex == null) gu.usindex = gu.stocks || 0;
+    if (st.etfUnitNzd !== ETF_UNIT_NZD) {   /* pre-v5.7 save: 1 old $6,000 unit = 60 ETF units of NZD 100 (value unchanged) */
+      gu.usindex = +((gu.usindex || 0) * ETF_OLD_UNIT / ETF_UNIT_NZD).toFixed(4);
+      st.etfUnitNzd = ETF_UNIT_NZD;
+    }
     ["gold", "silver", "stocks"].forEach(function (k) { delete pi[k]; delete gu[k]; });
     INDEX_KEYS.forEach(function (k) { if (pi[k] == null) pi[k] = 1; });
     GROWTH_KEYS.forEach(function (k) { if (gu[k] == null) gu[k] = 0; });
@@ -2286,8 +2336,12 @@ select.modal-select {
   }
   function renderIndexStrip() {
     var keys = INDEX_KEYS;
-    $("index-strip").innerHTML = keys.map(function (k) {
-      return "<span><strong>" + ASSET_LABELS[k] + "</strong> <span class='" + indexClass(k) + "'>" + indexPct(k) + "%</span></span>";
+    var upd = indexUpdateText(true);
+    var updHtml = "<span class='index-update' data-tip='Monthly index update: every month after payday each index/ETF moves by a random monthly return (US Index: average +0.7%, usually within \u00b19%). Market news cards can move it again.'><strong>Monthly index update:</strong> " +
+      (upd ? esc(upd) : state.month <= 1 ? "first update after month 1 payday" : "\u2014") + "</span> | ";
+    $("index-strip").innerHTML = updHtml + keys.map(function (k) {
+      return "<span" + (isEtf(k) ? " data-tip='" + fmtUnitPrice(k) + " (started at NZD 100.00)'" : "") + "><strong>" + ASSET_LABELS[k] + "</strong> <span class='" + indexClass(k) + "'>" + indexPct(k) + "%" +
+        (isEtf(k) ? " · $" + unitPriceExact(k).toFixed(2) + "/ETF unit" : "") + "</span></span>";
     }).join(" · ");
   }
 
@@ -2491,7 +2545,7 @@ select.modal-select {
     GROWTH_KEYS.forEach(function (key) {
       var u = state.growthUnits[key];
       if (!(u > 0)) return;
-      rows.push("<li><span>" + ASSET_LABELS[key] + " ×" + fmtUnits(u) +
+      rows.push("<li" + (isEtf(key) ? " title='" + fmtUnitPrice(key) + "'" : "") + "><span>" + ASSET_LABELS[key] + " ×" + fmtUnits(u) + (isEtf(key) ? " ETF units" : "") +
         ' <span class="pill growth">' + indexPct(key) + "%</span></span><span>" + fmt(growthValue(key)) +
         ' <button type="button" class="btn-secondary btn-sm btn-sell-g" data-key="' + key + '">Sell</button></span></li>');
     });
@@ -2524,7 +2578,7 @@ select.modal-select {
       if (!(u > 0)) return null;
       var gv = Math.round(u * BASE_UNIT[ev.match] * st.priceIndex[ev.match]);
       var go = Math.round(gv * (1 + prem));
-      return { kind: "growth", key: ev.match, idx: -1, title: ASSET_LABELS[ev.match] + " ×" + fmtUnits(u), market: gv, offer: go, loan: 0, net: go, cashflow: 0 };
+      return { kind: "growth", key: ev.match, idx: -1, title: ASSET_LABELS[ev.match] + " ×" + fmtUnits(u) + (isEtf(ev.match) ? " ETF units" : ""), market: gv, offer: go, loan: 0, net: go, cashflow: 0 };
     }
     var list = ev.match === "property" ? st.properties : ev.match === "business" ? st.businesses : [];
     var idxKey = ev.match === "property" ? "property" : "business";
@@ -2663,7 +2717,7 @@ select.modal-select {
     state.marketNote = "";
     SFX.play("buy");
     completeStep(ev.kind === "cashflow" ? "Bought (" + signedFmt(dealPassiveAtBuy(ev)) + "/mo)" :
-      ev.kind === "growth" ? "Bought " + (ev.units || 1) + " unit" + ((ev.units || 1) > 1 ? "s" : "") :
+      ev.kind === "growth" ? "Bought " + (ev.units || 1) + " " + unitWord(ev.assetKey, ev.units || 1) :
       "Bought (bank loan " + fmt(ev.price - ev.downPayment) + ")");
   }
 
@@ -2721,7 +2775,7 @@ select.modal-select {
       var key = ev.assetKey;
       state.priceIndex[key] = Math.max(0.2, +(state.priceIndex[key] * (1 + ev.pct)).toFixed(4));
       recomputePassive();
-      state.marketNote = ASSET_LABELS[key] + " index now " + indexPct(key) + "%.";
+      state.marketNote = ASSET_LABELS[key] + " index now " + indexPct(key) + "%" + (isEtf(key) ? " (" + fmtUnitPrice(key) + ")" : "") + ".";
       if (ev.trade) state.tradePending = true;
       return;
     }
@@ -2764,15 +2818,16 @@ select.modal-select {
 
   function tradeBuy(key) {
     if (!BASE_UNIT[key]) return;
-    var unitPrice = Math.round(BASE_UNIT[key] * state.priceIndex[key]);
+    var lot = TRADE_LOT[key] || 1;
+    var unitPrice = Math.round(unitPriceExact(key) * lot);
     if (state.cash < unitPrice) {
-      showToast("Need " + fmt(unitPrice) + " cash to buy 1 unit.", "error");
+      showToast("Need " + fmt(unitPrice) + " cash to buy " + lot + " " + unitWord(key, lot) + ".", "error");
       return;
     }
     state.cash -= unitPrice;
-    state.growthUnits[key] += 1;
-    state.stepNote += " Bought 1 @ " + fmt(unitPrice) + ".";
-    showToast("Bought 1 " + ASSET_LABELS[key] + " @ " + fmt(unitPrice) + ".", "ok");
+    state.growthUnits[key] = +(state.growthUnits[key] + lot).toFixed(4);
+    state.stepNote += " Bought " + lot + " " + unitWord(key, lot) + " @ " + fmtUnitPrice(key) + " = " + fmt(unitPrice) + ".";
+    showToast("Bought " + lot + " " + ASSET_LABELS[key] + " " + unitWord(key, lot) + " = " + fmt(unitPrice) + ".", "ok");
     SFX.play("buy");
     renderHud();
     renderEvent();
@@ -2782,13 +2837,13 @@ select.modal-select {
       showToast("No units to sell.", "error");
       return;
     }
-    var sellUnits = Math.min(1, state.growthUnits[key]);
-    var unitPrice = Math.round(BASE_UNIT[key] * state.priceIndex[key] * sellUnits);
+    var sellUnits = Math.min(TRADE_LOT[key] || 1, state.growthUnits[key]);
+    var unitPrice = Math.round(unitPriceExact(key) * sellUnits);
     state.growthUnits[key] = +(state.growthUnits[key] - sellUnits).toFixed(4);
     if (state.growthUnits[key] < 0.0001) state.growthUnits[key] = 0;
     state.cash += unitPrice;
-    state.stepNote += " Sold " + fmtUnits(sellUnits) + " @ " + fmt(unitPrice) + ".";
-    showToast("Sold " + fmtUnits(sellUnits) + " " + ASSET_LABELS[key] + " @ " + fmt(unitPrice) + ".", "ok");
+    state.stepNote += " Sold " + fmtUnits(sellUnits) + " " + unitWord(key, sellUnits) + " = " + fmt(unitPrice) + ".";
+    showToast("Sold " + fmtUnits(sellUnits) + " " + ASSET_LABELS[key] + " " + unitWord(key, sellUnits) + " = " + fmt(unitPrice) + ".", "ok");
     SFX.play("sell");
     renderHud();
     renderEvent();
@@ -2955,10 +3010,11 @@ select.modal-select {
     if (ev.type === "opportunity") {
       if (ev.kind === "growth") {
         amountText = "No cashflow · price risk";
+        if (isEtf(ev.assetKey)) copy = (ev.copy || "") + " " + (ev.units || 1) + " ETF units (" + ASSET_LABELS[ev.assetKey] + " now " + fmtUnitPrice(ev.assetKey) + ").";
         financeHtml = '<div class="event-finance"><span>Down payment</span> ' + fmt(ev.cost) +
           ' &nbsp;|&nbsp; <span>Loan needed</span> ' + fmt(0) +
           ' &nbsp;|&nbsp; <span>Full price</span> ' + fmt(ev.cost) + "</div>";
-        copy = ev.copy || "";
+        if (!isEtf(ev.assetKey)) copy = ev.copy || "";
       } else if (ev.kind === "cashflow") {
         if (ev.dealRolled) {
           amountText = signedFmt(ev.netMo) + "/mo · ROI " + fmtRoi(dealRoiPct(ev));
@@ -3008,6 +3064,7 @@ select.modal-select {
       } else amountText = "Buyout offer";
     } else if (ev.type === "market" && ev.effect === "price") {
       amountText = ASSET_LABELS[ev.assetKey] + " " + (ev.pct >= 0 ? "+" : "") + Math.round(ev.pct * 100) + "% → index " + indexPct(ev.assetKey) + "%";
+      if (isEtf(ev.assetKey)) copy = (copy || "") + " " + ASSET_LABELS[ev.assetKey] + ": " + fmtUnitPrice(ev.assetKey) + " (started at NZD 100.00).";
     } else if (ev.cost && ev.expenseDelta) {
       amountText = fmt(-ev.cost) + " & +" + fmt(ev.expenseDelta) + "/mo";
       amountClass = " cost-red";
@@ -3068,12 +3125,13 @@ select.modal-select {
         var key = ev.assetKey;
         actions = '<div class="trade-box"><strong>Trade on this move</strong><div class="event-actions" style="margin-top:0.5rem">';
         if (BASE_UNIT[key]) {
-          var px = Math.round(BASE_UNIT[key] * state.priceIndex[key]);
-          actions += '<button type="button" class="btn-primary btn-sm" id="btn-trade-buy">Buy 1 @ ' + fmt(px) + "</button>";
+          var lotN = TRADE_LOT[key] || 1, pxu = unitPriceExact(key);
+          actions += '<button type="button" class="btn-primary btn-sm" id="btn-trade-buy" data-tip="' + fmtUnitPrice(key) + '">Buy ' + lotN + (isEtf(key) ? " ETF units" : "") + ' = ' + fmt(Math.round(pxu * lotN)) + "</button>";
           if (state.growthUnits[key] > 0) {
-            var su = Math.min(1, state.growthUnits[key]);
-            actions += '<button type="button" class="btn-secondary btn-sm" id="btn-trade-sell">Sell ' + fmtUnits(su) + ' @ ' + fmt(Math.round(px * su)) + "</button>";
+            var su = Math.min(lotN, state.growthUnits[key]);
+            actions += '<button type="button" class="btn-secondary btn-sm" id="btn-trade-sell">Sell ' + fmtUnits(su) + (isEtf(key) ? " ETF units" : "") + ' = ' + fmt(Math.round(pxu * su)) + "</button>";
           }
+          actions += '<span class="event-copy">' + ASSET_LABELS[key] + ": " + fmtUnitPrice(key) + "</span>";
         }
         if (key === "property" && state.properties.length) {
           actions += '<span class="event-copy">Property index updated — sell from Holdings if you want out.</span>';
@@ -3175,6 +3233,8 @@ select.modal-select {
   function prepareMonth() {
     maybeResetYearFlags();
     applyPayStatus();
+    if (state.month > 1) monthlyIndexUpdate();   /* v5.7: fixed monthly index/ETF move, every month after payday */
+    else state.indexUpdate = null;
     state.monthEvents = drawMonthEvents();
     state.eventStep = 0;
     state.monthLog = [];
@@ -3273,7 +3333,7 @@ select.modal-select {
     beginMonth();
     autoSave();
     updateUndoBtn();
-    showToast("Payday \u2014 " + fmt(paid) + " in, expenses out. Month " + state.month +
+    showToast("Payday \u2014 " + fmt(paid) + " in, expenses out. " + (indexUpdateText(true) ? "Index update: " + indexUpdateText(true) + ". " : "") + "Month " + state.month +
       (state.sickMonth ? ": you are sick (no other events)." : ": event 1 of " + state.monthEvents.length + "."), "ok");
     if (justWon) openWinModal(true);
     else SFX.play("payday");
@@ -3542,6 +3602,8 @@ select.modal-select {
 
   function resetEconomyFlags() {
     state.growthUnits = { metals: 0, bitcoin: 0, usindex: 0 };
+    state.etfUnitNzd = ETF_UNIT_NZD;
+    state.indexUpdate = null;
     state.priceIndex = { metals: 1, bitcoin: 1, usindex: 1, property: 1, business: 1 };
     state.assets = [];
     state.properties = [];
@@ -3876,7 +3938,7 @@ select.modal-select {
   window.SMARTER_DOLLAR = {
     CAREERS: CAREERS, OPPORTUNITY: OPPORTUNITY, SPENDING: SPENDING, LIFE: LIFE, MARKET: MARKET,
     DECKS: DECKS, DIFFICULTIES: DIFFICULTIES,
-    rollDeal: rollDeal, buyoutTarget: buyoutTarget, checkWin: checkWin, isWinModalOpen: isWinModalOpen, nextMonth: nextMonth, acceptBuyout: acceptBuyout, declineBuyout: declineBuyout, renderEvent: renderEvent, renderHud: renderHud, structuralCashflow: structuralCashflow, bankruptcyStatus: bankruptcyStatus, checkBankruptcy: checkBankruptcy, hideTip: hideTip, BANKRUPT_REASON: BANKRUPT_REASON, settleMonthCashflow: settleMonthCashflow, drawFromDeck: drawFromDeck, dealRoiPct: dealRoiPct,
+    rollDeal: rollDeal, buyoutTarget: buyoutTarget, MONTHLY_INDEX_MODEL: MONTHLY_INDEX_MODEL, monthlyIndexUpdate: monthlyIndexUpdate, indexUpdateText: indexUpdateText, unitPriceExact: unitPriceExact, fmtUnitPrice: fmtUnitPrice, TRADE_LOT: TRADE_LOT, checkWin: checkWin, isWinModalOpen: isWinModalOpen, nextMonth: nextMonth, acceptBuyout: acceptBuyout, declineBuyout: declineBuyout, renderEvent: renderEvent, renderHud: renderHud, structuralCashflow: structuralCashflow, bankruptcyStatus: bankruptcyStatus, checkBankruptcy: checkBankruptcy, hideTip: hideTip, BANKRUPT_REASON: BANKRUPT_REASON, settleMonthCashflow: settleMonthCashflow, drawFromDeck: drawFromDeck, dealRoiPct: dealRoiPct,
     SFX: SFX, drawMonthEvents: drawMonthEvents, isOnceOnly: isOnceOnly, deckCards: deckCards, canDrawIllness: canDrawIllness,
     monthlyTaxFromGross: monthlyTaxFromGross, monthlyGrossFromRate: monthlyGrossFromRate,
     effectiveTaxRate: effectiveTaxRate, round10: round10, state: state,
