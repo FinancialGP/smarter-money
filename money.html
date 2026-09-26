@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SMARTER $ — NZ Financial Literacy Game (v5.4)</title>
+<title>SMARTER $ — NZ Financial Literacy Game (v5.5)</title>
 <style>
 :root {
   --bg: #0f172a; --surface: #1e293b; --surface2: #334155; --text: #f1f5f9; --muted: #94a3b8;
@@ -135,6 +135,9 @@ select.modal-select {
 .warning-banner { background: rgba(245,158,11,0.15); border: 1px solid var(--warn); color: #fcd34d; padding: 0.7rem 1rem; border-radius: 8px; font-size: 0.95rem; display: none; }
 .warning-banner.show { display: block; }
 .warning-banner.offwork { background: rgba(239,68,68,0.18); border-color: var(--danger); color: #fca5a5; }
+.banner-row { display: flex; flex-wrap: wrap; gap: 0.3rem; }
+.banner-row .warning-banner.show { flex: 1 1 260px; }
+.warning-banner.underwater { background: rgba(220,38,38,0.28); border-color: #ef4444; color: #fecaca; font-weight: 700; }
 .warning-banner.hi-loan { background: rgba(239,68,68,0.22); border-color: #f87171; color: #fecaca; font-weight: 600; }
 .toast { visibility: hidden; position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(120%); background: var(--surface); border: 1px solid var(--surface2); padding: 0.75rem 1.25rem; border-radius: 8px; z-index: 100; transition: transform 0.25s; max-width: 90vw; text-align: center; }
 .toast.show { visibility: visible; transform: translateX(-50%) translateY(0); }
@@ -217,9 +220,10 @@ select.modal-select {
   flex-shrink: 0;
   border-radius: 3px;
 }
+#screen-play .banner-row { flex-shrink: 0; }
 #screen-play .warning-banner {
-  padding: 0.32rem 0.6rem;
-  font-size: 0.8rem;
+  padding: 0.22rem 0.55rem;
+  font-size: 0.76rem;
   border-radius: 6px;
   flex-shrink: 0;
   line-height: 1.3;
@@ -504,9 +508,12 @@ select.modal-select {
     </div>
   </div>
   <div class="month-bar" aria-hidden="true"><div class="month-bar-fill" id="month-bar-fill" style="width:0%"></div></div>
+  <div class="banner-row" id="banner-row">
+  <div class="warning-banner underwater" id="underwater-banner" role="alert" data-tip="Net worth below $0 is a warning, not game over. Bankrupt only if ALSO out of cash AND monthly cashflow is negative even with full pay.">Underwater: debts exceed assets</div>
   <div class="warning-banner offwork" id="offwork-banner" role="alert"></div>
-  <div class="warning-banner hi-loan" id="hi-loan-banner" role="alert">High-interest loan active — 120% p.a. (classroom teaching point). Pay it down ASAP.</div>
-  <div class="warning-banner" id="cash-warning" role="alert">Cash is very low. Shortfalls use Credit Card (up to $20k limit) first, then HI loan at 120% p.a. (ceil to $1,000). Repay anytime with Pay Bank / Pay HI / Pay CC.</div>
+  <div class="warning-banner hi-loan" id="hi-loan-banner" role="alert">High-interest loan active — 120% p.a. Pay it down ASAP.</div>
+  <div class="warning-banner" id="cash-warning" role="alert">Cash is very low. Shortfalls use the credit card (to $20k), then the HI loan at 120% p.a. (ceil $1,000).</div>
+  </div>
   <div class="hud" id="hud" aria-live="polite"></div>
   <div class="index-strip" id="index-strip" aria-label="Asset price indices"></div>
   <div class="play-layout">
@@ -579,7 +586,7 @@ select.modal-select {
       <li>How did bank loans (for property/business) compare with the 120% high-interest loan?</li>
       <li>When markets moved, did you buy the dip, sell, or hold? What happened to your net worth?</li>
       <li>How did time off work (paid leave vs unpaid rest) change your cash buffer?</li>
-      <li>What Passive ÷ Expenses ratio would feel “safe” after five years — and why?</li>
+      <li>What Passive ÷ Expenses ratio would feel “safe” after ten years — and why?</li>
     </ol>
   </div>
   <div class="center-actions">
@@ -1306,6 +1313,7 @@ select.modal-select {
       $("screen-" + s).classList.toggle("active", s === name);
     });
     state.screen = name;
+    hideTip();
     if (name === "title") refreshContinueUI();
     refreshSpaceHint();
   }
@@ -1934,6 +1942,8 @@ select.modal-select {
     if (!state.businesses) state.businesses = [];
     if (!state.history) state.history = [];
     if (!state.restQueue) state.restQueue = [];
+    state.settleBorrowed = !!state.settleBorrowed;   /* v5.5 field; absent in old saves */
+    hideTip();
   }
 
   function loadGame(opts) {
@@ -2187,7 +2197,8 @@ select.modal-select {
     applyPayStatus();
     refreshInterestPreview();
     state.cash += state.jobIncome + state.passiveIncome - totalExpenses();
-    coverShortfall();
+    /* v5.5: remember whether this payday had to borrow (cash ran out → CC/HI covered it). */
+    state.settleBorrowed = !!coverShortfall();
   }
   function advanceRestAfterSettle() {
     if (!state.restQueue.length) {
@@ -2241,6 +2252,21 @@ select.modal-select {
 
 
   var tipTimer = null;
+  /* v5.5: hover tips never stick on touch devices. iPhone Safari fires a synthetic mouseenter on
+     tap and never a mouseleave, so a tip stayed on screen (even on the summary). Now: no hover tips
+     when the device can't hover, any touch hides the tip, tips auto-hide after 2.5s, and every
+     screen change / re-render of the element hides it. */
+  var lastTouchAt = 0, tipHideTimer = null;
+  function noHoverDevice() {
+    try { return !!(window.matchMedia && window.matchMedia("(hover: none)").matches); } catch (e) { return false; }
+  }
+  function hideTip() {
+    clearTimeout(tipTimer); clearTimeout(tipHideTimer);
+    var box = document.getElementById("tip-box");
+    if (box) { box.classList.remove("show"); box.hidden = true; }
+  }
+  document.addEventListener("touchstart", function () { lastTouchAt = Date.now(); hideTip(); }, { passive: true, capture: true });
+  document.addEventListener("touchend", function () { lastTouchAt = Date.now(); }, { passive: true, capture: true });
   function bindTooltips() {
     var box = $("tip-box");
     if (!box) return;
@@ -2249,9 +2275,13 @@ select.modal-select {
       el._tipBound = true;
       el.addEventListener("mouseenter", function (e) {
         clearTimeout(tipTimer);
+        if (noHoverDevice() || Date.now() - lastTouchAt < 1500) return;
         var msg = el.getAttribute("data-tip");
         if (!msg) return;
         tipTimer = setTimeout(function () {
+          if (!el.isConnected || el.offsetParent === null) return;
+          clearTimeout(tipHideTimer);
+          tipHideTimer = setTimeout(hideTip, 2500);
           box.textContent = msg;
           box.hidden = false;
           box.classList.add("show");
@@ -2263,20 +2293,39 @@ select.modal-select {
           box.style.top = y + "px";
         }, 1000);
       });
-      el.addEventListener("mouseleave", function () {
-        clearTimeout(tipTimer);
-        box.classList.remove("show");
-        box.hidden = true;
-      });
+      el.addEventListener("mouseleave", hideTip);
+      el.addEventListener("click", hideTip);
     });
   }
 
+  /* ---- v5.5 bankruptcy rule ----
+     Net worth < 0 alone no longer ends the game (it shows a red "Underwater" warning).
+     Bankrupt only when ALL THREE hold at a month's settlement:
+       (a) net worth < 0,
+       (b) out of cash: cash <= 0, or this payday's shortfall had to be covered by CC/HI borrowing
+           (HI rounds up to $1,000, so the few hundred left over is borrowed money, not savings),
+       (c) structural monthly cashflow < 0: the career's NORMAL pay (even while sick / off work
+           unpaid) + passive − expenses (tax at normal pay, living, kids, all interest).
+     So a temporary illness with a $0 paycheck never causes bankruptcy by itself. */
+  var BANKRUPT_REASON = "Bankrupt — out of cash, debts exceed assets, and monthly cashflow is negative even with full pay";
+  function structuralCashflow(st) {
+    st = st || state;
+    var g = st.baseGross || 0;
+    return g + st.passiveIncome - (monthlyTaxFromGross(g) + st.livingExpenses + bankInterest() + hiInterest() + ccInterest());
+  }
+  function outOfCash() { return state.cash <= 0 || !!state.settleBorrowed; }
+  function bankruptcyStatus() {
+    recomputePassive();
+    var nw = netWorth(), oc = outOfCash(), sc = structuralCashflow();
+    return { netWorth: nw, underwater: nw < 0, outOfCash: oc, structural: sc, bankrupt: nw < 0 && oc && sc < 0 };
+  }
   function checkBankruptcy(from) {
     if (state.bankrupt || state.screen !== "play") return false;
-    recomputePassive();
-    if (netWorth() < 0) {
+    if (from === "hud") return false;   /* only judged at a month's settlement (payday) */
+    var b = bankruptcyStatus();
+    if (b.bankrupt) {
       state.bankrupt = true;
-      state.endReason = "Bankrupt — Net Worth below $0";
+      state.endReason = BANKRUPT_REASON + " (net worth " + fmt(b.netWorth) + ", cashflow at full pay " + signedFmt(Math.round(b.structural)) + "/mo).";
       endGame(true);
       return true;
     }
@@ -2339,6 +2388,7 @@ select.modal-select {
 
     $("bs-net").textContent = "Net Worth " + fmt(netWorth());
     $("bs-net").classList.toggle("bankrupt", netWorth() < 0);
+    if (netWorth() < 0) $("bs-net").textContent += " (underwater)";
     renderHoldings();
     renderIndexStrip();
     $("play-month-label").textContent =
@@ -2353,16 +2403,23 @@ select.modal-select {
     if (state.offWork && state.restQueue.length) {
       var left = state.restQueue.length;
       var paidLabel = state.offWorkPaid ? "PAID leave (paycheck on)" : "UNPAID (paycheck $0, tax $0)";
-      ow.textContent = "Off work this month — " + paidLabel + ". Rest months remaining (incl. this month): " + left +
-        ". Living, kid costs, and all loan interest still due.";
+      ow.textContent = "Off work — " + paidLabel + ". Rest months left (incl. this): " + left +
+        ". Living costs and loan interest still due.";
       ow.classList.add("show");
     } else ow.classList.remove("show");
 
     if (state.hiLoan > 0) $("hi-loan-banner").classList.add("show");
     else $("hi-loan-banner").classList.remove("show");
+    var uw = $("underwater-banner"), bst = bankruptcyStatus();
+    if (bst.underwater) {
+      uw.textContent = "Underwater: debts exceed assets (net worth " + fmt(bst.netWorth) + ")" +
+        (bst.structural < 0 ? " — cashflow at full pay " + signedFmt(Math.round(bst.structural)) + "/mo: bankrupt if cash runs out!" : " — not bankrupt while full-pay cashflow is positive.");
+      uw.classList.add("show");
+    } else uw.classList.remove("show");
 
     var warn = $("cash-warning");
-    if (state.cash < 500 || state.hiLoan > 0 || state.ccBalance > CC_LIMIT * 0.8) warn.classList.add("show");
+    /* v5.5: not shown together with the HI banner (saves a row on small screens) */
+    if (state.hiLoan <= 0 && (state.cash < 500 || state.ccBalance > CC_LIMIT * 0.8)) warn.classList.add("show");
     else warn.classList.remove("show");
 
     $("btn-pay-bank").disabled = !(state.bankLoan > 0 && state.cash >= STEP);
@@ -3226,10 +3283,11 @@ select.modal-select {
   function endGame(isBankrupt) {
     var reasonEl = $("summary-reason");
     var headEl = $("summary-heading");
+    hideTip();
     SFX.play(isBankrupt || state.bankrupt ? "bankrupt" : "fanfare");
     if (isBankrupt || state.bankrupt) {
       state.bankrupt = true;
-      if (!state.endReason) state.endReason = "Bankrupt — Net Worth below $0";
+      if (!state.endReason) state.endReason = BANKRUPT_REASON + ".";
       if (headEl) headEl.textContent = "Bankruptcy";
       if (reasonEl) { reasonEl.style.display = "block"; reasonEl.textContent = state.endReason; }
     } else {
@@ -3241,13 +3299,14 @@ select.modal-select {
     refreshInterestPreview();
     var r = ratio();
     var pct = (r * 100).toFixed(1);
-    var pass = r >= 0.5;
+    var pass = r >= 0.5 && !state.bankrupt;   /* v5.5: never "Strong run" when bankrupt */
     $("summary-career").textContent =
-      (state.career && state.career.name) || "—" + " · " + capitalize(state.difficulty || "normal") + " · " + (state.bankrupt ? ("Bankrupt at month " + state.month + " · ") : "120 months (10 years) complete · ") + "Children: " + state.children;
-    $("summary-badge").innerHTML =
-      '<span class="win-badge ' + (pass ? "pass" : "fail") + '">' +
-      (pass ? "Strong run — " : "Keep building — ") +
-      "Passive ÷ Expenses = " + pct + "%</span>";
+      ((state.career && state.career.name) || "—") + " · " + capitalize(state.difficulty || "normal") + " · " + (state.bankrupt ? ("Bankrupt at month " + state.month + " · ") : "120 months (10 years) complete · ") + "Children: " + state.children;
+    $("summary-badge").innerHTML = state.bankrupt
+      ? '<span class="win-badge fail">' + esc(BANKRUPT_REASON) + " · Passive ÷ Expenses = " + pct + "%</span>"
+      : '<span class="win-badge ' + (pass ? "pass" : "fail") + '">' +
+        (pass ? "Strong run — " : "Keep building — ") +
+        "Passive ÷ Expenses = " + pct + "%</span>";
     $("summary-grid").innerHTML =
       sumStat(fmt(state.cash), "Final cash") +
       sumStat(fmt(state.jobIncome) + "/mo", "Paycheck") +
@@ -3603,7 +3662,7 @@ select.modal-select {
   window.SMARTER_DOLLAR = {
     CAREERS: CAREERS, OPPORTUNITY: OPPORTUNITY, SPENDING: SPENDING, LIFE: LIFE, MARKET: MARKET,
     DECKS: DECKS, DIFFICULTIES: DIFFICULTIES,
-    rollDeal: rollDeal, drawFromDeck: drawFromDeck, dealRoiPct: dealRoiPct,
+    rollDeal: rollDeal, renderHud: renderHud, structuralCashflow: structuralCashflow, bankruptcyStatus: bankruptcyStatus, checkBankruptcy: checkBankruptcy, hideTip: hideTip, BANKRUPT_REASON: BANKRUPT_REASON, settleMonthCashflow: settleMonthCashflow, drawFromDeck: drawFromDeck, dealRoiPct: dealRoiPct,
     SFX: SFX, drawMonthEvents: drawMonthEvents, isOnceOnly: isOnceOnly, deckCards: deckCards, canDrawIllness: canDrawIllness,
     monthlyTaxFromGross: monthlyTaxFromGross, monthlyGrossFromRate: monthlyGrossFromRate,
     effectiveTaxRate: effectiveTaxRate, round10: round10, state: state,
