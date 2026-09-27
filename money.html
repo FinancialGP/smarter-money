@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SMARTER $ — NZ Financial Literacy Game (v5.9)</title>
+<title>SMARTER $ — NZ Financial Literacy Game (v5.10)</title>
 <style>
 :root {
   --bg: #0f172a; --surface: #1e293b; --surface2: #334155; --text: #f1f5f9; --muted: #94a3b8;
@@ -1361,8 +1361,17 @@ select.modal-select {
     return c;
   }
   function dealRoiPct(ev) {
-    var base = ev.kind === "cashflow" ? ev.cost : ev.downPayment;
-    return base > 0 ? ev.netMo * 12 / base * 100 : null;
+    return dealView(ev).roi;   /* v5.10: same basis as the card (cash invested) */
+  }
+  /* v5.10: one source for what a deal card shows. ROI basis = cash invested (down payment; all-cash
+     deals: the full price). ROI is computed from the same rounded $ figures the card prints. */
+  function dealView(ev) {
+    var allCash = ev.kind === "cashflow" || ev.kind === "growth" || !(ev.price > 0);
+    var price = allCash ? (ev.cost || ev.price || 0) : ev.price;
+    var down = allCash ? price : (ev.downPayment || 0);
+    var net = ev.kind === "growth" ? 0 : Math.round(ev.dealRolled ? ev.netMo : (ev.passive || 0));
+    var roi = ev.kind === "growth" || !(down > 0) ? null : net * 12 / down * 100;
+    return { price: price, down: down, loan: Math.max(0, price - down), net: net, roi: roi };
   }
   function dealLoanInterest(ev, st) {
     st = st || state;
@@ -3118,37 +3127,26 @@ select.modal-select {
     var amountTip = "";
 
     if (ev.type === "opportunity") {
+      /* v5.10: every deal card shows Price + Down payment (ROI headline unchanged).
+         ROI basis (all deal types) = YOUR CASH INVESTED = the down payment
+         (all-cash deals: down payment = full price). ROI = monthly cashflow × 12 ÷ down payment. */
+      var dv = dealView(ev);
+      var downTxt = fmt(dv.down) + (dv.loan <= 0 ? " (full price, no loan)" : "");
+      financeHtml = '<div class="event-finance"><span>Price</span> ' + fmt(dv.price) +
+        ' &nbsp;|&nbsp; <span>Down payment</span> ' + downTxt + "</div>";
+      copy = ev.copy || "";
       if (ev.kind === "growth") {
         amountText = "No cashflow · price risk";
         if (isEtf(ev.assetKey)) copy = (ev.copy || "") + " " + (ev.units || 1) + " ETF units (" + ASSET_LABELS[ev.assetKey] + " now " + fmtUnitPrice(ev.assetKey) + ").";
-        financeHtml = '<div class="event-finance"><span>Price</span> ' + fmt(ev.cost) + "</div>";
-        if (!isEtf(ev.assetKey)) copy = ev.copy || "";
-      } else if (ev.kind === "cashflow") {
-        if (ev.dealRolled) {
-          amountText = signedFmt(ev.netMo) + "/mo · ROI " + fmtRoi(dealRoiPct(ev));
-          if (ev.netMo < 0) amountClass = " cost-red";
-        } else amountText = "+" + fmt(ev.passive) + "/mo · ROI " + fmtRoi(annualizedRoiPct(ev.passive, ev.cost));
-        financeHtml = '<div class="event-finance"><span>Price</span> ' + fmt(ev.cost) + "</div>";
-        copy = ev.copy || "";
-      } else if (ev.kind === "property" || ev.kind === "business") {
-        var loanNeed = ev.price - ev.downPayment;
-        if (ev.dealRolled) {
-          amountText = ev.zeroDown ? "No deposit — cashflow " + signedFmt(ev.netMo) + "/mo" :
-            signedFmt(ev.netMo) + "/mo · ROI " + fmtRoi(dealRoiPct(ev)) + " on deposit";
-          if (ev.netMo < 0) amountClass = " cost-red";
-        } else amountText = "+" + fmt(ev.passive) + "/mo · ROI " + fmtRoi(annualizedRoiPct(ev.passive, ev.downPayment)) + " on deposit";
-        /* v5.9: essentials only (price, down payment, cashflow, ROI). The loan maths lives in a tooltip. */
-        financeHtml = '<div class="event-finance"><span>Price</span> ' + fmt(ev.price) +
-          ' &nbsp;|&nbsp; <span>Down payment</span> ' + fmt(ev.downPayment) + "</div>";
-        copy = ev.copy || "";
-        amountTip = "Monthly cashflow after bank-loan interest" + (ev.dealRolled ? ": " + (ev.kind === "property" ? "rent " : "business draw ") + fmt(dealGross(ev)) +
-          "/mo − interest " + fmt(dealLoanInterest(ev)) + "/mo on a " + fmt(loanNeed) + " bank loan" : "") + ".";
       } else {
-        var loan2 = (ev.price || 0) - (ev.downPayment || 0);
-        amountText = "+" + fmt(ev.passive || 0) + "/mo";
-        financeHtml = '<div class="event-finance"><span>Price</span> ' + fmt(ev.price || ev.cost || 0) +
-          (loan2 > 0 ? ' &nbsp;|&nbsp; <span>Down payment</span> ' + fmt(ev.downPayment || 0) : "") + "</div>";
-        copy = ev.copy || "";
+        if (dv.roi == null) {
+          amountText = "No deposit — cashflow " + signedFmt(dv.net) + "/mo";
+        } else {
+          amountText = signedFmt(dv.net) + "/mo · ROI " + fmtRoi(dv.roi) + (dv.loan > 0 ? " on deposit" : "");
+        }
+        if (dv.net < 0) amountClass = " cost-red";
+        if (dv.loan > 0) amountTip = "Monthly cashflow after bank-loan interest" + (ev.dealRolled ? ": " + (ev.kind === "property" ? "rent " : "business draw ") + fmt(dealGross(ev)) +
+          "/mo \u2212 interest " + fmt(dealLoanInterest(ev)) + "/mo on a " + fmt(dv.loan) + " bank loan" : "") + ".";
       }
     } else if (ev.type === "market" && ev.effect === "buyout") {
       var bt = buyoutTarget(ev);
@@ -3301,6 +3299,7 @@ select.modal-select {
       '<div class="event-title">' + ev.title + "</div>" +
       sickBanner +
       '<div class="event-amount' + amountClass + '"' + (amountTip ? ' data-tip="' + esc(amountTip) + '"' : "") + ">" + amountText + "</div>" +
+
       financeHtml +
       '<div class="event-copy">' + copy + "</div>" + prevHtml;
     $("event-actions").innerHTML = actions;
