@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SMARTER $ — NZ Financial Literacy Game (v5.8)</title>
+<title>SMARTER $ — NZ Financial Literacy Game (v5.9)</title>
 <style>
 :root {
   --bg: #0f172a; --surface: #1e293b; --surface2: #334155; --text: #f1f5f9; --muted: #94a3b8;
@@ -433,6 +433,18 @@ select.modal-select {
 .next-month-bar #btn-next.waiting { opacity: 0.4; font-size: 0.82rem; padding: 0.3rem 0.8rem; cursor: not-allowed; box-shadow: none; }
 @media (min-width: 861px) and (max-height: 760px) { .next-month-bar { padding-top: 0.3rem; } .next-month-bar #btn-next { padding: 0.45rem 1rem; } }
 @media (min-width: 861px) and (max-height: 760px) { .event-prev { display: none; } .h3-note { display: none; } .month-log { font-size: 0.74rem; } }
+/* v5.9: the event card is never squeezed into a one-line inner scroller. The dashboard still fills the
+   window; when a card needs more room, its panel grows and the PAGE scrolls as a whole. */
+#screen-play.active { height: auto; min-height: 100vh; min-height: 100dvh; overflow: visible; }
+#screen-play .play-event-panel { overflow: visible; min-height: auto; }
+#screen-play .play-event-panel .event-card { flex: 0 0 auto; overflow: visible; min-height: auto; }
+#screen-play .event-actions-bar { overflow: visible; }
+@media (min-width: 861px) {
+  #screen-play .play-layout { flex: 1 0 auto; min-height: auto; overflow: visible; grid-template-rows: auto 1fr; }
+  #screen-play .play-ie-panel, #screen-play .play-bs-panel { overflow: visible; min-height: auto; }
+  #screen-play .play-holdings-panel { overflow: hidden; min-height: 0; }
+  #screen-play .play-holdings-panel .assets-list { overflow-y: auto; }
+}
 /* v5.1 colour scheme: income & assets GOLD, expenses & liabilities RED (labels + amounts + totals) */
 #expense-breakdown li.row-inc, #expense-breakdown li.row-inc span { color: #fbbf24; }
 #expense-breakdown li.row-exp, #expense-breakdown li.row-exp span { color: #ef4444; }
@@ -843,20 +855,20 @@ select.modal-select {
     {"id": "og14", "type": "opportunity", "kind": "growth", "title": "US Tech Shares Fund", "copy": "A fund of US tech companies.", "cost": 6000, "assetKey": "usindex", "units": 60, "label": "Growth · 60 ETF units"},
     {"id": "og15", "type": "opportunity", "kind": "growth", "title": "US Index Monthly Plan", "copy": "Invest in a US index fund.", "cost": 6000, "assetKey": "usindex", "units": 60, "label": "Growth · 60 ETF units"},
     {"id": "og16", "type": "opportunity", "kind": "growth", "title": "Global Shares Fund", "copy": "120 ETF units of a world share fund.", "cost": 12000, "assetKey": "usindex", "units": 120, "label": "Growth · 120 ETF units"},
-    {"id": "op1", "type": "opportunity", "kind": "property", "title": "Starter Rental Flat", "copy": "Provincial flat. Down payment from cash/CC/HI; rest is a bank loan. Rent scales with property index.", "price": 320000, "downPayment": 32000, "passive": 450, "label": "Property"},
-    {"id": "op2", "type": "opportunity", "kind": "property", "title": "Townhouse Rental", "copy": "Two-bed townhouse. Bank finances after down payment.", "price": 480000, "downPayment": 48000, "passive": 680, "label": "Property"},
-    {"id": "op3", "type": "opportunity", "kind": "property", "title": "City Unit Slice", "copy": "Apartment share. Higher rent, bigger loan.", "price": 550000, "downPayment": 55000, "passive": 780, "label": "Property"},
-    {"id": "op4", "type": "opportunity", "kind": "property", "title": "Duplex Opportunity", "copy": "Duplex — stronger cashflow if you can fund the deposit.", "price": 620000, "downPayment": 62000, "passive": 880, "label": "Property"},
-    {"id": "op5", "type": "opportunity", "kind": "property", "title": "Two-Bed Unit", "copy": "A unit in Hamilton. Bank loan for the rest.", "price": 420000, "downPayment": 42000, "passive": 600, "label": "Property"},
+    {"id": "op1", "type": "opportunity", "kind": "property", "title": "Starter Rental Flat", "copy": "Provincial flat. Rent scales with the property index.", "price": 320000, "downPayment": 32000, "passive": 450, "label": "Property"},
+    {"id": "op2", "type": "opportunity", "kind": "property", "title": "Townhouse Rental", "copy": "Two-bed townhouse in a growing suburb.", "price": 480000, "downPayment": 48000, "passive": 680, "label": "Property"},
+    {"id": "op3", "type": "opportunity", "kind": "property", "title": "City Unit Slice", "copy": "Apartment share. Higher rent, higher price.", "price": 550000, "downPayment": 55000, "passive": 780, "label": "Property"},
+    {"id": "op4", "type": "opportunity", "kind": "property", "title": "Duplex Opportunity", "copy": "Duplex — two tenants, stronger cashflow.", "price": 620000, "downPayment": 62000, "passive": 880, "label": "Property"},
+    {"id": "op5", "type": "opportunity", "kind": "property", "title": "Two-Bed Unit", "copy": "A unit in Hamilton.", "price": 420000, "downPayment": 42000, "passive": 600, "label": "Property"},
     {"id": "op6", "type": "opportunity", "kind": "property", "title": "Holiday Bach", "copy": "A bach rented to holiday visitors.", "price": 380000, "downPayment": 38000, "passive": 540, "label": "Property"},
     {"id": "op7", "type": "opportunity", "kind": "property", "title": "Granny Flat", "copy": "A small flat behind a house.", "price": 250000, "downPayment": 25000, "passive": 350, "label": "Property"},
     {"id": "op8", "type": "opportunity", "kind": "property", "title": "Student Flat", "copy": "A flat near the university in Dunedin.", "price": 450000, "downPayment": 45000, "passive": 640, "label": "Property"},
     {"id": "op9", "type": "opportunity", "kind": "property", "title": "Corner Shop Building", "copy": "A small shop building with a tenant.", "price": 520000, "downPayment": 78000, "passive": 740, "label": "Property"},
     {"id": "op10", "type": "opportunity", "kind": "property", "title": "Three-Bed House", "copy": "A family house in Palmerston North.", "price": 500000, "downPayment": 50000, "passive": 710, "label": "Property"},
-    {"id": "ob1", "type": "opportunity", "kind": "business", "title": "Café Franchise Slice", "copy": "Small café stake. Down payment + bank loan. Draw scales with business index.", "price": 180000, "downPayment": 36000, "passive": 260, "label": "Business"},
+    {"id": "ob1", "type": "opportunity", "kind": "business", "title": "Café Franchise Slice", "copy": "Small café stake. Draw scales with the business index.", "price": 180000, "downPayment": 36000, "passive": 260, "label": "Business"},
     {"id": "ob2", "type": "opportunity", "kind": "business", "title": "Lawn & Garden Crew", "copy": "Buy into a local crew. Equipment financed.", "price": 95000, "downPayment": 20000, "passive": 130, "label": "Business"},
-    {"id": "ob3", "type": "opportunity", "kind": "business", "title": "Mobile Mechanic Van", "copy": "Fitted van + tools. Deposit then bank loan.", "price": 120000, "downPayment": 25000, "passive": 170, "label": "Business"},
-    {"id": "ob4", "type": "opportunity", "kind": "business", "title": "Online Store Stake", "copy": "Inventory + ads. Deposit, bank for the rest.", "price": 80000, "downPayment": 20000, "passive": 110, "label": "Business"},
+    {"id": "ob3", "type": "opportunity", "kind": "business", "title": "Mobile Mechanic Van", "copy": "Fitted van + tools.", "price": 120000, "downPayment": 25000, "passive": 170, "label": "Business"},
+    {"id": "ob4", "type": "opportunity", "kind": "business", "title": "Online Store Stake", "copy": "Inventory + ads, sold online.", "price": 80000, "downPayment": 20000, "passive": 110, "label": "Business"},
     {"id": "ob5", "type": "opportunity", "kind": "business", "title": "Cleaning Company Share", "copy": "A share in an office cleaning firm.", "price": 60000, "downPayment": 15000, "passive": 90, "label": "Business"},
     {"id": "ob6", "type": "opportunity", "kind": "business", "title": "Takeaway Shop Stake", "copy": "A share in a fish and chip shop.", "price": 150000, "downPayment": 30000, "passive": 210, "label": "Business"},
     {"id": "ob7", "type": "opportunity", "kind": "business", "title": "Hair Salon Share", "copy": "A share in a busy salon.", "price": 90000, "downPayment": 20000, "passive": 130, "label": "Business"},
@@ -3103,23 +3115,20 @@ select.modal-select {
     var amountClass = "";
     var copy = ev.copy;
     var financeHtml = "";
+    var amountTip = "";
 
     if (ev.type === "opportunity") {
       if (ev.kind === "growth") {
         amountText = "No cashflow · price risk";
         if (isEtf(ev.assetKey)) copy = (ev.copy || "") + " " + (ev.units || 1) + " ETF units (" + ASSET_LABELS[ev.assetKey] + " now " + fmtUnitPrice(ev.assetKey) + ").";
-        financeHtml = '<div class="event-finance"><span>Down payment</span> ' + fmt(ev.cost) +
-          ' &nbsp;|&nbsp; <span>Loan needed</span> ' + fmt(0) +
-          ' &nbsp;|&nbsp; <span>Full price</span> ' + fmt(ev.cost) + "</div>";
+        financeHtml = '<div class="event-finance"><span>Price</span> ' + fmt(ev.cost) + "</div>";
         if (!isEtf(ev.assetKey)) copy = ev.copy || "";
       } else if (ev.kind === "cashflow") {
         if (ev.dealRolled) {
           amountText = signedFmt(ev.netMo) + "/mo · ROI " + fmtRoi(dealRoiPct(ev));
           if (ev.netMo < 0) amountClass = " cost-red";
         } else amountText = "+" + fmt(ev.passive) + "/mo · ROI " + fmtRoi(annualizedRoiPct(ev.passive, ev.cost));
-        financeHtml = '<div class="event-finance"><span>Down payment</span> ' + fmt(ev.cost) +
-          ' &nbsp;|&nbsp; <span>Loan needed</span> ' + fmt(0) +
-          ' &nbsp;|&nbsp; <span>Full price</span> ' + fmt(ev.cost) + "</div>";
+        financeHtml = '<div class="event-finance"><span>Price</span> ' + fmt(ev.cost) + "</div>";
         copy = ev.copy || "";
       } else if (ev.kind === "property" || ev.kind === "business") {
         var loanNeed = ev.price - ev.downPayment;
@@ -3128,20 +3137,17 @@ select.modal-select {
             signedFmt(ev.netMo) + "/mo · ROI " + fmtRoi(dealRoiPct(ev)) + " on deposit";
           if (ev.netMo < 0) amountClass = " cost-red";
         } else amountText = "+" + fmt(ev.passive) + "/mo · ROI " + fmtRoi(annualizedRoiPct(ev.passive, ev.downPayment)) + " on deposit";
-        financeHtml = '<div class="event-finance"><span>Down payment</span> ' + fmt(ev.downPayment) +
-          ' &nbsp;|&nbsp; <span>Loan needed</span> ' + fmt(loanNeed) +
-          ' &nbsp;|&nbsp; <span>Full price</span> ' + fmt(ev.price) + "</div>";
+        /* v5.9: essentials only (price, down payment, cashflow, ROI). The loan maths lives in a tooltip. */
+        financeHtml = '<div class="event-finance"><span>Price</span> ' + fmt(ev.price) +
+          ' &nbsp;|&nbsp; <span>Down payment</span> ' + fmt(ev.downPayment) + "</div>";
         copy = ev.copy || "";
-        if (ev.dealRolled) {
-          copy += ' <span class="deal-note">Net cashflow = ' + (ev.kind === "property" ? "rent " : "business draw ") + fmt(dealGross(ev)) + "/mo − loan interest " +
-            fmt(dealLoanInterest(ev)) + "/mo" + (ev.zeroDown ? " (no deposit: ROI on deposit not defined)" : "") + ". Every deal is different.</span>";
-        }
+        amountTip = "Monthly cashflow after bank-loan interest" + (ev.dealRolled ? ": " + (ev.kind === "property" ? "rent " : "business draw ") + fmt(dealGross(ev)) +
+          "/mo − interest " + fmt(dealLoanInterest(ev)) + "/mo on a " + fmt(loanNeed) + " bank loan" : "") + ".";
       } else {
         var loan2 = (ev.price || 0) - (ev.downPayment || 0);
         amountText = "+" + fmt(ev.passive || 0) + "/mo";
-        financeHtml = '<div class="event-finance"><span>Down payment</span> ' + fmt(ev.downPayment || ev.cost || 0) +
-          ' &nbsp;|&nbsp; <span>Loan needed</span> ' + fmt(loan2) +
-          ' &nbsp;|&nbsp; <span>Full price</span> ' + fmt(ev.price || ev.cost || 0) + "</div>";
+        financeHtml = '<div class="event-finance"><span>Price</span> ' + fmt(ev.price || ev.cost || 0) +
+          (loan2 > 0 ? ' &nbsp;|&nbsp; <span>Down payment</span> ' + fmt(ev.downPayment || 0) : "") + "</div>";
         copy = ev.copy || "";
       }
     } else if (ev.type === "market" && ev.effect === "buyout") {
@@ -3198,23 +3204,21 @@ select.modal-select {
           var down = ev.downPayment;
           var sf = Math.max(0, down - state.cash);
           var hiCover = ceil1000(sf);
+          var bankTip = "The bank lends the other " + fmt(ev.price - down) + " (interest-only, " + (state.bankApr * 100).toFixed(1) + "% p.a.).";
           if (down === 0) {
-            actions += '<button type="button" class="btn-primary" id="btn-buy" data-tip="No deposit: the bank loans the full price">Buy (no deposit)</button>';
+            actions += '<button type="button" class="btn-primary" id="btn-buy" data-tip="No deposit: the bank lends the full price (interest-only, ' + (state.bankApr * 100).toFixed(1) + '% p.a.).">Buy (no deposit)</button>';
           } else if (state.cash >= down) {
-            actions += '<button type="button" class="btn-primary" id="btn-buy" data-tip="Deposit from cash; bank loans the rest">Buy (down ' + fmt(down) + " cash)</button>";
+            actions += '<button type="button" class="btn-primary" id="btn-buy" data-tip="' + esc("Pay the " + fmt(down) + " deposit from cash. " + bankTip) + '">Buy</button>';
           } else {
-            actions += '<button type="button" class="btn-warn" id="btn-buy-hi" data-tip="CC then HI for deposit shortfall">Buy — CC/HI covers shortfall</button>';
-            actions += '<span class="hi-label">CC first ($20k), then HI 120% ceil $1,000</span>';
+            actions += '<button type="button" class="btn-warn" id="btn-buy-hi" data-tip="' + esc("Not enough cash for the deposit: the " + fmt(sf) + " gap is borrowed (credit card first, then the 120% HI loan). " + bankTip) + '">Buy · uses credit</button>';
           }
-          actions += '<div class="event-copy">Bank loan for remainder: ' + fmt(ev.price - down) + " @ " + (state.bankApr * 100).toFixed(1) + "% p.a. interest-only.</div>";
         } else {
           var shortfall = Math.max(0, ev.cost - state.cash);
           var hiNeed = ceil1000(shortfall);
           if (state.cash >= ev.cost) {
-            actions += '<button type="button" class="btn-primary" id="btn-buy" data-tip="Pay from cash">Buy (' + fmt(ev.cost) + ")</button>";
+            actions += '<button type="button" class="btn-primary" id="btn-buy" data-tip="Pay ' + fmt(ev.cost) + ' from cash">Buy</button>';
           } else {
-            actions += '<button type="button" class="btn-warn" id="btn-buy-hi" data-tip="CC then HI">Buy with CC/HI</button>';
-            actions += '<span class="hi-label">CC first, then HI ceil $1,000</span>';
+            actions += '<button type="button" class="btn-warn" id="btn-buy-hi" data-tip="' + esc("Not enough cash: the " + fmt(shortfall) + " gap is borrowed (credit card first, then the 120% HI loan).") + '">Buy · uses credit</button>';
           }
         }
         actions += '<button type="button" class="btn-secondary" id="btn-skip-event" data-tip="Pass on this deal">Skip</button></div>';
@@ -3296,7 +3300,7 @@ select.modal-select {
       header +
       '<div class="event-title">' + ev.title + "</div>" +
       sickBanner +
-      '<div class="event-amount' + amountClass + '">' + amountText + "</div>" +
+      '<div class="event-amount' + amountClass + '"' + (amountTip ? ' data-tip="' + esc(amountTip) + '"' : "") + ">" + amountText + "</div>" +
       financeHtml +
       '<div class="event-copy">' + copy + "</div>" + prevHtml;
     $("event-actions").innerHTML = actions;
