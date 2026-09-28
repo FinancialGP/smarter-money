@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SMARTER $ — NZ Financial Literacy Game (v5.10)</title>
+<title>SMARTER $ — NZ Financial Literacy Game (v5.12)</title>
 <style>
 :root {
   --bg: #0f172a; --surface: #1e293b; --surface2: #334155; --text: #f1f5f9; --muted: #94a3b8;
@@ -462,6 +462,71 @@ select.modal-select {
 @media (hover: none) and (pointer: coarse) { .space-default::after { display: none; } }
 /* Save slot picker */
 #confirm-modal { z-index: 300; }
+/* v5.11 risk warning (Easy/Normal) */
+#risk-modal { z-index: 310; }
+.risk-panel { border: 2px solid #f59e0b; width: min(560px, 100%); }
+.risk-panel h3 { color: #fcd34d; font-size: 1.25rem; }
+.risk-deal { color: var(--text); font-size: 0.98rem; margin: 0.35rem 0 0; font-weight: 700; }
+.risk-list { margin: 0.6rem 0 0.2rem 1.1rem; padding: 0; color: var(--text); font-size: 1rem; line-height: 1.45; }
+.risk-list li { margin: 0.3rem 0; }
+.risk-list li.risk-note { color: var(--muted); list-style: circle; font-size: 0.92rem; }
+.risk-ask { color: var(--text); font-size: 1rem; margin-top: 0.6rem; font-weight: 700; }
+.risk-panel .modal-actions button { min-height: 44px; min-width: 130px; font-size: 1rem; }
+/* v5.11 Financial Freedom celebration (over the win pop-up; click / Space closes) */
+#celebrate { position: fixed; inset: 0; z-index: 400; display: flex; align-items: center; justify-content: center; flex-direction: column;
+  background: radial-gradient(ellipse at center, rgba(15,23,42,0.55) 0%, rgba(15,23,42,0.82) 70%); cursor: pointer; opacity: 1; transition: opacity 0.4s; }
+#celebrate[hidden] { display: none; }
+#celebrate.fade { opacity: 0; }
+#celebrate canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.celebrate-banner { position: relative; text-align: center; padding: 0 1rem; animation: celebPop 0.7s cubic-bezier(.2,1.6,.4,1) both; pointer-events: none; }
+.celebrate-banner .big { font-size: clamp(2.6rem, 9vw, 7rem); font-weight: 900; line-height: 1.05; color: #fde047; letter-spacing: 0.01em;
+  text-shadow: 0 0 18px rgba(250,204,21,0.75), 0 4px 0 #b45309, 0 8px 24px rgba(0,0,0,0.6); }
+.celebrate-banner .sub { margin-top: 0.6rem; font-size: clamp(1.1rem, 2.8vw, 2rem); font-weight: 800; color: #f8fafc; text-shadow: 0 2px 8px rgba(0,0,0,0.7); }
+.celebrate-banner .hint { margin-top: 1.2rem; font-size: clamp(0.85rem, 1.6vw, 1.1rem); color: #cbd5e1; animation: celebBlink 1.4s ease-in-out infinite; }
+@keyframes celebPop { 0% { transform: scale(0.2) rotate(-6deg); opacity: 0; } 100% { transform: scale(1) rotate(0); opacity: 1; } }
+@keyframes celebBlink { 50% { opacity: 0.45; } }
+/* v5.12 hot-seat multiplayer */
+.mp-setup { margin: 0.6rem auto 0.2rem; display: flex; flex-direction: column; align-items: center; gap: 0.45rem; }
+.mp-count { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; justify-content: center; }
+.mp-lbl { font-weight: 700; color: var(--text); margin-right: 0.2rem; }
+.mp-n { min-width: 2.6rem; padding: 0.4rem 0.7rem; border-radius: 10px; background: var(--surface); border: 2px solid var(--surface2); color: var(--text); font-weight: 800; }
+.mp-n.selected { border-color: var(--accent); background: #132a1f; color: var(--accent); }
+.mp-names { display: flex; gap: 0.4rem; flex-wrap: wrap; justify-content: center; }
+.mp-names input { width: 9.5rem; padding: 0.4rem 0.55rem; border-radius: 8px; border: 1px solid var(--surface2); background: #0b1220; color: var(--text); font-size: 0.95rem; }
+.mp-names input:focus { outline: 2px solid var(--info); }
+.mp-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.25rem; font-size: 0.74rem; flex: 0 1 auto; min-height: 1.6rem; }
+#screen-play .banner-row.mp-on { align-items: center; flex-wrap: wrap; }
+#screen-play .banner-row.mp-on .warning-banner { flex: 1 1 260px; min-width: 260px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mp-bar .mp-nowtag { font-weight: 800; color: #052e16; background: var(--accent); border-radius: 999px; padding: 0.12rem 0.6rem; }
+.mp-chip { border: 1px solid var(--surface2); background: var(--surface); border-radius: 999px; padding: 0.1rem 0.55rem; color: var(--muted); white-space: nowrap; }
+.mp-chip b { color: var(--text); }
+.mp-chip.now { border-color: var(--accent); color: var(--text); }
+.mp-chip.free { border-color: #fbbf24; }
+.mp-chip.out { opacity: 0.6; text-decoration: line-through; }
+.handoff-box { max-width: 860px; margin: 0 auto; text-align: center; padding-top: 0.5rem; }
+.handoff-kicker { text-transform: uppercase; letter-spacing: 0.12em; font-size: 0.8rem; color: var(--info); font-weight: 700; }
+.handoff-now { font-size: clamp(1.8rem, 4.5vw, 3rem); margin: 0.3rem 0 0.2rem; color: var(--accent); }
+.handoff-note { color: #fde68a; margin: 0.3rem 0 0.6rem; min-height: 1.2em; }
+.mp-score { width: 100%; border-collapse: collapse; margin: 0.4rem 0 0.6rem; background: var(--surface); border-radius: 12px; overflow: hidden; font-size: 0.95rem; }
+.mp-score th, .mp-score td { padding: 0.45rem 0.6rem; border-bottom: 1px solid var(--surface2); text-align: left; }
+.mp-score th { color: var(--muted); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; background: #172236; }
+.mp-score td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.mp-score tr.now td { background: #132a1f; }
+.mp-score tr.now td:first-child { box-shadow: inset 4px 0 0 var(--accent); }
+.mp-score .st-free { color: #fbbf24; font-weight: 700; }
+.mp-score .st-out { color: #fca5a5; }
+.mp-score .st-done { color: var(--info); }
+.mp-score .pe-good { color: var(--accent); font-weight: 700; }
+.mp-rank td.rank { font-size: 1.3rem; width: 3rem; text-align: center; }
+.mp-rank tr.first td { background: rgba(251,191,36,0.12); }
+.mpend-box { max-width: 980px; margin: 0 auto; text-align: center; }
+.mpend-box h2 { font-size: clamp(1.6rem, 4vw, 2.4rem); }
+@media (max-width: 600px) { .mp-score { font-size: 0.8rem; } .mp-score th, .mp-score td { padding: 0.3rem 0.35rem; } }
+@media (prefers-reduced-motion: reduce) { .celebrate-banner { animation: none; } .celebrate-banner .hint { animation: none; } }
+#btn-go-back { font-weight: 800; }
+#btn-go-back[hidden], #risk-modal[hidden], #bankrupt-actions[hidden] { display: none; }
+.bankrupt-actions { justify-content: flex-start; margin: 0.25rem 0 0.75rem; }
+.bankrupt-actions button { min-height: 48px; font-size: 1.05rem; padding: 0.6rem 1.2rem; }
 #slot-modal .modal-panel { width: min(580px, 100%); max-height: 92vh; display: flex; flex-direction: column; }
 .slot-list { display: flex; flex-direction: column; gap: 0.45rem; overflow-y: auto; min-height: 0; }
 .slot-btn { text-align: left; background: var(--bg); border: 1px solid var(--surface2); color: var(--text); padding: 0.6rem 0.8rem; border-radius: 10px; width: 100%; font-weight: 600; }
@@ -481,6 +546,20 @@ select.modal-select {
     <p>A New Zealand classroom game about income, tax, expenses, markets, debt, and building passive income — over <strong>10 years</strong> (120 months).</p>
     <p><strong>Win goal:</strong> Financial Freedom — passive income ≥ total expenses (P÷E ≥ 100%) at a payday. The sooner, the better. Then see your summary or keep playing to month 120.</p>
     <p class="subtitle" style="margin-top:0.25rem"><strong>Each month:</strong> monthly index update (Gold/Silver, Bitcoin and US Index ETF prices move), then 4 events in order — 1 Market news · 2 Opportunity · 3 Life / spending · 4 Wildcard — then <strong>Next Month = payday</strong>. Get sick? No other events that month.</p>
+    <div class="mp-setup" id="mp-setup">
+      <div class="mp-count" role="group" aria-label="Number of players"><span class="mp-lbl">Players:</span>
+        <button type="button" class="mp-n selected" data-n="1" aria-pressed="true" data-tip="One player (normal game)">1</button>
+        <button type="button" class="mp-n" data-n="2" aria-pressed="false" data-tip="Hot-seat: 2 players take turns, one month each">2</button>
+        <button type="button" class="mp-n" data-n="3" aria-pressed="false" data-tip="Hot-seat: 3 players take turns, one month each">3</button>
+        <button type="button" class="mp-n" data-n="4" aria-pressed="false" data-tip="Hot-seat: 4 players take turns, one month each">4</button>
+      </div>
+      <div class="mp-names" id="mp-names" hidden>
+        <input type="text" id="mp-name-1" maxlength="16" value="Player 1" aria-label="Player 1 name" autocomplete="off">
+        <input type="text" id="mp-name-2" maxlength="16" value="Player 2" aria-label="Player 2 name" autocomplete="off">
+        <input type="text" id="mp-name-3" maxlength="16" value="Player 3" aria-label="Player 3 name" autocomplete="off">
+        <input type="text" id="mp-name-4" maxlength="16" value="Player 4" aria-label="Player 4 name" autocomplete="off">
+      </div>
+    </div>
     <div class="center-actions" style="justify-content:center;flex-wrap:wrap">
       <button type="button" class="btn-primary" id="btn-start" data-tip="Choose difficulty, then career">Start Game</button>
       <button type="button" class="btn-secondary" id="btn-continue" data-tip="Resume the latest auto-save" hidden>Continue</button>
@@ -506,12 +585,40 @@ select.modal-select {
 </section>
 
 <section id="screen-career" class="screen" aria-label="Choose career">
-  <h2>Choose Your Career</h2>
+  <h2 id="career-heading">Choose Your Career</h2>
   <p class="subtitle">Default hours: 40 per week. Rates are NZ-flavoured classroom guides (NZD). Pay is shown monthly.</p>
   <div class="card-grid" id="career-grid" role="group" aria-label="Career options"></div>
   <div class="center-actions">
     <button type="button" class="btn-ghost" id="btn-career-back">Back</button>
     <button type="button" class="btn-primary" id="btn-career-start" disabled>Start 10 Years</button>
+  </div>
+</section>
+
+<section id="screen-handoff" class="screen" aria-label="Next player's turn">
+  <div class="handoff-box">
+    <div class="handoff-kicker">Hot-seat · pass the device</div>
+    <h2 class="handoff-now" id="handoff-now">Now: Player 1’s turn</h2>
+    <p class="subtitle" id="handoff-sub"></p>
+    <p class="handoff-note" id="handoff-note"></p>
+    <table class="mp-score" id="handoff-score"></table>
+    <div class="center-actions" style="justify-content:center">
+      <button type="button" class="btn-primary" id="btn-handoff-start">Start turn →</button>
+      <button type="button" class="btn-secondary" id="btn-handoff-save" data-tip="Save the whole multiplayer game to a slot">Save</button>
+      <button type="button" class="btn-ghost" id="btn-handoff-title" data-tip="Return to title (progress is auto-saved: use Continue)">Title</button>
+    </div>
+  </div>
+</section>
+
+<section id="screen-mpend" class="screen" aria-label="Final ranking">
+  <div class="mpend-box">
+    <h2 id="mpend-heading">🏁 Final Ranking</h2>
+    <p class="subtitle" id="mpend-sub"></p>
+    <table class="mp-score mp-rank" id="mpend-table"></table>
+    <p class="subtitle" style="font-size:0.85rem">Ranking: first to Financial Freedom (earliest month) wins; everyone else is ranked by net worth.</p>
+    <div class="center-actions" style="justify-content:center">
+      <button type="button" class="btn-primary" id="btn-mpend-new" data-tip="Same players and names: choose difficulty and careers again">New game (same players)</button>
+      <button type="button" class="btn-secondary" id="btn-mpend-title">Title</button>
+    </div>
   </div>
 </section>
 
@@ -536,6 +643,7 @@ select.modal-select {
   </div>
   <div class="month-bar" aria-hidden="true"><div class="month-bar-fill" id="month-bar-fill" style="width:0%"></div></div>
   <div class="banner-row" id="banner-row">
+  <div class="mp-bar" id="mp-bar" hidden></div>
   <div class="warning-banner underwater" id="underwater-banner" role="alert" data-tip="Net worth below $0 is a warning, not game over. Bankrupt only if ALSO out of cash AND monthly cashflow is negative even with full pay.">Underwater: debts exceed assets</div>
   <div class="warning-banner offwork" id="offwork-banner" role="alert"></div>
   <div class="warning-banner hi-loan" id="hi-loan-banner" role="alert">High-interest loan active — 120% p.a. Pay it down ASAP.</div>
@@ -589,6 +697,11 @@ select.modal-select {
   <p id="summary-reason" class="subtitle" style="display:none;color:#fecaca;font-weight:700"></p>
   <p id="summary-career" class="subtitle"></p>
   <div id="summary-badge" style="margin-bottom:0.5rem"></div>
+  <div class="center-actions bankrupt-actions" id="bankrupt-actions" hidden>
+    <button type="button" class="btn-warn" id="btn-go-back" data-tip="Undo: go back to the start of the last month and try again (hotkey B)">↩ Go back a month</button>
+    <button type="button" class="btn-warn" id="btn-mark-out" hidden data-tip="Give up: this player is out, the others keep playing">Mark out</button>
+    <button type="button" class="btn-secondary" id="btn-new-game-top" data-tip="Start a new game with the same career and difficulty">New game</button>
+  </div>
   <div class="summary-grid" id="summary-grid"></div>
   <div class="panel" style="margin-top:0.5rem">
     <h3>Final Balance Sheet</h3>
@@ -616,8 +729,8 @@ select.modal-select {
       <li>What Passive ÷ Expenses ratio would feel “safe” after ten years — and why?</li>
     </ol>
   </div>
-  <div class="center-actions">
-    <button type="button" class="btn-primary" id="btn-play-again" data-tip="Replay with same career and difficulty">Play Again</button>
+  <div class="center-actions" id="summary-bottom-actions">
+    <button type="button" class="btn-primary" id="btn-play-again" data-tip="Start a new game with the same career and difficulty">New game</button>
     <button type="button" class="btn-secondary" id="btn-change-career" data-tip="Pick a different career">Change Career</button>
   </div>
 </section>
@@ -668,6 +781,26 @@ select.modal-select {
       <button type="button" class="btn-secondary" id="win-summary">See Summary</button>
       <button type="button" class="btn-primary" id="win-keep">Keep Playing</button>
     </div>
+  </div>
+</div>
+<div class="modal-overlay" id="risk-modal" role="alertdialog" aria-modal="true" aria-labelledby="risk-title" aria-describedby="risk-list" hidden>
+  <div class="modal-panel risk-panel">
+    <h3 id="risk-title">⚠️ Careful — this could hurt your money</h3>
+    <p class="risk-deal" id="risk-deal"></p>
+    <ul class="risk-list" id="risk-list"></ul>
+    <p class="risk-ask">Do you still want to buy it?</p>
+    <div class="modal-actions">
+      <button type="button" class="btn-warn" id="risk-buy">Buy anyway</button>
+      <button type="button" class="btn-primary" id="risk-cancel">Cancel</button>
+    </div>
+  </div>
+</div>
+<div id="celebrate" role="dialog" aria-modal="true" aria-label="Financial Freedom celebration" hidden>
+  <canvas id="celebrate-canvas" aria-hidden="true"></canvas>
+  <div class="celebrate-banner">
+    <div class="big">Financial Freedom!</div>
+    <div class="sub">Your passive income pays all your expenses 🎉</div>
+    <div class="hint">Tap or press Space to continue</div>
   </div>
 </div>
 <div class="modal-overlay" id="confirm-modal" role="dialog" aria-modal="true" aria-labelledby="confirm-title" hidden>
@@ -1165,7 +1298,13 @@ select.modal-select {
       illness: function () { tone(330, 0, 0.3, "sine", 0.5); tone(262, 0.25, 0.45, "sine", 0.5); },
       click: function () { tone(1200, 0, 0.04, "sine", 0.3); },
       bankrupt: function () { seq([392, 349, 311, 262], 0.22, 0.4, "triangle", 0.55); },
-      fanfare: function () { seq([523, 659, 784], 0.12, 0.2, "triangle", 0.5); tone(1047, 0.36, 0.7, "triangle", 0.5); tone(784, 0.36, 0.7, "sine", 0.3); tone(659, 0.36, 0.7, "sine", 0.3); }
+      fanfare: function () { seq([523, 659, 784], 0.12, 0.2, "triangle", 0.5); tone(1047, 0.36, 0.7, "triangle", 0.5); tone(784, 0.36, 0.7, "sine", 0.3); tone(659, 0.36, 0.7, "sine", 0.3); },
+      /* v5.11: Financial Freedom celebration — fanfare, then firework "pops" and a final chord (~3.5 s) */
+      celebrate: function () {
+        seq([523, 659, 784], 0.12, 0.2, "triangle", 0.5); tone(1047, 0.36, 0.8, "triangle", 0.5); tone(784, 0.36, 0.8, "sine", 0.3); tone(659, 0.36, 0.8, "sine", 0.3);
+        [1.0, 1.45, 1.8, 2.3, 2.6].forEach(function (t, i) { var f = [1568, 2093, 1760, 2349, 1976][i]; tone(f, t, 0.25, "sine", 0.35); tone(f * 1.5, t + 0.05, 0.3, "sine", 0.2); tone(f / 2, t + 0.02, 0.18, "triangle", 0.25); });
+        tone(1047, 2.9, 1.0, "triangle", 0.45); tone(1319, 2.9, 1.0, "sine", 0.3); tone(1568, 2.9, 1.0, "sine", 0.3); tone(523, 2.9, 1.0, "sine", 0.3);
+      }
     };
     function play(name) {
       try {
@@ -1428,7 +1567,7 @@ select.modal-select {
     showToast._timer = setTimeout(function () { t.classList.remove("show"); }, 2800);
   }
   function showScreen(name) {
-    ["title", "difficulty", "career", "play", "summary"].forEach(function (s) {
+    ["title", "difficulty", "career", "handoff", "play", "summary", "mpend"].forEach(function (s) {
       $("screen-" + s).classList.toggle("active", s === name);
     });
     state.screen = name;
@@ -1450,6 +1589,8 @@ select.modal-select {
 
   /* Undo stack: deep-cloned playable states. Persisted in save JSON (capped). In-memory also OK if save strip fails. */
   var UNDO_CAP = 120;
+  var mp = null;   /* v5.12 hot-seat multiplayer state (null = single player) */
+  var MP_SAVE_UNDO = 60;   /* v5.12: months of undo kept per player inside a multiplayer SAVE (in memory: UNDO_CAP) */
   var undoStack = [];
   var confirmCallback = null;
   /* Snapshot of the START of the current month (after payday, event 1 not yet resolved).
@@ -1479,11 +1620,18 @@ select.modal-select {
     if (!btn) return;
     var can = state.screen === "play" && !state.bankrupt && undoStack.length > 0;
     btn.disabled = !can;
+    var gb = $("btn-go-back");   /* v5.11: bankruptcy screen */
+    var showGb = state.screen === "summary" && state.bankrupt && undoStack.length > 0;
+    if (gb) gb.hidden = !showGb;
+    var ba = $("bankrupt-actions");
+    if (ba) ba.hidden = !(state.screen === "summary" && state.bankrupt);
   }
 
   function previousMonth() {
     SFX.hush(500);
-    if (state.screen !== "play" || state.bankrupt) return;
+    /* v5.11: also allowed from the bankruptcy screen ("Go back a month") */
+    var fromEnd = state.screen === "summary" && state.bankrupt;
+    if (!fromEnd && (state.screen !== "play" || state.bankrupt)) return;
     if (!undoStack.length) {
       showToast("Nothing to undo — already at earliest month.", "error");
       updateUndoBtn();
@@ -1517,12 +1665,14 @@ select.modal-select {
     return !!(m && m.classList.contains("show") && !m.hidden);
   }
   function isAnyModalOpen() {
-    return isConfirmModalOpen() || isRepayModalOpen() || isSlotModalOpen();
+    return isConfirmModalOpen() || isRepayModalOpen() || isSlotModalOpen() || isRiskModalOpen();
   }
 
   /* ---- Space / Enter = default next step ---- */
   function usable(el) { return !!(el && !el.disabled && !el.hidden && el.offsetParent !== null); }
   function spaceTarget() {
+    if (isCelebrating()) return null;
+    if (isRiskModalOpen()) return $("risk-cancel");   /* v5.11: Space never confirms "Buy anyway" */
     if (isConfirmModalOpen()) return $("confirm-ok");
     if (isWinModalOpen()) return $("win-keep");
     if (isRepayModalOpen()) { var rc = $("repay-confirm"); return usable(rc) ? rc : null; }
@@ -1531,6 +1681,7 @@ select.modal-select {
     if (scr === "title") return usable($("btn-start")) ? $("btn-start") : null;
     if (scr === "difficulty") return usable($("btn-diff-next")) ? $("btn-diff-next") : null;
     if (scr === "career") return usable($("btn-career-start")) ? $("btn-career-start") : null;
+    if (scr === "handoff") return usable($("btn-handoff-start")) ? $("btn-handoff-start") : null;
     if (scr !== "play" || state.bankrupt) return null;
     if (state.eventResolved || !state.pendingEvent) return usable($("btn-next")) ? $("btn-next") : null;
     /* Pending event: primary action. Buy only when cash covers it; if the only buy option is
@@ -1539,6 +1690,7 @@ select.modal-select {
        one, which is always 'affordable' but would cost you money every month. */
     var pe = state.pendingEvent;
     if (pe.type === "opportunity" && pe.dealRolled && pe.netMo < 0 && usable($("btn-skip-event"))) return $("btn-skip-event");
+    if (pe.type === "opportunity" && pe.riskDeclined && usable($("btn-skip-event"))) return $("btn-skip-event");   /* v5.11 */
     var order = ["btn-buyout-keep", "btn-buyout-ok", "btn-buy", "btn-trade-done", "btn-birth-accept", "btn-resolve", "btn-skip-event"];
     for (var i = 0; i < order.length; i++) {
       var el = $(order[i]);
@@ -1612,6 +1764,9 @@ select.modal-select {
       netWorth: nw,
       bankrupt: !!state.bankrupt,
       finished: state.screen === "summary",
+      players: mp ? mp.players.map(function (p) { return p.name; }) : undefined,
+      nowPlayer: mp ? mp.players[mp.cur].name : undefined,
+      mpOver: mp ? !!mp.over : undefined,
       savedAt: new Date().toISOString()
     };
   }
@@ -1620,7 +1775,7 @@ select.modal-select {
      history: a snapshot taken at month m had history for months < m). Keeps 5 slots + Auto
      well inside browser storage limits. In-memory undo behaviour is unchanged. */
   function buildSavePayload() {
-    return {
+    var out = {
       version: SAVE_VERSION,
       game: "SMARTER$ full",
       savedAt: new Date().toISOString(),
@@ -1634,6 +1789,8 @@ select.modal-select {
       }),
       monthStart: monthStartSnap ? (function () { var c = Object.assign({}, monthStartSnap); delete c.history; return c; })() : null
     };
+    if (mp) { out.mp = mpPack(); out.undoStack = out.undoStack.slice(-MP_SAVE_UNDO); }   /* v5.12 hot-seat: the other players + shared market; saved undo capped per player */
+    return out;
   }
   function rebuildMonthStart(data) {
     if (!data.monthStart || typeof data.monthStart !== "object") return null;
@@ -1669,9 +1826,10 @@ select.modal-select {
       localStorage.setItem(key, JSON.stringify(payload));
       return "ok";
     } catch (err) {
-      if (isQuotaError(err) && payload.undoStack && payload.undoStack.length > 12) {
+      if (isQuotaError(err) && payload.undoStack && (payload.undoStack.length > 12 || payload.mp)) {
         payload.undoStack = payload.undoStack.slice(-12);
         payload.undoTrimmed = true;
+        if (payload.mp && Array.isArray(payload.mp.players)) payload.mp.players.forEach(function (pk) { if (pk && Array.isArray(pk.undoStack)) pk.undoStack = pk.undoStack.slice(-12); });
         try { localStorage.setItem(key, JSON.stringify(payload)); return "trimmed"; } catch (e2) {}
       }
       return false;
@@ -1714,6 +1872,7 @@ select.modal-select {
   function metaLine(meta) {
     var m = meta.month || 1;
     var parts = [
+      (meta.players && meta.players.length > 1 ? "\ud83d\udc65 " + meta.players.length + " players: " + meta.players.join(", ") + (meta.mpOver ? " (game over)" : " \u00b7 Now: " + meta.nowPlayer) + " \u00b7 " : "") +
       (meta.career || "Career") + (meta.difficulty ? " (" + capitalize(String(meta.difficulty)) + ")" : ""),
       "Month " + m + " · Year " + yearOf(m) + " · Month " + monthInYear(m) +
         (meta.eventCount && !meta.monthDone && !meta.finished && !meta.bankrupt ? " (event " + ((meta.eventStep || 0) + 1) + "/" + meta.eventCount + ")" : ""),
@@ -1740,7 +1899,7 @@ select.modal-select {
     } catch (err) { /* storage blocked — nothing to migrate */ }
   }
   function openSlotModal(mode) {
-    if (mode === "save" && state.screen !== "play" && state.screen !== "summary") {
+    if (mode === "save" && state.screen !== "play" && state.screen !== "summary" && !(mp && (state.screen === "handoff" || state.screen === "mpend"))) {
       showToast("Nothing to save yet.", "error");
       return;
     }
@@ -1816,7 +1975,7 @@ select.modal-select {
   function chooseLoad(data, label) {
     if (!data) return;
     var doLoad = function () { closeSlotModal(); loadGame({ data: data, label: label }); };
-    if (state.screen === "play" && !state.bankrupt) {
+    if ((state.screen === "play" || state.screen === "handoff") && !state.bankrupt) {
       showConfirm("Load " + label + "? Current progress will be overwritten.", doLoad, { title: "Load game?", okLabel: "Load" });
     } else doLoad();
   }
@@ -1939,6 +2098,10 @@ select.modal-select {
     else if (st.screen === "summary" || (st.month >= TOTAL_MONTHS && st.eventResolved)) status = " · Finished";
     var stepTxt = (!status && Array.isArray(st.monthEvents) && st.monthEvents.length > 1 && !st.eventResolved)
       ? " (event " + ((st.eventStep || 0) + 1) + "/" + st.monthEvents.length + ")" : "";
+    if (data.mp && Array.isArray(data.mp.players) && data.mp.players.length > 1) {   /* v5.12 hot-seat save */
+      var nm = data.mp.players.map(function (p) { return p.name; });
+      return "\ud83d\udc65 " + nm.length + " players: " + nm.join(", ") + " \u00b7 " + (data.mp.over ? "Game over (final ranking)" : "Now: " + nm[data.mp.cur | 0] + " \u00b7 Month " + month) + " \u00b7 " + diff;
+    }
     return "Month " + month + stepTxt + " · " + career + " · " + diff + status;
   }
 
@@ -1972,6 +2135,7 @@ select.modal-select {
       $("play-career-title").textContent =
         state.career.name + " · " + fmt(state.career.rate) + "/hr · " + fmt(state.baseGross) + "/mo gross";
     }
+    if (mp && state.career) $("play-career-title").textContent = mp.players[mp.cur].name + " \u00b7 " + $("play-career-title").textContent;
     recomputePassive();
     recomputeLiving();
     applyPayStatus();
@@ -2094,6 +2258,9 @@ select.modal-select {
       if (!opts.quietMissing) showToast("No save found.", "error");
       return false;
     }
+    stopCelebration(true);
+    mp = data.mp ? mpUnpack(data.mp) : null;   /* v5.12: hot-seat game (null = single player) */
+    if (mp) { mp.players.forEach(function (pl, i) { if (i < 4) mpSetup.names[i] = pl.name; }); mpSetCount(mp.players.length); }
     applyLoadedState(data);
     if (Array.isArray(data.undoStack)) {
       undoStack = rebuildUndoStack(data);
@@ -2103,6 +2270,13 @@ select.modal-select {
     monthStartSnap = rebuildMonthStart(data);
     if (!monthStartSnap) captureMonthStart(); /* old save: best effort = the loaded point */
     var screen = state.screen || "play";
+    if (mp && (mp.over || screen === "handoff" || (screen === "summary" && !state.bankrupt))) {
+      if (mp.over || screen === "summary") { mp.over = true; mpShowEnd(true); }
+      else mpShowHandoff();
+      showToast((opts.label ? opts.label + " loaded" : "Game loaded") + " \u2014 " + mp.players.length + " players" + (mp.over ? " (final ranking)." : ", " + mp.players[mp.cur].name + "\u2019s turn."), "ok");
+      refreshContinueUI();
+      return true;
+    }
     if (state.bankrupt || screen === "summary") {
       endGame(!!state.bankrupt);
       // endGame already auto-saves; avoid double toast noise
@@ -2468,6 +2642,7 @@ select.modal-select {
   }
 
   function renderHud() {
+    mpRenderBar();
     if (state.bankrupt) return;
     applyPayStatus();
     recomputePassive();
@@ -2716,9 +2891,85 @@ select.modal-select {
     return { ok: true, method: method };
   }
 
-  function buyOpportunity(mode) {
+  /* v5.11 risk warning (Easy + Normal only). Dry-runs the purchase on a copy of the state and
+     lists the reasons in plain English: the deal's own cashflow is negative; monthly cash flow at
+     NORMAL pay becomes negative; or cash left is less than one month of expenses. */
+  function dealRisk(ev, mode) {
+    var out = { reasons: [], notes: [] };
+    if (!ev || ev.type !== "opportunity" || state.difficulty === "hard" || window.__SD_NO_RISK) return out;   /* __SD_NO_RISK: test hook for legacy tests */
+    var KEYS = ["cash", "ccBalance", "hiLoan", "bankLoan", "assets", "properties", "businesses", "growthUnits", "passiveIncome",
+      "bankInterestThisMonth", "hiInterestThisMonth", "ccInterestThisMonth"];
+    var snap = {};
+    KEYS.forEach(function (k) { snap[k] = state[k] == null ? state[k] : deepCloneState(state[k]); });
+    try {
+      var cc0 = state.ccBalance, hi0 = state.hiLoan;
+      if (ev.kind === "growth" || ev.kind === "cashflow") {
+        state.cash -= ev.cost;
+        coverShortfall();
+        if (ev.kind === "cashflow") state.assets.push({ title: ev.title, passive: dealPassiveAtBuy(ev), cost: ev.cost });
+        else state.growthUnits[ev.assetKey] += (ev.units || 1);
+      } else if (ev.kind === "property" || ev.kind === "business") {
+        financeDownPayment(ev.downPayment);
+        state.bankLoan += ev.price - ev.downPayment;
+        var e2 = { title: ev.title, costBasis: ev.price, downPayment: ev.downPayment, loanAmount: ev.price - ev.downPayment, passive: dealPassiveAtBuy(ev) };
+        if (ev.kind === "property") state.properties.push(e2); else state.businesses.push(e2);
+      }
+      recomputePassive();
+      var g = state.baseGross || 0, sc = Math.round(structuralCashflow());
+      var exp = Math.round(g + state.passiveIncome - structuralCashflow());
+      var cashAfter = Math.round(state.cash);
+      var borrowed = Math.round((state.ccBalance - cc0) + (state.hiLoan - hi0));
+      var net = ev.kind === "growth" ? 0 : dealView(ev).net;
+      if (net < 0) out.reasons.push("This deal loses money every month: its cash flow is " + signedFmt(net) + " a month.");
+      if (sc < 0) out.reasons.push("After buying, your monthly cash flow (with your normal pay) will be " + signedFmt(sc) + ". You will spend more than you earn each month.");
+      if (cashAfter < exp) out.reasons.push("After buying, your cash will be " + fmt(cashAfter) + " \u2014 less than one month of expenses (" + fmt(exp) + ").");
+      if (out.reasons.length && borrowed > 0) out.notes.push("You do not have enough cash, so you will borrow " + fmt(borrowed) + " (credit card first, then the 120% high-interest loan).");
+      out.cashAfter = cashAfter; out.expenses = exp; out.cashflowAfter = sc; out.borrowed = borrowed; out.dealNet = net;
+    } finally {
+      KEYS.forEach(function (k) { state[k] = snap[k]; });   /* dry run only: put everything back */
+    }
+    return out;
+  }
+  var riskPending = null;
+  function isRiskModalOpen() { var m = $("risk-modal"); return !!(m && m.classList.contains("show") && !m.hidden); }
+  function openRiskModal(ev, mode, risk) {
+    var m = $("risk-modal");
+    if (!m) return false;
+    riskPending = { mode: mode, id: ev.id, step: state.eventStep, month: state.month };
+    $("risk-deal").textContent = ev.title + " \u2014 " + (ev.kind === "property" || ev.kind === "business" ? "down payment " + fmt(ev.downPayment) : "price " + fmt(ev.cost));
+    $("risk-list").innerHTML = risk.reasons.map(function (r) { return "<li>" + esc(r) + "</li>"; }).join("") +
+      risk.notes.map(function (r) { return '<li class="risk-note">' + esc(r) + "</li>"; }).join("");
+    hideTip();
+    m.hidden = false; m.classList.add("show");
+    SFX.play("negative");
+    try { $("risk-cancel").focus({ preventScroll: true }); } catch (e) { $("risk-cancel").focus(); }
+    refreshSpaceHint();
+    return true;
+  }
+  function closeRiskModal(buy) {
+    var m = $("risk-modal");
+    if (m) { m.classList.remove("show"); m.hidden = true; }
+    var rp = riskPending; riskPending = null;
+    refreshSpaceHint();
+    var ev = state.pendingEvent;
+    if (buy && rp && ev && ev.id === rp.id && state.eventStep === rp.step && state.month === rp.month && !state.eventResolved) buyOpportunity(rp.mode, true);
+    else if (!buy) {
+      if (ev && rp && ev.id === rp.id) ev.riskDeclined = true;   /* next Space = Skip (no warning loop) */
+      showToast("OK \u2014 not bought. You can still Buy or Skip.", "");
+    }
+  }
+
+  function buyOpportunity(mode, confirmed) {
     var ev = state.pendingEvent;
     if (!ev || ev.type !== "opportunity" || state.eventResolved) return;
+    if (!confirmed && (mode === "cash" || mode === "hi")) {
+      var okCash = !((ev.kind === "growth" || ev.kind === "cashflow") && mode === "cash" && state.cash < ev.cost) &&
+        !((ev.kind === "property" || ev.kind === "business") && mode === "cash" && ev.downPayment > 0 && state.cash < ev.downPayment);
+      if (okCash) {
+        var risk = dealRisk(ev, mode);
+        if (risk.reasons.length && openRiskModal(ev, mode, risk)) return;
+      }
+    }
 
     if (ev.kind === "growth" || ev.kind === "cashflow") {
       var cost = ev.cost;
@@ -3346,9 +3597,11 @@ select.modal-select {
   function prepareMonth() {
     maybeResetYearFlags();
     applyPayStatus();
-    if (state.month > 1) monthlyIndexUpdate();   /* v5.7: fixed monthly index/ETF move, every month after payday */
+    if (mp) mpMarketStart();   /* v5.12: one shared market per month for all players */
+    else if (state.month > 1) monthlyIndexUpdate();   /* v5.7: fixed monthly index/ETF move, every month after payday */
     else state.indexUpdate = null;
     state.monthEvents = drawMonthEvents();
+    if (mp) mpMarketCard();
     state.eventStep = 0;
     state.monthLog = [];
     loadStep();
@@ -3396,13 +3649,81 @@ select.modal-select {
     if (!m || !state.wonMonth) return;
     var w = state.winStats || {};
     $("win-when").textContent = freedomLabel(state.wonMonth);
+    $("win-title").textContent = mp ? mp.players[mp.cur].name + ": Financial Freedom!" : "Financial Freedom!";
+    $("win-summary").hidden = !!mp;
+    $("win-keep").textContent = mp ? "Continue \u2192" : "Keep Playing";
     $("win-message").textContent = "Your passive income " + fmt(w.passive || 0) + "/mo now pays all your expenses " + fmt(w.expenses || 0) +
       "/mo (P÷E " + ((w.expenses ? w.passive / w.expenses : 0) * 100).toFixed(1) + "%). Net worth " + fmt(w.netWorth || 0) +
-      ". You don’t need your job to pay the bills any more!";
+      ". You don’t need your job to pay the bills any more!" + (mp ? " " + mp.players[mp.cur].name + " has finished \u2014 the others keep playing." : "");
     hideTip();
     m.hidden = false;
     m.classList.add("show");
-    if (withSound) SFX.play("fanfare");
+    if (withSound) { SFX.play("celebrate"); startCelebration(); }   /* v5.11: only on the live win payday */
+    refreshSpaceHint();
+  }
+  /* ---------- v5.11 Financial Freedom celebration: canvas confetti + fireworks, ~4.2 s ---------- */
+  var celeb = { on: false, raf: 0, timer: 0, parts: [], t0: 0, lastBurst: 0 };
+  function isCelebrating() { return celeb.on; }
+  function startCelebration() {
+    var box = $("celebrate"), cv = $("celebrate-canvas");
+    if (!box || !cv) return;
+    stopCelebration(true);
+    hideTip();
+    celeb.on = true; celeb.parts = []; celeb.t0 = performance.now(); celeb.lastBurst = 0; celeb.count = 0;
+    box.hidden = false; box.classList.remove("fade");
+    var reduce = false;
+    try { reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
+    var dpr = Math.min(2, window.devicePixelRatio || 1);
+    var W = window.innerWidth, H = window.innerHeight;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    var g = cv.getContext && cv.getContext("2d");
+    var COLS = ["#fde047", "#f59e0b", "#22c55e", "#38bdf8", "#f472b6", "#a78bfa", "#ffffff", "#ef4444"];
+    var scale = Math.max(1, Math.min(W, H) / 500);
+    function confetti(n) {
+      for (var i = 0; i < n; i++) celeb.parts.push({ k: 0, x: Math.random() * W, y: -20 - Math.random() * H * 0.6, vx: (Math.random() - 0.5) * 1.6, vy: 1.6 + Math.random() * 2.6,
+        w: (6 + Math.random() * 8) * scale, h: (3 + Math.random() * 5) * scale, r: Math.random() * 6.28, vr: (Math.random() - 0.5) * 0.3, c: COLS[i % COLS.length], life: 1e9 });
+    }
+    function burst() {
+      var x = W * (0.15 + Math.random() * 0.7), y = H * (0.12 + Math.random() * 0.4), c = COLS[Math.floor(Math.random() * COLS.length)], n = reduce ? 0 : 46;
+      for (var i = 0; i < n; i++) { var a = (i / n) * 6.283, sp = (2.2 + Math.random() * 3.2) * scale;
+        celeb.parts.push({ k: 1, x: x, y: y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, w: 2.6 * scale, c: i % 3 ? c : "#ffffff", life: 60 + Math.random() * 30 }); }
+      celeb.count++;
+    }
+    confetti(reduce ? 40 : 170);
+    var DUR = 4200;
+    function frame(now) {
+      if (!celeb.on) return;
+      var el = now - celeb.t0;
+      if (!reduce && el < DUR - 900 && now - celeb.lastBurst > 520) { burst(); celeb.lastBurst = now; }
+      if (g) {
+        g.setTransform(dpr, 0, 0, dpr, 0, 0);
+        g.clearRect(0, 0, W, H);
+        for (var i = celeb.parts.length - 1; i >= 0; i--) {
+          var p = celeb.parts[i];
+          if (p.k === 0) { p.x += p.vx + Math.sin((el + i * 50) / 400) * 0.6; p.y += p.vy; p.r += p.vr;
+            g.save(); g.translate(p.x, p.y); g.rotate(p.r); g.fillStyle = p.c; g.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); g.restore();
+            if (p.y > H + 30) { if (el < DUR - 1200) { p.y = -20; p.x = Math.random() * W; } else celeb.parts.splice(i, 1); } }
+          else { p.x += p.vx; p.y += p.vy; p.vx *= 0.97; p.vy = p.vy * 0.97 + 0.05; p.life -= 1;
+            g.globalAlpha = Math.max(0, Math.min(1, p.life / 40)); g.fillStyle = p.c; g.beginPath(); g.arc(p.x, p.y, p.w, 0, 6.283); g.fill(); g.globalAlpha = 1;
+            if (p.life <= 0) celeb.parts.splice(i, 1); }
+        }
+      }
+      celeb.raf = requestAnimationFrame(frame);
+    }
+    celeb.raf = requestAnimationFrame(frame);
+    celeb.timer = setTimeout(function () { stopCelebration(); }, DUR);
+    refreshSpaceHint();
+  }
+  function stopCelebration(instant) {
+    var box = $("celebrate");
+    clearTimeout(celeb.timer);
+    if (!celeb.on) { if (box && instant) box.hidden = true; return; }
+    celeb.on = false;
+    cancelAnimationFrame(celeb.raf);
+    if (!box) return;
+    if (instant) { box.hidden = true; box.classList.remove("fade"); }
+    else { box.classList.add("fade"); setTimeout(function () { if (!celeb.on) { box.hidden = true; box.classList.remove("fade"); } }, 420); }
+    var wk = $("win-keep"); if (wk && isWinModalOpen()) try { wk.focus({ preventScroll: true }); } catch (e) {}
     refreshSpaceHint();
   }
   function closeWinModal() {
@@ -3411,6 +3732,7 @@ select.modal-select {
     refreshSpaceHint();
   }
   function winKeepPlaying() {
+    if (mp) { mpWinContinue(); return; }
     state.winModalPending = false;
     if (monthStartSnap) monthStartSnap.winModalPending = false;   /* undo inside this month won't re-open it */
     closeWinModal();
@@ -3446,10 +3768,11 @@ select.modal-select {
     beginMonth();
     autoSave();
     updateUndoBtn();
-    showToast("Payday \u2014 " + fmt(paid) + " in, expenses out. " + (indexUpdateText(true) ? "Index update: " + indexUpdateText(true) + ". " : "") + "Month " + state.month +
+    if (!mp) showToast("Payday \u2014 " + fmt(paid) + " in, expenses out. " + (indexUpdateText(true) ? "Index update: " + indexUpdateText(true) + ". " : "") + "Month " + state.month +
       (state.sickMonth ? ": you are sick (no other events)." : ": event 1 of " + state.monthEvents.length + "."), "ok");
     if (justWon) openWinModal(true);
     else SFX.play("payday");
+    if (mp && !justWon) mpEndTurn(mp.players[mp.cur].name + " finished month " + (state.month - 1) + " \u2014 payday " + fmt(paid) + " in.");
   }
 
   function autoResolve(ev) {
@@ -3649,6 +3972,7 @@ select.modal-select {
   }
 
   function endGame(isBankrupt) {
+    if (mp && !(isBankrupt || state.bankrupt)) { mpFinishPlayer(); return; }   /* v5.12: month 120 done → next player */
     var reasonEl = $("summary-reason");
     var headEl = $("summary-heading");
     hideTip();
@@ -3709,8 +4033,309 @@ select.modal-select {
       "<li><span>High-interest loan</span><span>" + fmt(state.hiLoan) + "</span></li>" +
       "<li><span>Total liabilities</span><span>" + fmt(totalLiabilities()) + "</span></li>";
     $("summary-bs-net").textContent = "Net Worth " + fmt(netWorth());
+    if (mp) {   /* v5.12: bankrupt in a hot-seat game: go back a month, or mark this player out */
+      var pn = mp.players[mp.cur].name;
+      if (headEl) headEl.textContent = "Bankruptcy \u2014 " + pn;
+      $("summary-career").textContent = pn + " \u00b7 " + $("summary-career").textContent;
+      $("btn-mark-out").textContent = "Mark " + pn + " out \u2192 next player";
+    }
+    $("btn-mark-out").hidden = !mp;
+    $("btn-new-game-top").hidden = !!mp;
+    $("summary-bottom-actions").hidden = !!mp;
     showScreen("summary");
+    stopCelebration(true);
     autoSave();
+    updateUndoBtn();
+    var gbk = $("btn-go-back");
+    if (gbk && !gbk.hidden) { try { gbk.focus({ preventScroll: true }); } catch (e) {} }
+  }
+
+  /* ================= v5.12 hot-seat multiplayer (1–4 players on one device) =================
+     mp = null in a normal single-player game (everything behaves exactly as before).
+     In a hot-seat game each player has a complete game state of their own (career, statement,
+     cash, debts, cards, random events, undo history); the live `state` / undoStack /
+     monthStartSnap always belong to the player whose turn it is and are swapped at each hand-off.
+     Turns: one month each — the active player with the lowest month goes next (ties: lower
+     player number), so Player 1 month 1, Player 2 month 1, … then month 2.
+     Shared market: mp.market[month] = the monthly index update + the market-news card (event 1)
+     for that month, created by the first player to reach the month and reused by everyone
+     (prices at each month start come from the shared record, so all players see the same ETF /
+     property / business prices and bank rate). Personal events (deal, life, wildcard, illness,
+     babies) stay per player. */
+  var mpSetup = { n: 1, names: ["Player 1", "Player 2", "Player 3", "Player 4"], careers: [], pick: 0 };
+  function mpSetCount(n) {
+    mpSetup.n = Math.max(1, Math.min(4, n | 0 || 1));
+    document.querySelectorAll(".mp-n").forEach(function (b) {
+      var on = +b.dataset.n === mpSetup.n;
+      b.classList.toggle("selected", on); b.setAttribute("aria-pressed", on ? "true" : "false");
+    });
+    var box = $("mp-names");
+    if (box) box.hidden = mpSetup.n < 2;
+    [1, 2, 3, 4].forEach(function (k) { var inp = $("mp-name-" + k); if (inp) { inp.hidden = k > mpSetup.n; inp.value = mpSetup.names[k - 1]; } });
+    $("btn-start").setAttribute("data-tip", mpSetup.n > 1 ? mpSetup.n + " players: choose difficulty (shared), then each player picks a career" : "Choose difficulty, then career");
+    refreshSpaceHint();
+  }
+  function mpPlayerNames() {
+    var out = [];
+    for (var i = 0; i < mpSetup.n; i++) {
+      var nm = String(mpSetup.names[i] || "").replace(/\s+/g, " ").trim().slice(0, 16);
+      out.push(nm || ("Player " + (i + 1)));
+    }
+    return out;
+  }
+  function mpCareerScreen(preselect) {
+    var multi = mpSetup.n > 1;
+    var names = mpPlayerNames();
+    var h = $("career-heading");
+    if (h) h.textContent = multi ? "Choose Your Career \u2014 " + names[mpSetup.pick] + " (player " + (mpSetup.pick + 1) + " of " + mpSetup.n + ")" : "Choose Your Career";
+    var btn = $("btn-career-start");
+    btn.textContent = multi && mpSetup.pick < mpSetup.n - 1 ? "Next: " + names[mpSetup.pick + 1] + "\u2019s career \u2192" : "Start 10 Years";
+    state.career = preselect || null;
+    document.querySelectorAll("#career-grid .choice-card").forEach(function (el) {
+      el.classList.toggle("selected", !!preselect && el.dataset.id === String(preselect.id));
+    });
+    btn.disabled = !state.career;
+  }
+  function mpStatsNow() {
+    recomputeLiving(); applyPayStatus(); recomputePassive();
+    return { month: state.month, netWorth: netWorth(), passive: state.passiveIncome, expenses: totalExpenses(),
+      career: (state.career && state.career.name) || "", wonMonth: state.wonMonth || null, bankrupt: !!state.bankrupt };
+  }
+  function mpStats(i) { return i === mp.cur && !mp.over ? mpStatsNow() : (mp.players[i].stats || {}); }
+  function mpStash() {
+    var p = mp.players[mp.cur];
+    p.stats = mpStatsNow();
+    p.state = deepCloneState(state);
+    p.undo = undoStack; p.monthStart = monthStartSnap;
+  }
+  function mpLoad(i) {
+    mp.cur = i;
+    var p = mp.players[i];
+    applyLoadedState(p.state);
+    undoStack = p.undo || []; monthStartSnap = p.monthStart || null;
+    p.state = null; p.undo = null; p.monthStart = null;
+  }
+  function mpPickNext() {
+    var best = -1, bm = 1e9;
+    mp.players.forEach(function (p, i) {
+      if (p.status !== "active" || !p.state) return;
+      if (p.state.month < bm) { bm = p.state.month; best = i; }
+    });
+    return best;
+  }
+  function mpStartGame() {
+    var names = mpPlayerNames();
+    stopCelebration(true);
+    clearUndoStack();
+    mp = { v: 1, players: [], cur: 0, market: {}, over: false, lastNote: "" };
+    names.forEach(function (nm) { mp.players.push({ name: nm, status: "active", state: null, undo: [], monthStart: null, stats: null }); });
+    for (var i = 0; i < names.length; i++) {
+      mp.cur = i;
+      state.career = mpSetup.careers[i];
+      state.pendingEvent = null; state.eventResolved = false; state.winModalPending = false;
+      initCareerEconomy();
+      state.screen = "play";
+      prepareMonth();
+      captureMonthStart();
+      undoStack = [];
+      mpStash();
+    }
+    mpLoad(0);
+    mp.lastNote = "Everyone shares the same market each month; your own deals, life events and illness are separate. Pass the device to " + names[0] + ".";
+    mpShowHandoff();
+    autoSave();
+  }
+  function mpStatusText(p, s) {
+    if (p.status === "free") return '<span class="st-free">\ud83c\udfc6 Financial Freedom \u00b7 M' + (s.wonMonth || "?") + "</span>";
+    if (p.status === "done") return '<span class="st-done">Finished 120 months</span>';
+    if (p.status === "out") return '<span class="st-out">Out \u00b7 bankrupt M' + (p.outMonth || s.month || "?") + "</span>";
+    if (s.bankrupt) return '<span class="st-out">Bankrupt \u2014 deciding</span>';
+    return "Playing \u00b7 month " + (s.month || 1);
+  }
+  function mpPeCell(s) {
+    var pe = s.expenses > 0 ? s.passive / s.expenses : 0;
+    return '<span class="' + (pe >= 1 ? "pe-good" : "") + '">' + fmt(Math.round(s.passive || 0)) + " / " + fmt(Math.round(s.expenses || 0)) + "</span> <small>(" + (pe * 100).toFixed(0) + "%)</small>";
+  }
+  function mpScoreTable() {
+    var h = "<thead><tr><th>Player</th><th>Career</th><th class=\"num\">Net worth</th><th class=\"num\">Passive / expenses (mo)</th><th>Status</th></tr></thead><tbody>";
+    mp.players.forEach(function (p, i) {
+      var s = mpStats(i);
+      h += '<tr class="' + (i === mp.cur && !mp.over ? "now" : "") + '"><td><b>' + (i === mp.cur && !mp.over ? "\u25b6 " : "") + esc(p.name) + "</b></td><td>" + esc(s.career || "") +
+        '</td><td class="num">' + fmt(Math.round(s.netWorth || 0)) + '</td><td class="num">' + mpPeCell(s) + "</td><td>" + mpStatusText(p, s) + "</td></tr>";
+    });
+    return h + "</tbody>";
+  }
+  function mpRenderBar() {
+    var bar = $("mp-bar"), s3 = $("btn-skip3");
+    if (s3) s3.hidden = !!mp;   /* Skip 3 would jump past the other players' turns */
+    if (!bar) return;
+    var row = $("banner-row"); if (row) row.classList.toggle("mp-on", !!mp);
+    if (!mp) { bar.hidden = true; bar.innerHTML = ""; return; }
+    bar.hidden = false;
+    var h = '<span class="mp-nowtag">Now: ' + esc(mp.players[mp.cur].name) + "\u2019s turn</span>";
+    mp.players.forEach(function (p, i) {
+      var s = mpStats(i);
+      var cls = "mp-chip" + (i === mp.cur ? " now" : "") + (p.status === "free" ? " free" : "") + (p.status === "out" ? " out" : "");
+      var st = p.status === "free" ? " \ud83c\udfc6" : p.status === "done" ? " \u2713" : p.status === "out" ? " \u2716" : "";
+      var pe = s.expenses > 0 ? (s.passive || 0) / s.expenses : 0;
+      h += '<span class="' + cls + '" data-tip="' + esc(p.name + ": net worth " + fmt(Math.round(s.netWorth || 0)) + " \u00b7 passive " + fmt(Math.round(s.passive || 0)) + "/mo vs expenses " + fmt(Math.round(s.expenses || 0)) + "/mo \u00b7 " + mpStatusText(p, s).replace(/<[^>]+>/g, "")) + '"><b>' + esc(p.name) + "</b>" + st + " " + fmt(Math.round(s.netWorth || 0)) +
+        " \u00b7 P/E " + (pe * 100).toFixed(0) + "%</span>";
+    });
+    bar.innerHTML = h;
+    bindTooltips();
+    if (row) row.querySelectorAll(".warning-banner").forEach(function (el) { el.title = el.textContent; });
+  }
+  function mpShowHandoff() {
+    var p = mp.players[mp.cur];
+    $("handoff-now").textContent = "Now: " + p.name + "\u2019s turn";
+    $("handoff-sub").textContent = "Month " + state.month + " of " + TOTAL_MONTHS + " \u00b7 Year " + yearOf(state.month) + " \u00b7 " +
+      ((state.career && state.career.name) || "") + " \u00b7 " + capitalize(state.difficulty || "normal");
+    $("handoff-note").textContent = mp.lastNote || ("Pass the device to " + p.name + ".");
+    $("handoff-score").innerHTML = mpScoreTable();
+    $("btn-handoff-start").textContent = "Start " + p.name + "\u2019s turn \u2192";
+    var tst = $("toast"); if (tst) { clearTimeout(showToast._timer); tst.classList.remove("show"); }   /* the last player's pop-up message doesn't carry over */
+    showScreen("handoff");
+    updateUndoBtn();
+    try { $("btn-handoff-start").focus({ preventScroll: true }); } catch (e) {}
+  }
+  function mpStartTurn() {
+    if (!mp || state.screen !== "handoff") return;
+    showScreen("play");
+    restorePlayUI();
+    updateUndoBtn();
+    autoSave();
+    SFX.play("click");
+  }
+  function mpEndTurn(note) {
+    if (!mp) return;
+    hideTip();
+    if (state.screen !== "summary") state.screen = "play";
+    mpStash();
+    mp.lastNote = note || "";
+    var nxt = mpPickNext();
+    if (nxt < 0) { mp.over = true; mpShowEnd(); autoSave(); return; }
+    mpLoad(nxt);
+    mpShowHandoff();
+    autoSave();
+  }
+  function mpWinContinue() {
+    state.winModalPending = false;
+    closeWinModal();
+    var p = mp.players[mp.cur];
+    p.status = "free";
+    mpEndTurn("\ud83c\udfc6 " + p.name + " reached Financial Freedom in " + freedomLabel(state.wonMonth) + "!");
+  }
+  function mpFinishPlayer() {
+    var p = mp.players[mp.cur];
+    hideTip(); closeWinModal();
+    state.winModalPending = false;
+    var wonNow = state.wonMonth && state.wonMonth === state.month;
+    p.status = state.wonMonth ? "free" : "done";
+    p.finishedMonth = state.month;
+    state.screen = "summary";
+    if (wonNow) { SFX.play("celebrate"); startCelebration(); } else SFX.play("fanfare");
+    mpEndTurn(wonNow ? "\ud83c\udfc6 " + p.name + " reached Financial Freedom at the final payday (month " + state.month + ")!" :
+      p.name + " finished all " + TOTAL_MONTHS + " months (net worth " + fmt(Math.round(netWorth())) + ").");
+  }
+  function mpMarkOut() {
+    if (!mp || !state.bankrupt) return;
+    var p = mp.players[mp.cur];
+    p.status = "out"; p.outMonth = state.month;
+    mpEndTurn(p.name + " is out (bankrupt in month " + state.month + ").");
+  }
+  function mpRanking() {
+    var rows = mp.players.map(function (p, i) { return { i: i, p: p, s: mpStats(i) }; });
+    rows.sort(function (a, b) {
+      var af = a.p.status === "free" ? 0 : 1, bf = b.p.status === "free" ? 0 : 1;
+      if (af !== bf) return af - bf;
+      if (!af && (a.s.wonMonth || 999) !== (b.s.wonMonth || 999)) return (a.s.wonMonth || 999) - (b.s.wonMonth || 999);
+      return (b.s.netWorth || 0) - (a.s.netWorth || 0);
+    });
+    return rows;
+  }
+  function mpShowEnd(quiet) {
+    var rows = mpRanking();
+    var medals = ["\ud83e\udd47", "\ud83e\udd48", "\ud83e\udd49", "4"];
+    var h = "<thead><tr><th>#</th><th>Player</th><th>Career</th><th>Result</th><th class=\"num\">Net worth</th><th class=\"num\">Passive / expenses (mo)</th></tr></thead><tbody>";
+    rows.forEach(function (r, k) {
+      h += '<tr class="' + (k === 0 ? "first" : "") + '"><td class="rank">' + medals[k] + "</td><td><b>" + esc(r.p.name) + "</b></td><td>" + esc(r.s.career || "") + "</td><td>" + mpStatusText(r.p, r.s) +
+        '</td><td class="num">' + fmt(Math.round(r.s.netWorth || 0)) + '</td><td class="num">' + mpPeCell(r.s) + "</td></tr>";
+    });
+    $("mpend-table").innerHTML = h + "</tbody>";
+    var w = rows[0];
+    $("mpend-heading").textContent = "\ud83c\udfc1 Final Ranking \u2014 " + w.p.name + " wins!";
+    $("mpend-sub").textContent = (w.p.status === "free" ? w.p.name + " reached Financial Freedom first (month " + w.s.wonMonth + ")" : "Nobody reached Financial Freedom \u2014 highest net worth wins") +
+      " \u00b7 " + mp.players.length + " players \u00b7 " + capitalize(state.difficulty || "normal");
+    var bar = $("month-bar-fill"); if (bar) bar.style.width = "100%";
+    showScreen("mpend");
+    updateUndoBtn();
+    if (!quiet) SFX.play("fanfare");
+  }
+  /* ---- shared market ---- */
+  function mpPickIdx(pi) { var o = {}; INDEX_KEYS.forEach(function (k) { o[k] = pi[k] != null ? pi[k] : 1; }); return o; }
+  function mpMarketStart() {
+    var m = state.month, mk = mp.market[m];
+    if (!mk) {
+      var prev = mp.market[m - 1];
+      if (prev && prev.end) { INDEX_KEYS.forEach(function (k) { state.priceIndex[k] = prev.end.pi[k]; }); state.bankApr = prev.end.apr; }
+      if (m > 1) monthlyIndexUpdate(); else state.indexUpdate = null;
+      mk = mp.market[m] = { start: { pi: mpPickIdx(state.priceIndex), apr: state.bankApr }, update: state.indexUpdate ? deepCloneState(state.indexUpdate) : null, card: null, end: null };
+    } else {
+      INDEX_KEYS.forEach(function (k) { state.priceIndex[k] = mk.start.pi[k]; });
+      state.bankApr = mk.start.apr;
+      state.indexUpdate = mk.update ? deepCloneState(mk.update) : null;
+    }
+  }
+  function mpMarketEnd(start, c) {
+    var pi = Object.assign({}, start.pi), apr = start.apr;
+    if (c && c.effect === "price" && pi[c.assetKey] != null) pi[c.assetKey] = Math.max(0.2, +(pi[c.assetKey] * (1 + c.pct)).toFixed(4));
+    if (c && c.effect === "rate") apr = Math.max(0.05, Math.min(0.12, +(apr + c.bankDelta).toFixed(4)));
+    if (c && Array.isArray(c.linked)) c.linked.forEach(function (l) { if (pi[l.key] != null) pi[l.key] = Math.max(0.2, +(pi[l.key] * (1 + l.pct)).toFixed(4)); });
+    return { pi: pi, apr: apr };
+  }
+  function mpMarketCard() {
+    var mk = mp.market[state.month];
+    var ownFirst = !state.sickMonth && state.monthEvents[0] && state.monthEvents[0].type === "market";
+    if (!mk.card) {
+      var c;
+      if (ownFirst) c = state.monthEvents[0];
+      else { c = drawFromDeck("market", []); var lk = linkedMovesFor(c); if (lk.length && Math.random() < LINKED_MOVE_CHANCE) c.linked = lk; }
+      mk.card = deepCloneState(c); mk.card.slot = 0;
+      mk.end = mpMarketEnd(mk.start, mk.card);
+    } else if (ownFirst) {
+      state.monthEvents[0] = Object.assign(deepCloneState(mk.card), { slot: 0 });
+    }
+  }
+  /* ---- save / load ---- */
+  function mpStripHist(snap) { var c = Object.assign({}, snap); delete c.history; return c; }
+  function mpPack() {
+    return {
+      v: 1, cur: mp.cur, over: !!mp.over, lastNote: mp.lastNote || "", market: mp.market,
+      players: mp.players.map(function (p, i) {
+        var pk = { name: p.name, status: p.status, stats: p.stats || null, outMonth: p.outMonth || null, finishedMonth: p.finishedMonth || null };
+        if (i === mp.cur && !p.state) return pk;   /* the current player = the main save fields */
+        pk.state = p.state;
+        pk.undoHistoryStripped = true;
+        pk.undoStack = (p.undo || []).slice(-MP_SAVE_UNDO).map(mpStripHist);
+        pk.monthStart = p.monthStart ? mpStripHist(p.monthStart) : null;
+        return pk;
+      })
+    };
+  }
+  function mpUnpack(d) {
+    if (!d || !Array.isArray(d.players) || !d.players.length) return null;
+    var out = { v: 1, cur: Math.max(0, Math.min(d.players.length - 1, d.cur | 0)), over: !!d.over, lastNote: d.lastNote || "", market: d.market && typeof d.market === "object" ? deepCloneState(d.market) : {}, players: [] };
+    d.players.forEach(function (pk, i) {
+      var p = { name: pk.name || ("Player " + (i + 1)), status: pk.status || "active", stats: pk.stats || null, outMonth: pk.outMonth || null, finishedMonth: pk.finishedMonth || null, state: null, undo: [], monthStart: null };
+      if (pk.state && typeof pk.state === "object") {
+        p.state = deepCloneState(pk.state);
+        migrateAssetState(p.state); migrateMonthState(p.state);
+        p.undo = rebuildUndoStack(pk);
+        p.monthStart = rebuildMonthStart(pk);
+      }
+      out.players.push(p);
+    });
+    return out;
   }
 
   function resetEconomyFlags() {
@@ -3772,6 +4397,7 @@ select.modal-select {
   }
 
   function startGame() {
+    mp = null;
     clearUndoStack();
     initCareerEconomy();
     showScreen("play");
@@ -3781,6 +4407,9 @@ select.modal-select {
   }
 
   function restartToTitle() {
+    mp = null;
+    stopCelebration(true);
+    closeWinModal();
     clearUndoStack();
     state.difficulty = null;
     state.career = null;
@@ -3864,17 +4493,48 @@ select.modal-select {
   $("btn-diff-back").addEventListener("click", function () { showScreen("title"); });
   $("btn-diff-next").addEventListener("click", function () {
     if (!state.difficulty) return;
+    mpSetup.pick = 0; mpSetup.careers = [];
+    mpCareerScreen(null);
     showScreen("career");
   });
-  $("btn-career-back").addEventListener("click", function () { showScreen("difficulty"); });
+  $("btn-career-back").addEventListener("click", function () {
+    if (mpSetup.n > 1 && mpSetup.pick > 0) { mpSetup.pick--; mpCareerScreen(mpSetup.careers[mpSetup.pick]); refreshSpaceHint(); return; }
+    mpSetup.pick = 0; mpCareerScreen(null);
+    showScreen("difficulty");
+  });
   $("btn-career-start").addEventListener("click", function () {
     if (!state.career || !state.difficulty) return;
+    if (mpSetup.n > 1) {   /* v5.12: each player picks a career in turn */
+      mpSetup.careers[mpSetup.pick] = state.career;
+      if (mpSetup.pick < mpSetup.n - 1) { mpSetup.pick++; mpCareerScreen(mpSetup.careers[mpSetup.pick] || null); refreshSpaceHint(); return; }
+      mpStartGame();
+      return;
+    }
     startGame();
   });
+  document.querySelectorAll(".mp-n").forEach(function (b) {
+    b.addEventListener("click", function () { mpSetCount(+b.dataset.n); b.blur(); });
+  });
+  [1, 2, 3, 4].forEach(function (k) {
+    var inp = $("mp-name-" + k);
+    inp.addEventListener("input", function () { mpSetup.names[k - 1] = inp.value; });
+    inp.addEventListener("keydown", function (e) { if (e.key === "Enter") { e.preventDefault(); inp.blur(); } });
+  });
+  $("btn-handoff-start").addEventListener("click", mpStartTurn);
+  $("btn-handoff-save").addEventListener("click", manualSave);
+  $("btn-handoff-title").addEventListener("click", function () { autoSave(); restartToTitle(); });
+  $("btn-mark-out").addEventListener("click", mpMarkOut);
+  $("btn-mpend-new").addEventListener("click", function () { restartToTitle(); mpSetCount(mpSetup.n); showScreen("difficulty"); });
+  $("btn-mpend-title").addEventListener("click", restartToTitle);
   $("btn-next").addEventListener("click", nextMonth);
   $("btn-skip3").addEventListener("click", skipThreeMonths);
   $("btn-prev-month").addEventListener("click", previousMonth);
   $("win-keep").addEventListener("click", winKeepPlaying);
+  $("risk-cancel").addEventListener("click", function () { closeRiskModal(false); });
+  $("risk-buy").addEventListener("click", function () { closeRiskModal(true); });
+  $("celebrate").addEventListener("click", function () { stopCelebration(); });
+  $("btn-go-back").addEventListener("click", previousMonth);
+  $("btn-new-game-top").addEventListener("click", function () { $("btn-play-again").click(); });
   $("win-summary").addEventListener("click", winSeeSummary);
   ["btn-sound", "btn-sound-title"].forEach(function (id) { var b = $(id); if (b) b.addEventListener("click", function () { SFX.toggle(); b.blur(); }); });
   SFX.syncButtons();
@@ -3972,6 +4632,20 @@ select.modal-select {
   document.addEventListener("keydown", function (e) {
     var typing = isTypingTarget(e.target);
     var spaceOrEnter = isSpaceKey(e) || e.key === "Enter";
+    if (isCelebrating()) {   /* v5.11: Space / Enter / Esc just end the celebration (win pop-up stays) */
+      if (spaceOrEnter || e.key === "Escape") { e.preventDefault(); if (!e.repeat) stopCelebration(); }
+      return;
+    }
+    if (isRiskModalOpen()) {   /* v5.11: Space / Esc = Cancel; Enter presses the focused button */
+      if (e.key === "Escape" || isSpaceKey(e)) { e.preventDefault(); if (!e.repeat) closeRiskModal(false); return; }
+      if (e.key === "Enter") { e.preventDefault(); if (!e.repeat) closeRiskModal(e.target && e.target.id === "risk-buy"); return; }
+      if (e.key === "Tab") return;
+      e.preventDefault();
+      return;
+    }
+    if (state.screen === "summary" && state.bankrupt && (e.key === "b" || e.key === "B") && !typing && !e.ctrlKey && !e.metaKey && !e.altKey && !isAnyModalOpen()) {
+      e.preventDefault(); if (!e.repeat) previousMonth(); return;
+    }
     if (isConfirmModalOpen()) {
       if (e.key === "Escape") { e.preventDefault(); closeConfirm(false); return; }
       if (!typing && spaceOrEnter) { e.preventDefault(); if (!e.repeat) closeConfirm(true); return; }
@@ -4002,7 +4676,7 @@ select.modal-select {
        Space stays the safe default (Done trading). */
     if (e.key === "Enter" && e.target && e.target.tagName === "BUTTON" && e.target.closest && e.target.closest(".trade-box")) return;
     if (spaceOrEnter) {
-      if (state.screen === "summary") return;
+      if (state.screen === "summary" || state.screen === "mpend") return;
       e.preventDefault();
       if (e.repeat) return; /* one press = one step */
       pressSpaceDefault();
@@ -4038,12 +4712,13 @@ select.modal-select {
   /* Stop the browser's own "Space clicks the focused button" on key-up (would double-step). */
   document.addEventListener("keyup", function (e) {
     if (!isSpaceKey(e) || isTypingTarget(e.target) || isSlotModalOpen()) return;
-    if (state.screen === "summary" && !isConfirmModalOpen()) return;
+    if ((state.screen === "summary" || state.screen === "mpend") && !isConfirmModalOpen()) return;
     e.preventDefault();
   });
 
   buildDifficulty();
   buildCareers();
+  mpSetCount(1);
   probeStorage();
   migrateLegacySave();
   refreshContinueUI();
@@ -4053,7 +4728,8 @@ select.modal-select {
   window.SMARTER_DOLLAR = {
     CAREERS: CAREERS, OPPORTUNITY: OPPORTUNITY, SPENDING: SPENDING, LIFE: LIFE, MARKET: MARKET,
     DECKS: DECKS, DIFFICULTIES: DIFFICULTIES,
-    rollDeal: rollDeal, buyoutTarget: buyoutTarget, MONTHLY_INDEX_MODEL: MONTHLY_INDEX_MODEL, monthlyIndexUpdate: monthlyIndexUpdate, indexUpdateText: indexUpdateText, unitPriceExact: unitPriceExact, fmtUnitPrice: fmtUnitPrice, tradeBuy: tradeBuy, tradeSell: tradeSell, maxAffordable: maxAffordable, tradeCost: tradeCost, checkWin: checkWin, isWinModalOpen: isWinModalOpen, nextMonth: nextMonth, acceptBuyout: acceptBuyout, declineBuyout: declineBuyout, renderEvent: renderEvent, renderHud: renderHud, structuralCashflow: structuralCashflow, bankruptcyStatus: bankruptcyStatus, checkBankruptcy: checkBankruptcy, hideTip: hideTip, BANKRUPT_REASON: BANKRUPT_REASON, settleMonthCashflow: settleMonthCashflow, drawFromDeck: drawFromDeck, dealRoiPct: dealRoiPct,
+    mp: function () { return mp; }, mpSetup: mpSetup, mpSetCount: mpSetCount, mpEndTurn: mpEndTurn, mpMarkOut: mpMarkOut, mpRanking: mpRanking, mpStartTurn: mpStartTurn, loadGame: loadGame, buildSavePayload: buildSavePayload,
+    rollDeal: rollDeal, buyoutTarget: buyoutTarget, dealRisk: dealRisk, isRiskModalOpen: isRiskModalOpen, isCelebrating: isCelebrating, startCelebration: startCelebration, stopCelebration: stopCelebration, previousMonth: previousMonth, undoDepth: function () { return undoStack.length; }, buyOpportunity: buyOpportunity, MONTHLY_INDEX_MODEL: MONTHLY_INDEX_MODEL, monthlyIndexUpdate: monthlyIndexUpdate, indexUpdateText: indexUpdateText, unitPriceExact: unitPriceExact, fmtUnitPrice: fmtUnitPrice, tradeBuy: tradeBuy, tradeSell: tradeSell, maxAffordable: maxAffordable, tradeCost: tradeCost, checkWin: checkWin, isWinModalOpen: isWinModalOpen, nextMonth: nextMonth, acceptBuyout: acceptBuyout, declineBuyout: declineBuyout, renderEvent: renderEvent, renderHud: renderHud, structuralCashflow: structuralCashflow, bankruptcyStatus: bankruptcyStatus, checkBankruptcy: checkBankruptcy, hideTip: hideTip, BANKRUPT_REASON: BANKRUPT_REASON, settleMonthCashflow: settleMonthCashflow, drawFromDeck: drawFromDeck, dealRoiPct: dealRoiPct,
     SFX: SFX, drawMonthEvents: drawMonthEvents, isOnceOnly: isOnceOnly, deckCards: deckCards, canDrawIllness: canDrawIllness,
     monthlyTaxFromGross: monthlyTaxFromGross, monthlyGrossFromRate: monthlyGrossFromRate,
     effectiveTaxRate: effectiveTaxRate, round10: round10, state: state,
