@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SMARTER $ Quadrants — From Job to Side Hustle (E → S)</title>
+<title>SMARTER $ Quadrants — From Job to Side Hustle (E → S) v1.1</title>
 <script>(function () { var t = "day"; try { if (localStorage.getItem("smarter-dollar-theme") === "night") t = "night"; } catch (e) {} document.documentElement.setAttribute("data-theme", t); })();</script>
 <style>
 :root {
@@ -149,16 +149,69 @@ html[data-theme="day"] .overlay { background: rgba(15,23,42,.55); }
 .src a { color: var(--info); }
 .pill-ok { color: var(--accent); font-weight: 800; } .pill-bad { color: var(--danger); font-weight: 800; }
 footer.foot { color: var(--muted); font-size: .78rem; text-align: center; padding: .6rem; }
+
+/* v1.1 simpler screens */
+details.sw { margin-top: .5rem; border: 1px dashed var(--surface2); border-radius: 10px; padding: .3rem .6rem; }
+details.sw > summary { cursor: pointer; font-weight: 800; color: var(--info); list-style: none; padding: .25rem 0; font-size: .95rem; }
+details.sw > summary::before { content: "▸ "; }
+details.sw[open] > summary::before { content: "▾ "; }
+details.sw > summary::-webkit-details-marker { display: none; }
+details.sw .working { border: none; padding: .2rem 0; margin: 0; }
+.keynums { display: grid; grid-template-columns: repeat(4, 1fr); gap: .45rem; margin-top: .5rem; }
+.keynums .kn { border-radius: 12px; padding: .45rem .6rem; background: var(--bg); border: 2px solid var(--surface2); }
+.keynums .kn .l { font-size: .75rem; font-weight: 800; text-transform: uppercase; letter-spacing: .03em; color: var(--muted); }
+.keynums .kn .v { font-size: 1.35rem; font-weight: 900; }
+.keynums .kn.in .v { color: var(--accent); } .keynums .kn.out .v { color: var(--danger); }
+.keynums .kn.gst { border-color: var(--gst); } .keynums .kn.gst .v { color: var(--gst); }
+.keynums .kn.tax { border-color: var(--tax); } .keynums .kn.tax .v { color: var(--tax); }
+.tips { margin-top: .55rem; display: grid; gap: .4rem; }
+.tip { border-left: 6px solid var(--warn); background: rgba(245,158,11,.12); border-radius: 10px; padding: .5rem .7rem; font-size: 1.02rem; font-weight: 600; }
+html[data-theme="day"] .tip { background: #fef3c7; color: #3b2a06; }
+.tip.note { border-left-color: var(--info); background: rgba(56,189,248,.12); }
+html[data-theme="day"] .tip.note { background: #e0f2fe; color: #0c2a3e; }
+.tip .tb { display: flex; gap: .4rem; flex-wrap: wrap; margin-top: .35rem; }
+.tip .ba { margin-top: .35rem; background: var(--surface); border: 2px solid var(--accent); border-radius: 8px; padding: .35rem .55rem; font-size: .95rem; font-weight: 700; }
+.tip .ba div { margin: .1rem 0; }
+.tip.skipped { opacity: .65; }
+.tipsaved { font-size: .85rem; font-weight: 800; background: var(--surface2); border-radius: 999px; padding: .15rem .6rem; }
+html[data-theme="day"] .tipsaved { background: #dcfce7; color: #14532d; }
+.dline { display: flex; justify-content: space-between; align-items: center; gap: .5rem; flex-wrap: wrap; padding: .45rem 0; border-bottom: 1px solid rgba(148,163,184,.25); font-size: 1rem; }
+.dline .dn { font-weight: 700; }
+.dline .ds { color: var(--accent); font-weight: 800; white-space: nowrap; }
+.dline .dr { display: flex; gap: .35rem; align-items: center; flex-wrap: wrap; }
+@media (max-width: 1000px) { #month-panel { order: -1; } }
+@media (max-width: 640px) {
+  html { font-size: 17px; }
+  .screen { padding: .5rem .5rem 1rem; }
+  .topbar { padding: .35rem .5rem; flex-wrap: wrap; }
+  .topbar .brand { font-size: 1rem; }
+  .topbar .brand .muted { display: none; }
+  .topbar { flex-wrap: nowrap; }
+  .topbar .controls { flex-wrap: nowrap; }
+  .topbar .bl { display: none; }
+  .topbar .controls button { padding: .35rem .5rem; font-size: .85rem; }
+  kbd { display: none; }
+  .keynums { grid-template-columns: 1fr 1fr; }
+  .panel { padding: .6rem .65rem; }
+  button { min-height: 44px; }
+  .btn-sm { min-height: 38px; }
+  .modal { padding: .8rem .8rem; max-height: 94vh; border-radius: 12px; }
+  .overlay { padding: .4rem; }
+  .modal .mactions button { flex: 1 1 auto; }
+  .potctl input { width: 6.5rem; }
+  .month-head .mt { font-size: 1.3rem; }
+  .actions #btn-confirm { width: 100%; font-size: 1.2rem; }
+}
 </style>
 </head>
 <body>
 <div class="topbar">
   <div class="brand">SMARTER <span class="logo-dollar">$</span> Quadrants <span class="muted small">· From job to side hustle (E → S)</span></div>
   <div class="controls">
-    <button class="btn-ghost btn-sm" id="btn-how" title="How to play (?)">❓ How to play <kbd>?</kbd></button>
-    <button class="btn-ghost btn-sm" id="btn-facts" title="IRD facts and sources (F)">📘 IRD facts <kbd>F</kbd></button>
+    <button class="btn-ghost btn-sm" id="btn-how" title="How to play (?)">❓<span class="bl"> How to play</span> <kbd>?</kbd></button>
+    <button class="btn-ghost btn-sm" id="btn-facts" title="IRD facts and sources (F)">📘<span class="bl"> IRD facts</span> <kbd>F</kbd></button>
     <button class="btn-ghost btn-sm" id="btn-theme" title="Day / Night colours (T)">☀️ Day <kbd>T</kbd></button>
-    <button class="btn-ghost btn-sm" id="btn-restart" title="Back to start">⟲ New game</button>
+    <button class="btn-ghost btn-sm" id="btn-restart" title="Back to start">⟲<span class="bl"> New game</span></button>
   </div>
 </div>
 
@@ -167,7 +220,7 @@ footer.foot { color: var(--muted); font-size: .78rem; text-align: center; paddin
   <div class="hero">
     <div>
       <h1>My move from <span class="logo-dollar">E</span> to <span class="logo-dollar">S</span></h1>
-      <p class="muted" style="max-width:40rem;margin:.4rem 0 .6rem">You start with a job. Your boss takes the tax out of your pay (PAYE). Then you start a side hustle. Now <b>you</b> must put money aside for tax, learn GST, file an IR3 and pay provisional tax — and use legal ways to lower your tax.</p>
+      <p class="muted" style="max-width:40rem;margin:.4rem 0 .6rem">Start with a job. Then start a side hustle. Put money aside for tax and GST, and lower your tax the legal way.</p>
       <div class="panel">
         <div class="setup-row"><b>Players:</b>
           <span class="seg" id="seg-players"><button data-n="1" class="on">1</button> <button data-n="2">2</button> <button data-n="3">3</button> <button data-n="4">4</button></span>
@@ -178,7 +231,7 @@ footer.foot { color: var(--muted); font-size: .78rem; text-align: center; paddin
         <div class="setup-row"><b>Numbers:</b>
           <span class="seg" id="seg-mode"><button data-v="story" class="on">Story numbers</button> <button data-v="own">Learner's own numbers</button></span></div>
         <div id="own-box" style="display:none">
-          <p class="small muted">Rough numbers are fine. Amounts are per month unless it says per week. Leave a box at 0 if it does not apply.</p>
+          <p class="small muted">Rough numbers are fine. Per month unless it says per week. 0 = does not apply.</p>
           <div class="own-grid">
             <label for="own-wage">Job pay before tax, <b>per week</b> (0 = no job)</label><input type="number" id="own-wage" value="1000" min="0" step="10">
             <label for="own-sales-now">Business sales now, per month (before GST)</label><input type="number" id="own-sales-now" value="3000" min="0" step="50">
@@ -195,7 +248,7 @@ footer.foot { color: var(--muted); font-size: .78rem; text-align: center; paddin
         <div class="setup-row" style="margin-top:.6rem"><button class="btn-primary" id="btn-start" style="font-size:1.15rem">▶ Start <kbd>Enter</kbd></button>
           <button class="btn-secondary" id="btn-how2">❓ How to play</button></div>
       </div>
-      <p class="disclaimer" style="margin-top:.6rem"><b>Educational game — simplified. Not tax advice.</b> Numbers use IRD rules checked on 1 Oct 2026 for the 2026–27 tax year, made simpler for learning. Always check with Inland Revenue (ird.govt.nz) or an accountant for your own situation.</p>
+      <p class="disclaimer" style="margin-top:.6rem"><b>Learning game — simplified, not tax advice.</b> Based on IRD rules checked 1 Oct 2026. Check ird.govt.nz or an accountant for your own case.</p>
     </div>
     <div class="panel">
       <h2>The 4 quadrants</h2>
@@ -220,36 +273,36 @@ footer.foot { color: var(--muted); font-size: .78rem; text-align: center; paddin
         </div>
       </div>
       <div class="panel" style="margin-top:.6rem">
-        <h3>Coming up (IRD due dates)</h3>
+        <h3>Coming up</h3>
         <ul class="upcoming" id="upcoming"></ul>
       </div>
       <div class="panel" style="margin-top:.6rem">
-        <h3>Goals</h3>
-        <ul class="goals" id="goals"></ul>
+        <details class="sw" style="border:none;margin:0;padding:0"><summary>Goals</summary><ul class="goals" id="goals"></ul></details>
       </div>
     </div>
     <div class="panel" id="month-panel">
       <div class="month-head">
         <div><div class="mt" id="month-title">April 2026</div><div class="muted small" id="month-sub">Tax year 1 (2026–27) · month 1</div></div>
-        <span class="pbadge" id="player-badge">Player 1</span>
+        <span style="display:flex;gap:.4rem;align-items:center;flex-wrap:wrap"><span class="tipsaved" id="tips-saved">💡 Tips used: saved $0</span><span class="pbadge" id="player-badge">Player 1</span></span>
       </div>
-      <table class="lines" id="money-lines"></table>
+      <div class="tips" id="tips"></div>
+      <div class="keynums" id="keynums"></div>
       <div class="aside-box" id="aside-box">
         <div class="potctl gst" id="ctl-gst">
-          <div class="pt">GST pot <span class="muted small">(<kbd>G</kbd>)</span></div>
+          <div class="pt">Put in GST pot <kbd>G</kbd></div>
           <div class="row"><button class="btn-secondary btn-sm" data-pot="gst" data-d="-50">−50</button><input type="number" id="in-gst" value="0" step="10" aria-label="Move to GST pot"><button class="btn-secondary btn-sm" data-pot="gst" data-d="50">+50</button></div>
           <div class="small muted" id="gst-note"></div>
         </div>
         <div class="potctl tax" id="ctl-tax">
-          <div class="pt">Tax pot <span class="muted small">(<kbd>X</kbd>)</span></div>
+          <div class="pt">Put in Tax pot <kbd>X</kbd></div>
           <div class="row"><button class="btn-secondary btn-sm" data-pot="tax" data-d="-50">−50</button><input type="number" id="in-tax" value="0" step="10" aria-label="Move to Tax pot"><button class="btn-secondary btn-sm" data-pot="tax" data-d="50">+50</button></div>
           <div class="small muted" id="tax-note"></div>
         </div>
       </div>
-      <div class="working" id="working"></div>
+      <details class="sw" id="sw-month"><summary>Show working</summary><table class="lines" id="money-lines"></table><div class="working" id="working"></div></details>
       <div class="actions">
-        <button class="btn-secondary" id="btn-hint">💡 Use hint <kbd>H</kbd></button>
-        <button class="btn-tax" id="btn-deduct">🧾 Legally lower your tax <kbd>D</kbd></button>
+        <button class="btn-secondary" id="btn-hint">💡 Hint <kbd>H</kbd></button>
+        <button class="btn-tax" id="btn-deduct">🧾 Lower my tax <kbd>D</kbd></button>
         <button class="btn-gst" id="btn-gstreg">Register for GST</button>
         <button class="btn-ghost" id="btn-payslip">Payslip <kbd>P</kbd></button>
         <span style="flex:1"></span>
@@ -324,7 +377,7 @@ function newPlayer(i, name) {
     gstReg: false, gstFreq: null, regT: null, gstAcc: {}, gstPaid: {}, salesHist: {},
     yr: [], bills: [], rit: [], ded: {}, loan: null, equipT: null, cashJob: null, trap: {}, quiz: null,
     stats: { onTimeGst: 0, lateGst: 0, onTimeTax: 0, lateTax: 0, penalties: 0, interest: 0, cardInt: 0, refunds: 0 },
-    month: null, results: [], ir3: [] };
+    month: null, results: [], ir3: [], freqChanges: [], tipSeen: {}, tipLog: [], tipsSaved: 0 };
 }
 function ys(p, y) { if (!p.yr[y]) p.yr[y] = { wages: 0, paye: 0, acc: 0, ks: 0, boss: 0, salesEx: 0, costsDed: 0, hidden: 0, loanInt: 0 }; return p.yr[y]; }
 function own() { return G.own; }
@@ -357,12 +410,15 @@ function payslip(p, y) {
     wk: { gross: w, paye: paye / 52, acc: acc / 52, ks: ks / 52, net: (annual - paye - acc - ks) / 52, boss: boss / 52 } };
 }
 function stage(p) { if (!p.hustle) return "E"; return p.job ? "E + S" : "S"; }
+function freqAt(p, e) { var f = p.gstFreq, ch = p.freqChanges || []; for (var i = ch.length - 1; i >= 0; i--) if (e < ch[i].t) f = ch[i].old; return f; }
 function isPeriodEnd(p, e) {
   if (!p.gstReg || e < p.regT) return false;
-  var m = mi(e);
-  if (p.gstFreq === "monthly") return true;
-  if (p.gstFreq === "two") return m % 2 === 1;
-  if (p.gstFreq === "six") return m === 5 || m === 11;
+  var ch = p.freqChanges || [];
+  for (var i = 0; i < ch.length; i++) if (ch[i].t === e + 1) return true;
+  var m = mi(e), f = freqAt(p, e);
+  if (f === "monthly") return true;
+  if (f === "two") return m % 2 === 1;
+  if (f === "six") return m === 5 || m === 11;
   return false;
 }
 function gstDueT(e) { var m = mi(e); return (m === 7 || m === 11) ? e + 2 : e + 1; }
@@ -522,7 +578,7 @@ function runIR3(p, y) {
   r.provNext = addProvisional(p, y + 1, r.rit);
   return r;
 }
-function ir3Html(p, r) {
+function ir3Table(p, r) {
   var h = "<p class='small muted'><span class='tag simp'>Simplified</span> Tax credits (e.g. independent earner tax credit), ACC levies on business income and student loans are left out.</p><table class='calc'>";
   h += "<tr><td>Wages from your job (PAYE income)</td><td class='amt'>" + money(r.s.wages) + "</td></tr>";
   if (r.s.salesEx > 0 || r.s.hidden > 0) {
@@ -541,6 +597,13 @@ function ir3Html(p, r) {
   if (r.D > 0) h += "<p>🧾 Your legal deductions of " + money(r.D) + " lowered your tax by <b>" + money(r.saved) + "</b>.</p>";
   if (r.s.hidden > 0) h += "<p class='pill-bad'>⚠ You did not declare " + money(r.s.hidden) + " of cash income. That is tax evasion — IRD can find it later.</p>";
   return h;
+}
+function ir3Html(p, r) {
+  var h = "<table class='calc'><tr><td>Taxable income</td><td class='amt'>" + money(r.TI) + "</td></tr><tr><td>Tax for the year</td><td class='amt'>" + money(r.T.tax) + "</td></tr><tr><td>Already paid (PAYE" + (r.prov > 0 ? " + provisional" : "") + ")</td><td class='amt'>" + money(-(r.s.paye + r.prov)) + "</td></tr>" +
+    "<tr class='tot'><td>" + (r.terminal >= 0 ? "To pay by " + dueLabel("7", 12 * (r.y + 1) + 10) : "Refund to you") + "</td><td class='amt'>" + money(Math.abs(r.terminal)) + "</td></tr></table>";
+  if (r.D > 0) h += "<p>🧾 Deductions saved you <b>" + money(r.saved) + "</b> of tax.</p>";
+  if (r.s.hidden > 0) h += "<p class='pill-bad'>⚠ " + money(r.s.hidden) + " of cash income was not declared.</p>";
+  return h + sw(ir3Table(p, r));
 }
 /* ===== Rendering ===== */
 function quadHtml(players, opts) {
@@ -565,26 +628,30 @@ function render() {
   var setV = function (id, v) { var el = $(id); el.textContent = money(v); el.classList.toggle("neg", v < -0.5); };
   setV("acc-every", p.every); setV("acc-gst", p.gst); setV("acc-tax", p.tax); setV("acc-kiwi", p.kiwi);
   $("month-title").textContent = isWrap(t) ? "April – May " + calYear(t) + " (wrap-up)" : monthLabel(t);
-  $("month-sub").textContent = isWrap(t) ? "After the end of " + taxYearLabel(y - 1) + " · last bills" : taxYearLabel(y) + " · month " + (mi(t) + 1) + " of 12 · turn " + (t + 1) + " of " + (wrapT() + 1);
+  $("month-sub").textContent = isWrap(t) ? "Last bills" : "Turn " + (t + 1) + " of " + (wrapT() + 1) + " · " + taxYearLabel(y).replace(/ \(.*\)/, "");
   var b = $("player-badge"); b.textContent = p.name + " · " + stage(p); b.style.background = p.color;
   var h = "";
   if (m) m.lines.forEach(function (l) { h += "<tr class='" + (l.amt >= 0 ? "in" : "out") + "'><td>" + l.label + "</td><td class='amt'>" + (l.amt > 0 ? "+" : "") + money(l.amt) + "</td></tr>"; });
   h += "<tr class='tot'><td>Everyday account now</td><td class='amt'>" + money(p.every) + "</td></tr>";
   $("money-lines").innerHTML = h;
+  var mIn = 0, mOut = 0; if (m) m.lines.forEach(function (l) { if (l.amt > 0) mIn += l.amt; else mOut += l.amt; });
+  $("keynums").innerHTML = "<div class='kn in'><div class='l'>Money in</div><div class='v'>+" + money(mIn).replace("−", "") + "</div></div><div class='kn out'><div class='l'>Money out</div><div class='v'>" + money(mOut) + "</div></div><div class='kn gst'><div class='l'>GST pot</div><div class='v'>" + money(p.gst) + "</div></div><div class='kn tax'><div class='l'>Tax pot</div><div class='v'>" + money(p.tax) + "</div></div>";
+  $("tips-saved").textContent = "💡 Tips used: saved " + money(p.tipsSaved);
+  renderTips(p);
   var hs = hints(p), showG = p.gstReg || isWrap(t);
   $("ctl-gst").style.opacity = showG ? "1" : "0.5";
-  $("gst-note").innerHTML = showG ? "Hint: " + money(hs.gst) : "Not registered for GST";
+  $("gst-note").innerHTML = showG ? "Hint: " + money(hs.gst) : "Not registered yet";
   $("tax-note").innerHTML = "Hint: " + money(hs.tax);
-  $("working").innerHTML = "<div class='wl'><b>How the numbers work</b></div>" + hs.gstW.map(function (x) { return "<div class='wl'>🟦 " + x + "</div>"; }).join("") + hs.taxW.map(function (x) { return "<div class='wl'>🟪 " + x + "</div>"; }).join("");
+  $("working").innerHTML = hs.gstW.map(function (x) { return "<div class='wl'>🟦 " + x + "</div>"; }).join("") + hs.taxW.map(function (x) { return "<div class='wl'>🟪 " + x + "</div>"; }).join("");
   updateLeft();
-  $("btn-deduct").style.display = (p.hustle && t >= p.hustleT + 2 && !isWrap(t)) ? "" : "none";
+  $("btn-deduct").style.display = (p.hustle && t >= p.hustleT + 1 && !isWrap(t)) ? "" : "none";
   $("btn-gstreg").style.display = (p.hustle && !p.gstReg && t < G.lastT) ? "" : "none";
   $("btn-payslip").style.display = p.job ? "" : "none";
   var up = [];
   p.bills.forEach(function (bb) { if (!bb.done && bb.t >= t) up.push({ t: bb.t, txt: bb.label, due: bb.due, amt: bb.amount }); });
   if (p.gstReg) for (var e = Math.max(p.regT, t - 2); e <= Math.min(G.lastT, t + 6); e++) if (isPeriodEnd(p, e) && !p.gstPaid[e] && gstDueT(e) >= t && periodStart(p, e) <= t) { var s0 = periodStart(p, e), ps = periodSums(p, s0, Math.min(e, t)); up.push({ t: gstDueT(e), txt: "GST for " + periodName(s0, e) + (e > t ? " (so far)" : ""), due: gstDueDay(e), amt: (ps.sales - ps.costs) * 3 / 23 }); }
   up.sort(function (a, c) { return a.t - c.t; });
-  $("upcoming").innerHTML = up.length ? up.slice(0, 6).map(function (u) { return "<li><span>" + esc(u.due) + ": " + esc(u.txt) + "</span><b>" + money(u.amt) + "</b></li>"; }).join("") : "<li class='muted'>Nothing due yet." + (p.job && !p.hustle ? " PAYE is paid by your boss." : "") + "</li>";
+  $("upcoming").innerHTML = up.length ? up.slice(0, 4).map(function (u) { return "<li><span>" + esc(u.due) + ": " + esc(u.txt) + "</span><b>" + money(u.amt) + "</b></li>"; }).join("") : "<li class='muted'>Nothing due yet.</li>";
   $("goals").innerHTML = goals(p).map(function (g) { return "<li><span>" + g.txt + "</span><span class='" + (g.ok ? "ok" : "no") + "'>" + (g.ok ? "✓" : g.state || "…") + "</span></li>"; }).join("");
 }
 function updateLeft() {
@@ -634,6 +701,125 @@ function runQueue(after) { afterQueue = after || null; nextModal(); }
 function closeModal() { $("overlay").classList.remove("show"); modalOpen = false; }
 function toast(msg) { var t = $("toast"); t.innerHTML = msg; t.classList.add("show"); clearTimeout(toast._t); toast._t = setTimeout(function () { t.classList.remove("show"); }, 2600); }
 function focusDefault() { var b = $("btn-confirm"); if (b && $("screen-play").classList.contains("active")) b.focus({ preventScroll: true }); }
+/* ===== v1.1 Tips: short, matched to the moment; some can be applied ===== */
+function estTax(p) {
+  if (!p.hustle) return 0;
+  var t = G.t, y = yearOf(t), s = ys(p, y), m = p.month, left = Math.max(0, 12 * y + 11 - t);
+  var P = (s.salesEx - s.costsDed) + (m ? (m.sx - m.costDed) : 0) * left;
+  var D = sum(deductionsFor(p, y), function (x) { return x.amount; }), W = wagesYear(p, y);
+  return Math.max(0, taxOn(W + P - D).tax - taxOn(W).tax);
+}
+function tipCtx(p, t) {
+  var last12 = 0; for (var k = Math.max(0, t - 11); k <= t; k++) last12 += p.salesHist[k] || 0;
+  var dues = isWrap(t) ? [] : duesFor(p, t), has = function (k) { return dues.some(function (d) { return d.kind === k; }); };
+  var firstSales = p.hustle && (p.salesHist[t] || 0) > 0 && !Object.keys(p.salesHist).some(function (k) { return Number(k) < t && p.salesHist[k] > 0; });
+  return { last12: last12, proj: (p.salesHist[t] || 0) * 12, gstDue: has("gst"), provDue: has("prov"), termDue: has("terminal"), firstSales: firstSales, wrap: isWrap(t), canDed: p.hustle && t >= p.hustleT + 1 && !isWrap(t) };
+}
+function changeLine(label, a, b) { return "<div>" + label + ": " + money(a) + " → " + money(b) + "</div>"; }
+function applyTaxEffect(p, fn) {
+  var before = estTax(p), e0 = p.every; fn();
+  var after = estTax(p), saved = Math.max(0, before - after);
+  var h = changeLine("Tax this year (estimate)", before, after) + (saved > 0.5 ? "<div class='pill-ok'>You keep " + money(saved) + " more</div>" : "");
+  if (Math.abs(p.every - e0) > 0.5) h += changeLine("Everyday", e0, p.every);
+  return { html: h, saved: saved };
+}
+var TIPS = [
+  { id: "side1", pr: 95, when: function (p, t, c) { return c.firstSales; }, text: "Side income has no PAYE. Put some aside for tax.",
+    act: { avail: function (p) { return true; }, apply: function (p) { var h = hints(p), t0 = p.tax + (Number($("in-tax").value) || 0); $("in-tax").value = h.tax; updateLeft(); return { html: changeLine("Tax pot after Done", t0, p.tax + h.tax) + "<div>The hint amount is now in the Tax pot box.</div>", saved: 0 }; } } },
+  { id: "full1", pr: 94, when: function (p, t) { return p.fullS && t === p.fullST; }, text: "No boss now: no PAYE and no boss KiwiSaver. All the tax is yours to set aside." },
+  { id: "cash1", pr: 93, when: function (p, t) { return t === 7 && !!p.hustle; }, text: "Cash jobs are income too. Put them in your IR3." },
+  { id: "gstnear", pr: 90, when: function (p, t, c) { return p.hustle && !p.gstReg && Math.max(c.last12, c.proj) >= 48000 && t < G.lastT; }, text: "Close to $60,000 in sales? You must register for GST.",
+    act: { label: "Register now", avail: function (p) { return !p.gstReg; }, apply: function (p) { p.gstReg = true; p.gstFreq = "two"; p.regT = G.t + 1; return { html: "<div>GST: not registered → registered (every 2 months) from " + monthLabel(G.t + 1) + "</div><div>Add 15% to prices. Claim GST back on costs.</div>", saved: 0 }; } } },
+  { id: "gstreg1", pr: 89, when: function (p, t) { return p.gstReg && t === p.regT && t > 0; }, text: "You're registered: add 15% GST to prices and keep it in your GST pot." },
+  { id: "termdue1", pr: 86, when: function (p, t, c) { return c.termDue; }, text: "Your end-of-year tax is due 7 February. Pay it from your Tax pot." },
+  { id: "gstdue1", pr: 85, when: function (p, t, c) { return c.gstDue; }, text: "GST is due this month. Pay it from your GST pot." },
+  { id: "gstdue2", pr: 85, when: function (p, t, c) { return c.gstDue; }, text: "GST to pay = GST on your sales − GST on your costs." },
+  { id: "gstdue3", pr: 85, when: function (p, t, c) { return c.gstDue; }, text: "GST is due on the 28th of the month after the period ends." },
+  { id: "provdue1", pr: 84, when: function (p, t, c) { return c.provDue; }, text: "Provisional tax is due this month. It's part of this year's tax, paid early." },
+  { id: "provdue2", pr: 84, when: function (p, t, c) { return c.provDue; }, text: "Paying late costs 1% the next day, then 4% more after a week." },
+  { id: "provdue3", pr: 84, when: function (p, t, c) { return c.provDue; }, text: "Standard option: provisional tax = last year's tax + 5%." },
+  { id: "six1", pr: 70, when: function (p, t) { return p.gstReg && p.gstFreq !== "six" && t >= p.regT && isPeriodEnd(p, t) && t < G.lastT - 1; }, text: "Filing GST every 6 months means fewer returns, and provisional tax in 2 instalments.",
+    act: { label: "Switch to 6-monthly", avail: function (p) { return p.gstReg && p.gstFreq !== "six"; }, apply: function (p) { var old = p.gstFreq; p.freqChanges.push({ t: G.t + 1, old: old }); p.gstFreq = "six"; return { html: "<div>GST returns: " + freqName(old) + " → every 6 months (from " + monthLabel(G.t + 1) + ")</div><div>Next provisional tax: 3 → 2 instalments (28 Oct, 7 May)</div>", saved: 0 }; } } },
+  { id: "eoy1", pr: 80, when: function (p, t) { return mi(t) === 11 && !isWrap(t); }, text: "The tax year ends 31 March. File your IR3 by 7 July." },
+  { id: "eoy2", pr: 79, when: function (p, t) { return mi(t) === 10 && p.hustle; }, text: "Your IR3 is coming. Keep receipts and records for 7 years." },
+  { id: "year2", pr: 78, when: function (p, t) { return t === 13 && p.hustle; }, text: "Year 2: last year's tax and this year's provisional tax can land close together." },
+  { id: "car1", pr: 77, when: function (p, t) { return !isOwn() && t === 6; }, text: "Private car repairs are not a business cost." },
+  { id: "home1", pr: 66, when: function (p, t, c) { return c.canDed; }, text: "Work from home? Claim a home office.",
+    act: { avail: function (p) { return !p.ded.home; }, apply: function (p) { return applyTaxEffect(p, function () { p.ded.home = { method: "sqm", fromT: p.hustleT }; }); } } },
+  { id: "tool1", pr: 65, when: function (p, t, c) { return c.canDed; }, text: "A tool for $1,000 or less? You can claim all of it this year.",
+    act: { label: "Buy " + "tool", avail: function (p) { return !p.ded.low; }, apply: function (p) { return applyTaxEffect(p, function () { buyAsset(p, "low", LOW_COST); p.every -= LOW_COST; p.month.lines.push({ label: "Bought " + HUSTLES[p.hustle].low + " (low-value asset)", amt: -LOW_COST }); }); } } },
+  { id: "log1", pr: 64, when: function (p, t, c) { return c.canDed && t >= p.hustleT + 2; }, text: "Keep a 90-day car logbook. Then claim your real business share of car costs.",
+    act: { avail: function (p) { return !p.ded.car; }, apply: function (p) { return applyTaxEffect(p, function () { p.ded.car = { method: "logbook", fromT: p.hustleT }; }); } } },
+  { id: "phone1", pr: 63, when: function (p, t, c) { return c.canDed && t >= p.hustleT + 2; }, text: "Claim the business share of your phone and internet.",
+    act: { avail: function (p) { return !p.ded.phone; }, apply: function (p) { return applyTaxEffect(p, function () { p.ded.phone = { fromT: p.hustleT }; }); } } },
+  { id: "laptop1", pr: 62, when: function (p, t, c) { return c.canDed && t >= p.hustleT + 3; }, text: "Need a new laptop? Investment Boost: claim 20% now, plus depreciation.",
+    act: { label: "Buy laptop", avail: function (p) { return !p.ded.laptop; }, apply: function (p) { return applyTaxEffect(p, function () { buyAsset(p, "laptop", LAPTOP_COST); p.every -= LAPTOP_COST; p.month.lines.push({ label: "Bought a new laptop", amt: -LAPTOP_COST }); }); } } },
+  { id: "setaside", pr: 60, when: function (p, t, c) { return p.hustle && !c.wrap && !c.firstSales && (p.month && p.month.sx > 0); }, text: "Common tip (not an IRD rule): put 20–30% of profit in your Tax pot.",
+    act: { avail: function (p) { return true; }, apply: function (p) { var h = hints(p), t0 = p.tax + (Number($("in-tax").value) || 0); $("in-tax").value = h.tax; updateLeft(); return { html: changeLine("Tax pot after Done", t0, p.tax + h.tax), saved: 0 }; } } },
+  { id: "wrap1", pr: 96, when: function (p, t, c) { return c.wrap; }, text: "Last bills are due 7 May. Make sure your pots can pay them." }
+];
+var GENERAL = [
+  "Family groceries are private. You can't claim them.",
+  "Driving from home to your job is private travel.",
+  "No car logbook? You can claim at most 25% of car costs.",
+  "Business loan interest can be claimed. The repayments can't.",
+  "Spending $1 on the business saves only part of $1 in tax.",
+  "NZ tax rates go from 10.5% up to 39% as income grows.",
+  "No receipt, no claim. Keep records for 7 years.",
+  "Your boss takes PAYE out of your wages for you.",
+  "Your main job uses tax code M. A second job uses a secondary code.",
+  "IRD charges interest when tax is paid late."
+];
+function pickTips(p, t) {
+  var c = tipCtx(p, t), out = [];
+  var cands = TIPS.filter(function (x) { return x.when(p, t, c) && (!x.act || x.act.avail(p)); }).sort(function (a, b) { return b.pr - a.pr; });
+  var fresh = cands.filter(function (x) { return !p.tipSeen[x.id]; });
+  fresh.slice(0, 2).forEach(function (x) { out.push(x.id); });
+  if (!out.length) {
+    var okG = function (id) { return p.job || (id !== "g7" && id !== "g8"); };
+    var g = GENERAL.map(function (x, i) { return "g" + i; }).filter(function (id) { return okG(id) && !p.tipSeen[id]; });
+    if (!g.length) { GENERAL.forEach(function (x, i) { delete p.tipSeen["g" + i]; }); g = GENERAL.map(function (x, i) { return "g" + i; }).filter(okG); }
+    out.push(g[0]);
+  }
+  out.forEach(function (id) { p.tipSeen[id] = true; });
+  var all = TIPS.length + GENERAL.length;
+  if (Object.keys(p.tipSeen).length >= all) p.tipSeen = {};
+  return out;
+}
+function tipById(id) { if (id.charAt(0) === "g" && /^g\d+$/.test(id)) return { id: id, text: GENERAL[Number(id.slice(1))] }; return TIPS.filter(function (x) { return x.id === id; })[0]; }
+function renderTips(p) {
+  var m = p.month; if (!m) { $("tips").innerHTML = ""; return; }
+  var h = (m.notes || []).map(function (n) { return "<div class='tip note'>📣 " + n + "</div>"; }).join("");
+  (m.tips || []).forEach(function (id) {
+    var tp = tipById(id), st = (m.tipState || {})[id];
+    if (!tp) return;
+    var cls = "tip" + (st && st.status === "skipped" ? " skipped" : "");
+    h += "<div class='" + cls + "' data-tipbox='" + id + "'>💡 " + tp.text;
+    if (tp.act && !st && tp.act.avail(p)) h += "<div class='tb'><button class='btn-primary btn-sm' data-tip='" + id + "' data-tipdo='apply'>✓ Apply to my business <kbd>A</kbd></button><button class='btn-secondary btn-sm' data-tip='" + id + "' data-tipdo='skip'>Not now <kbd>N</kbd></button></div>";
+    if (st && st.status === "applied") h += "<div class='ba'>" + st.html + "</div>";
+    if (st && st.status === "skipped") h += "<div class='small muted'>Skipped for now.</div>";
+    h += "</div>";
+  });
+  $("tips").innerHTML = h;
+  Array.prototype.forEach.call($("tips").querySelectorAll("[data-tip]"), function (b) {
+    b.addEventListener("click", function () { tipDo(p, b.getAttribute("data-tip"), b.getAttribute("data-tipdo")); });
+  });
+}
+function tipDo(p, id, what) {
+  var tp = tipById(id), m = p.month; if (!tp || !tp.act || !m) return;
+  m.tipState = m.tipState || {}; if (m.tipState[id]) return;
+  if (what === "apply") {
+    var r = tp.act.apply(p);
+    m.tipState[id] = { status: "applied", html: r.html };
+    p.tipsSaved += r.saved || 0;
+    p.tipLog.push({ t: G.t, id: id, text: tp.text, status: "applied", effect: r.html.replace(/<\/div>/g, " · ").replace(/<[^>]+>/g, "").replace(/\s+/g, " ").replace(/( · )+$/, "").trim(), saved: r.saved || 0 });
+  } else {
+    m.tipState[id] = { status: "skipped" };
+    p.tipLog.push({ t: G.t, id: id, text: tp.text, status: "skipped", effect: "", saved: 0 });
+  }
+  render();
+}
+function firstOpenTip(p) { var m = p.month; if (!m || !m.tips) return null; for (var i = 0; i < m.tips.length; i++) { var tp = tipById(m.tips[i]); if (tp && tp.act && !(m.tipState || {})[tp.id] && tp.act.avail(p)) return tp.id; } return null; }
 /* ===== Turn flow ===== */
 function startGame() {
   var players = [];
@@ -656,7 +842,7 @@ function showScreen(id) { ["screen-title", "screen-play", "screen-end"].forEach(
 function startTurn() {
   var p = curP(), t = G.t, y = yearOf(t);
   $("in-gst").value = 0; $("in-tax").value = 0;
-  var L = [], m = { t: t, lines: L, sx: 0, salesIn: 0, costPaid: 0, costDed: 0, reg: false, assetPaid: 0 };
+  var L = [], m = { t: t, lines: L, sx: 0, salesIn: 0, costPaid: 0, costDed: 0, reg: false, assetPaid: 0, notes: [], tips: [], tipState: {} };
   p.month = m;
   if (p.every < -0.5) { var ci = -p.every * 0.20 / 12; p.every -= ci; p.stats.cardInt += ci; L.push({ label: "Credit card interest – you were overdrawn <span class='tag simp'>game rule: 20% a year</span>", amt: -ci }); }
   if (!isWrap(t)) {
@@ -683,136 +869,146 @@ function startTurn() {
     var lv = living(t); p.every -= lv;
     L.push({ label: "Living costs – rent, food, power, family" + (mi(t) === 8 ? " (+ Christmas)" : "") + (!isOwn() && t === 6 ? " (+ car repair $700)" : ""), amt: -lv });
   } else L.push({ label: "We jump to 7 May " + calYear(t) + " to pay the last bills for " + taxYearLabel(y - 1) + ". No new income this turn.", amt: 0 });
+  if (!isOwn() && t === 8 && p.hustle) m.notes.push("☕ A café wants your products: about +$1,500 a month from now.");
+  if (!isOwn() && t === 6) m.notes.push("🚗 Car repair: $700 (in living costs).");
+  if (p.hustle && t === p.hustleT + 1) m.notes.push("New: 🧾 <b>Lower my tax</b> — claim real business costs.");
+  if (isWrap(t)) m.notes.push("🏁 No new income this turn. Pay the 7 May bills.");
   buildEvents(p, t);
+  m.tips = pickTips(p, t);
   render();
   if (queue.length) runQueue(); else focusDefault();
 }
 function sharedOnce(key) { if (G.sharedShown[key]) return false; G.sharedShown[key] = true; return true; }
 function buildEvents(p, t) {
   var y = yearOf(t), startT = isOwn() ? 0 : 2;
-  if (G.players.length > 1) pushModal({ title: "🎲 " + esc(p.name) + "'s turn", html: "<p>Pass the keyboard to <b>" + esc(p.name) + "</b>. Month: <b>" + (isWrap(t) ? "wrap-up (7 May)" : monthLabel(t)) + "</b>.</p>", buttons: [{ label: "I'm ready", primary: true }] });
+  if (G.players.length > 1) pushModal({ title: "🎲 " + esc(p.name) + "'s turn", html: "<p>Pass to <b>" + esc(p.name) + "</b> · " + (isWrap(t) ? "7 May" : monthLabel(t)) + "</p>", buttons: [{ label: "I'm ready", primary: true }] });
   if (t === 0 && sharedOnce("E0")) {
     if (p.job) pushModal({ title: "Stage E · Your job and your payslip", html: function () { return eLessonHtml(p); }, buttons: [{ label: "Got it", primary: true }] });
-    else pushModal({ title: "Stage S · You work for yourself", html: "<p>You have no PAYE job in these numbers, so you start in <b>S</b>. Nobody takes tax out for you. You put money aside, file an IR3 each year and pay any GST and provisional tax.</p>" });
+    else pushModal({ title: "Stage S · You work for yourself", html: "<p>No job, so you start in <b>S</b>. Nobody takes tax out for you — you put it aside.</p>" });
   }
   if (t === 1 && p.job && !p.quiz) pushModal(quizModal(p));
   if (t === startT && !p.hustle) pushModal(hustleModal(p));
-  if (t === startT + 2 && p.hustle && sharedOnce("D")) pushModal({ title: "🧾 New: Legally lower your tax", html: dedIntroHtml(), buttons: [{ label: "Open the deductions list", primary: true, action: function () { pushModal(dedModal(curP()), true); } }, { label: "Later" }] });
-  if (!isOwn() && t === 6 && sharedOnce("car")) pushModal({ title: "🚗 Car repair", html: "<p>Your car needs a $700 repair. It's in your living costs this month. Private car costs are <b>not</b> business costs — only the business share of a car can be claimed.</p>" });
-  if (!isOwn() && t === 8 && sharedOnce("cafe")) pushModal({ title: "☕ Big news: a café order!", html: "<p>A café wants your products every week: about <b>+$1,500 a month</b> in sales from December.</p><p>Watch your sales: when they reach <b>$60,000 in 12 months</b> (or you expect they will), you <b>must</b> register for GST.</p>" });
   if (t === 7 && p.hustle && !p.cashJob) pushModal(cashModal(p));
   if (p.hustle && !p.gstReg && t <= G.lastT - 1) {
     var last12 = 0; for (var k = Math.max(0, t - 11); k <= t; k++) last12 += p.salesHist[k] || 0;
     var proj = (p.salesHist[t] || 0) * 12;
     if (last12 >= R.gstThreshold || proj >= R.gstThreshold) pushModal(gstMustModal(p, last12, proj));
   }
-  if (t === 11 && sharedOnce("eoy")) pushModal({ title: "📅 31 March = end of the tax year", html: "<p>The NZ tax year runs <b>1 April to 31 March</b>. After this month you file an <b>IR3</b> (individual tax return) because you had income with no tax taken out. The IR3 is due by <b>7 July</b>.</p><p>Keep all business records — receipts, invoices, bank statements — for <b>at least 7 years</b>.</p>" });
   if (t > 0 && t % 12 === 0 && t <= wrapT() && !p.ir3[y - 1]) {
     var r = runIR3(p, y - 1);
     pushModal({ title: "📄 IR3 for " + taxYearLabel(y - 1) + " — " + esc(p.name), html: function () { return ir3Html(p, r) + provNoteHtml(p, r, y - 1); } });
   }
   if (t === 12 && p.job && !isWrap(t) && !p.decided) pushModal(jobModal(p));
   if (t === 19 && p.cashJob === "hidden" && !p.audited) pushModal(auditModal(p));
-  if (isWrap(t) && sharedOnce("wrap")) pushModal({ title: "🏁 Last bills", html: "<p>The tax year is over. Some bills are due on <b>7 May</b>: the GST return for the period ending March, and the last provisional tax instalment. Make sure your pots can pay them (press <kbd>H</kbd> for the top-up hint), then press Done.</p>" });
 }
-/* ===== Event modals ===== */
+/* ===== Event modals (v1.1: short, working behind "Show working") ===== */
+function sw(inner, label) { return "<details class='sw'><summary>" + (label || "Show working") + "</summary>" + inner + "</details>"; }
 function eLessonHtml(p) {
   var ps = payslip(p, 0), w = ps.wk;
-  return "<p>You start in <b>E</b>: you have a job paying <b>" + money(w.gross) + " a week</b> (" + money(ps.annual) + " a year). Your tax code is <b>M</b> (main job).</p>" +
-    "<p>Your boss takes tax out <b>before</b> you get paid. This is <b>PAYE</b> (Pay As You Earn). You never send this tax to IRD yourself.</p>" +
-    "<table class='calc'><tr><td>Weekly pay before tax</td><td class='amt'>" + money2(w.gross) + "</td></tr>" +
+  return "<p>Your job pays <b>" + money(w.gross) + " a week</b>. Tax code <b>M</b>.</p><p>Your boss takes out tax (<b>PAYE</b>), ACC and KiwiSaver. You take home <b>" + money2(w.net) + "</b>.</p>" +
+    sw("<table class='calc'><tr><td>Pay before tax</td><td class='amt'>" + money2(w.gross) + "</td></tr>" +
     "<tr><td>− PAYE (income tax)</td><td class='amt'>" + money2(-w.paye) + "</td></tr>" +
-    "<tr><td>− ACC earners' levy 1.75%: " + money(w.gross) + " × 1.75%</td><td class='amt'>" + money2(-w.acc) + "</td></tr>" +
-    "<tr><td>− KiwiSaver 3.5%: " + money(w.gross) + " × 3.5%</td><td class='amt'>" + money2(-w.ks) + "</td></tr>" +
-    "<tr class='tot'><td>Take-home pay</td><td class='amt'>" + money2(w.net) + "</td></tr>" +
-    "<tr><td>Your boss also adds KiwiSaver 3.5% (into KiwiSaver, not your pay)</td><td class='amt'>+" + money2(w.boss) + "</td></tr></table>" +
-    "<p class='small muted'>PAYE above is the yearly tax on " + money(ps.annual) + " ÷ 52. Real payslips can differ by a few cents.</p>";
+    "<tr><td>− ACC levy 1.75%</td><td class='amt'>" + money2(-w.acc) + "</td></tr>" +
+    "<tr><td>− KiwiSaver 3.5%</td><td class='amt'>" + money2(-w.ks) + "</td></tr>" +
+    "<tr class='tot'><td>Take-home</td><td class='amt'>" + money2(w.net) + "</td></tr>" +
+    "<tr><td>Boss adds KiwiSaver 3.5%</td><td class='amt'>+" + money2(w.boss) + "</td></tr></table>" +
+    "<p class='small muted'>PAYE = yearly tax on " + money(ps.annual) + " ÷ 52.</p>");
 }
 function quizModal(p) {
   var pick = function (code) {
     return function () {
       var ok = code === "SH"; p.quiz = code; if (ok) p.trap.quiz = true;
-      pushModal({ title: ok ? "✓ Correct: SH" : "Not quite — the answer is SH", html: "<p>Main job $52,000 + café shifts $8,000 = about <b>$60,000</b> a year. That's between $53,501 and $78,100, so the second job uses <b>SH</b> (taxed at 30%).</p><p>Secondary codes: <b>SB</b> (total up to $15,600), <b>S</b> ($15,601–$53,500), <b>SH</b> ($53,501–$78,100), <b>ST</b> ($78,101–$180,000), <b>SA</b> (over $180,000).</p><p>💡 Important: a side hustle (self-employed income) has <b>no tax code and no PAYE</b>. Nobody takes the tax out — <b>you</b> must put it aside.</p>" + (ok ? "<p class='pill-ok'>+25 points</p>" : "") }, true);
+      pushModal({ title: ok ? "✓ Correct: SH" : "The answer is SH", html: "<p>$52,000 + $8,000 = about $60,000. That's in the $53,501–$78,100 band, so the second job uses <b>SH</b>.</p><p>💡 A side hustle has <b>no tax code and no PAYE</b>. You put the tax aside.</p>" + (ok ? "<p class='pill-ok'>+25 points</p>" : "") + sw("<p>Secondary codes: SB (total up to $15,600), S ($15,601–$53,500), SH ($53,501–$78,100), ST ($78,101–$180,000), SA (over $180,000).</p>") }, true);
     };
   };
-  return { title: "Quick quiz: a second job", html: "<p>Your friend has a main job paying <b>$52,000</b> a year (code M) and starts café shifts paying about <b>$8,000</b> a year. Which <b>secondary tax code</b> should the café job use?</p>",
+  return { title: "Quick quiz", html: "<p>Main job <b>$52,000</b> a year (code M). Café shifts <b>$8,000</b> a year. Which tax code for the café job?</p>",
     buttons: [{ label: "M", action: pick("M") }, { label: "S", action: pick("S") }, { label: "SH", action: pick("SH") }, { label: "SB", action: pick("SB") }] };
 }
 function hustleModal(p) {
   var go = function (k) { return function () { p.hustle = k; p.hustleT = G.t; pushModal({ title: HUSTLES[k].icon + " You are now " + stage(p), html: sLessonHtml(p) }, true); }; };
   var keys = Object.keys(HUSTLES);
-  return { title: "Start a side hustle (E → E+S)", html: "<p>" + esc(p.name) + ", pick a side hustle. Sales start small and grow.</p><ul>" + keys.map(function (k) { return "<li>" + HUSTLES[k].icon + " <b>" + HUSTLES[k].name + "</b></li>"; }).join("") + "</ul><p class='small muted'>Business costs in this game are about " + Math.round(costRate() * 100) + "% of sales.</p>",
+  return { title: "Start a side hustle", html: "<p>" + esc(p.name) + ", pick one. Sales start small and grow.</p>",
     buttons: keys.map(function (k, i) { return { label: HUSTLES[k].icon + " " + HUSTLES[k].name, primary: i === 0, action: go(k) }; }) };
 }
 function sLessonHtml(p) {
-  return "<p>You now earn money for yourself. For this money:</p><ul><li><b>No PAYE.</b> Nobody takes tax out. Each month, move money into your <b>Tax pot</b>.</li><li>After 31 March you file an <b>IR3</b>. Tax is worked out on <b>profit</b> = sales − business costs − deductions.</li><li>Profit is added on top of your wages, so it is taxed at your <b>higher</b> rate.</li><li>If sales reach <b>$60,000 in 12 months</b> you <b>must</b> register for GST.</li><li>Keep every receipt for <b>7 years</b>.</li></ul><p>Each month: press <kbd>H</kbd> for a hint, type amounts in the GST and Tax pots, then <kbd>Enter</kbd>.</p>";
+  return "<ul><li><b>No PAYE</b> on side income. Put tax aside each month.</li><li>After 31 March, file an <b>IR3</b>.</li><li>Sales near <b>$60,000</b>? Register for GST.</li></ul><p>Each month: read the tip, press <kbd>H</kbd> for a hint, then <b>Done</b>.</p>";
 }
 function cashModal(p) {
-  return { title: "💵 A cash job", html: "<p>A neighbour pays you <b>$400 cash</b> for a job. No invoice. \"Nobody needs to know,\" they say.</p><p>What do you do?</p>",
-    buttons: [{ label: "Declare it (add to my sales)", primary: true, action: function () { p.cashJob = "declared"; var y = yearOf(G.t); ys(p, y).salesEx += 400; p.salesHist[G.t] = (p.salesHist[G.t] || 0) + 400; p.every += 400; if (p.month) { p.month.sx += 400; p.month.lines.push({ label: "Cash job – declared as business income", amt: 400 }); } pushModal({ title: "✓ Good choice", html: "<p>All income must be declared, including cash. IRD says your IR3 must include cash \"under the table\" jobs. <span class='pill-ok'>+50 points</span></p>" }, true); } },
-      { label: "Keep it quiet", action: function () { p.cashJob = "hidden"; ys(p, yearOf(G.t)).hidden += 400; p.every += 400; if (p.month) p.month.lines.push({ label: "Cash job – NOT declared", amt: 400 }); pushModal({ title: "⚠ Risky", html: "<p>Not declaring income is <b>tax evasion</b>. IRD matches bank data and gets tip-offs. If caught you pay the tax plus a shortfall penalty of up to <b>150%</b>.</p>" }, true); } }] };
+  var log = function (st, eff) { p.tipLog.push({ t: G.t, id: "cash", text: "Declare the $400 cash job.", status: st, effect: eff, saved: 0 }); };
+  return { title: "💵 A $400 cash job", html: "<p>A neighbour pays you <b>$400 cash</b>. \"Nobody needs to know.\"</p><p>💡 Cash jobs are income. They go in your IR3.</p>",
+    buttons: [{ label: "✓ Declare it", primary: true, action: function () { p.cashJob = "declared"; var y = yearOf(G.t); ys(p, y).salesEx += 400; p.salesHist[G.t] = (p.salesHist[G.t] || 0) + 400; p.every += 400; if (p.month) { p.month.sx += 400; p.month.lines.push({ label: "Cash job – declared", amt: 400 }); } log("applied", "Tax on $400 at your rate is paid on time. No penalty risk."); pushModal({ title: "✓ Good choice", html: "<p>All income must be declared. <span class='pill-ok'>+50 points</span></p>" }, true); } },
+      { label: "Keep it quiet", action: function () { p.cashJob = "hidden"; ys(p, yearOf(G.t)).hidden += 400; p.every += 400; if (p.month) p.month.lines.push({ label: "Cash job – NOT declared", amt: 400 }); log("skipped", "Risk: if IRD finds it, tax + up to 150% penalty."); pushModal({ title: "⚠ Risky", html: "<p>Hiding income is <b>tax evasion</b>. If caught: the tax plus a penalty of up to <b>150%</b>.</p>" }, true); } }] };
 }
 function gstMustModal(p, last12, proj) {
-  var reg = function (f) { return function () { p.gstReg = true; p.gstFreq = f; p.regT = G.t + 1; toast("Registered for GST: file " + freqName(f) + " from " + monthLabel(G.t + 1)); }; };
-  return { title: "🟦 You must register for GST", html: "<p>Sales in the last 12 months: <b>" + money(last12) + "</b>. This month × 12 = " + money(p.salesHist[G.t] || 0) + " × 12 = <b>" + money(proj) + "</b>.</p><p>IRD: you <b>must</b> register when your turnover was $60,000 or more in the last 12 months, <b>or you expect it</b> in the next 12 months.</p><p>From next month you add <b>15% GST</b> to your prices and claim back the GST on business costs. You pay the difference to IRD after each period. Choose how often to file:</p><ul><li><b>Every 2 months</b> (common for small businesses)</li><li><b>Every month</b> (more work, smaller bills)</li><li><b>Every 6 months</b> (turnover under $500,000; also means provisional tax is paid in 2 instalments)</li></ul>",
+  var reg = function (f) { return function () { p.gstReg = true; p.gstFreq = f; p.regT = G.t + 1; toast("GST: file " + freqName(f) + " from " + monthLabel(G.t + 1)); }; };
+  return { title: "🟦 You must register for GST", html: "<p>Your sales are at or over <b>$60,000</b> a year. From next month: add <b>15% GST</b> to prices and claim GST back on costs.</p><p>How often do you want to file?</p>" +
+    sw("<p>Last 12 months: " + money(last12) + ". This month × 12 = " + money(proj) + ". IRD: register at $60,000 in the last 12 months, or if you expect it in the next 12.</p><p>6-monthly filing is for turnover under $500,000, and means provisional tax in 2 instalments.</p>"),
     buttons: [{ label: "Every 2 months", primary: true, action: reg("two") }, { label: "Every month", action: reg("monthly") }, { label: "Every 6 months", action: reg("six") }] };
 }
 function gstVoluntaryModal(p) {
-  var reg = function (f) { return function () { p.gstReg = true; p.gstFreq = f; p.regT = G.t + 1; toast("Registered for GST (voluntary) from " + monthLabel(G.t + 1)); render(); }; };
-  return { title: "🟦 Register for GST now? (voluntary)", html: "<p>You can register for GST <b>before</b> sales reach $60,000. Then you add 15% to prices and claim GST back on costs. More paperwork — but useful if you buy a lot of business equipment.</p>",
+  var reg = function (f) { return function () { p.gstReg = true; p.gstFreq = f; p.regT = G.t + 1; toast("Registered for GST from " + monthLabel(G.t + 1)); render(); }; };
+  return { title: "🟦 Register for GST now?", html: "<p>You can register before $60,000. You add 15% to prices and claim GST back on costs.</p>",
     buttons: [{ label: "Every 2 months", action: reg("two") }, { label: "Every month", action: reg("monthly") }, { label: "Every 6 months", action: reg("six") }, { label: "Not now", primary: true }] };
 }
 function jobModal(p) {
-  return { title: "A big decision: keep the job?", html: "<p>Your business is growing. You can <b>keep your job</b> (E + S) or <b>go full-time</b> on the business (S).</p><ul><li><b>Keep the job:</b> steady pay, PAYE and KiwiSaver from your boss. Less time for the business.</li><li><b>Go full-time S:</b> sales grow faster in this game, but no wages, no PAYE, no boss KiwiSaver. All the tax is yours to put aside.</li></ul>",
-    buttons: [{ label: "Keep my job (E + S)", primary: true, action: function () { p.decided = "keep"; } }, { label: "Go full-time (S)", action: function () { p.decided = "full"; p.fullS = true; p.fullST = 12; p.job = false; toast("You are now S: self-employed full-time"); } }] };
+  return { title: "Keep your job?", html: "<p><b>Keep it (E + S):</b> steady pay, PAYE and boss KiwiSaver.</p><p><b>Go full-time (S):</b> sales grow faster in this game, but no wages — all the tax is yours.</p>",
+    buttons: [{ label: "Keep my job", primary: true, action: function () { p.decided = "keep"; } }, { label: "Go full-time", action: function () { p.decided = "full"; p.fullS = true; p.fullST = 12; p.job = false; toast("You are now S: self-employed full-time"); } }] };
 }
+function auditMath(p) { var mr = marginal(p.ir3[0] ? p.ir3[0].TI : 70000), tax = 400 * mr; return { mr: mr, tax: tax, pen: tax * 1.5 }; }
 function auditModal(p) {
-  return { title: "🔎 IRD review", html: function () { var mr = marginal(p.ir3[0] ? p.ir3[0].TI : 70000), tax = 400 * mr, pen = tax * 1.5; return "<p>IRD found the <b>$400 cash job</b> you didn't declare.</p><table class='calc'><tr><td>Tax you should have paid: $400 × " + pct(mr) + "</td><td class='amt'>" + money2(tax) + "</td></tr><tr><td>Shortfall penalty for evasion: 150% × " + money2(tax) + "</td><td class='amt'>" + money2(pen) + "</td></tr><tr class='tot'><td>Bill due this month</td><td class='amt'>" + money2(tax + pen) + "</td></tr></table><p class='small muted'>Interest can also apply. Declaring it would have cost only " + money2(tax) + ".</p>"; },
-    buttons: [{ label: "OK", primary: true, action: function () { var mr = marginal(p.ir3[0] ? p.ir3[0].TI : 70000), tax = 400 * mr; p.audited = true; p.bills.push({ kind: "audit", t: G.t, amount: tax * 2.5, label: "IRD review: tax + 150% penalty", due: dueLabel("28", G.t), work: "$400 × " + pct(mr) + " = " + money2(tax) + " + 150% penalty" }); render(); } }] };
+  return { title: "🔎 IRD found the cash job", html: function () { var a = auditMath(p); return "<p>You must pay <b>" + money2(a.tax + a.pen) + "</b> this month. Declaring it would have cost " + money2(a.tax) + ".</p>" + sw("<p>Tax: $400 × " + pct(a.mr) + " = " + money2(a.tax) + ". Penalty for evasion: 150% × " + money2(a.tax) + " = " + money2(a.pen) + ". Interest can also apply.</p>"); },
+    buttons: [{ label: "OK", primary: true, action: function () { var a = auditMath(p); p.audited = true; p.bills.push({ kind: "audit", t: G.t, amount: a.tax + a.pen, label: "IRD review: tax + 150% penalty", due: dueLabel("28", G.t), work: "$400 × " + pct(a.mr) + " = " + money2(a.tax) + " + 150% penalty" }); render(); } }] };
 }
 function provNoteHtml(p, r, y) {
-  var h = "<hr>";
   if (r.provNext) {
-    h += "<p>🟪 <b>Provisional tax:</b> your RIT of " + money(r.rit) + " is over <b>$5,000</b>, so you pay provisional tax for " + taxYearLabel(y + 1) + ". Standard option: " + money(r.rit) + " + 5% = <b>" + money(r.provNext.amt) + "</b>, in " + r.provNext.n + " instalments:</p><ul>" + r.provNext.list.map(function (b) { return "<li>" + b.due + ": " + money(b.amount) + "</li>"; }).join("") + "</ul>";
-    if (r.terminal > 0 && y === 0 && !isOwn()) h += "<p class='pill-bad'>⚠ The first-year surprise</p><p>In your first year you pay <b>no</b> provisional tax. But now <b>two</b> things land close together: last year's tax (" + money(r.terminal) + " on 7 Feb) <b>and</b> this year's instalments. Keep your Tax pot growing!</p>";
-    h += "<p class='small muted'>Other options exist: estimation, ratio (GST filers) and AIM (accounting software, turnover under $5m).</p>";
-  } else h += "<p>Your RIT is " + money(r.rit) + " — $5,000 or less, so <b>no provisional tax</b> next year. Just pay any end-of-year tax by 7 Feb.</p>";
-  return h;
+    var h = "<p>🟪 Your tax was over <b>$5,000</b>, so next year you pay <b>provisional tax</b>: " + r.provNext.list.map(function (b) { return money(b.amount) + " on " + b.due.replace(/ \d{4}$/, ""); }).join(", ") + ".</p>";
+    if (r.terminal > 0 && y === 0 && !isOwn()) h += "<p class='pill-bad'>⚠ First-year surprise: this tax (7 Feb) and provisional tax land close together.</p>";
+    return h + sw("<p>Standard option: " + money(r.rit) + " + 5% = " + money(r.provNext.amt) + ", in " + r.provNext.n + " instalments. Other options: estimation, ratio, AIM.</p>", "More about provisional tax");
+  }
+  return "<p>Your tax was $5,000 or less, so <b>no provisional tax</b> next year.</p>";
 }
 /* ===== Deductions modal ===== */
-function dedIntroHtml() {
-  return "<p>A <b>deduction</b> is a business cost you take off your sales before tax is worked out. Less profit on paper = less tax.</p><p>⚠ Spending is <b>not</b> free money: if your top tax rate is 30%, spending <b>$1</b> on the business saves only about <b>30c</b> of tax. Only claim things you really use for the business.</p><p>Each card shows the claim and the tax it saves. Press <kbd>D</kbd> any month to open the list.</p>";
-}
+function dedIntroHtml() { return "<p>Real business costs lower your tax. Only claim what you really use for the business.</p>"; }
 function topRate(p) { var sr = sideRate(p); return sr.top || 0.175; }
-function savedLine(p, amt, perYear) { var r = topRate(p); return "<div class='dw'>Tax saved ≈ " + money2(amt) + " × " + pct(r) + " (your top rate) = <b>" + money2(amt * r) + "</b>" + (perYear ? " a year" : "") + "</div>"; }
+function saveTxt(p, amt, yr) { return "saves " + money(amt * topRate(p)) + (yr ? "/yr" : ""); }
 function buyAsset(p, key, price) {
   var t = G.t, reg = p.gstReg && t >= p.regT, base = reg ? price / 1.15 : price;
   p.ded[key] = { t: t, cost: price, base: base, reg: reg };
   if (reg) { gstAcc(p, t).costs += price; p.month.assetPaid += price; }
   return base;
 }
-function dedCard(id, title, body, btns, claimed) {
-  return "<div class='dcard" + (claimed ? " claimed" : "") + "' id='dc-" + id + "'><div class='dh'><span>" + title + "</span><span>" + (claimed ? "<span class='pill-ok'>✓ " + claimed + "</span>" : btns) + "</span></div>" + body + "</div>";
-}
-function db(act, label, primary) { return "<button class='" + (primary ? "btn-primary" : "btn-secondary") + " btn-sm' data-ded='" + act + "'>" + label + "</button> "; }
+function db(act, label, primary) { return "<button class='" + (primary ? "btn-primary" : "btn-secondary") + " btn-sm' data-ded='" + act + "'>" + label + "</button>"; }
+function dline(name, save, btn, done) { return "<div class='dline'><span class='dn'>" + name + "</span><span class='dr'><span class='ds'>" + save + "</span>" + (done ? "<span class='pill-ok'>✓ " + done + "</span>" : btn) + "</span></div>"; }
 function dedBody(p) {
-  var d = p.ded, h = dedIntroHtml().replace(/<p>Each card[\s\S]*$/, ""), H = HUSTLES[p.hustle], reg = p.gstReg && G.t >= p.regT;
-  var hb = "<div class='dw'>You use " + HOME.area + " m² of your " + HOME.total + " m² rented home. Rent " + money(HOME.rent) + "/month, power " + money(HOME.power) + "/year, insurance " + money(HOME.insurance) + "/year. Pick <b>one</b> method:</div>" +
-    ["sqm", "actual", "shared"].map(function (k, i) { var lab = ["A · Square-metre rate (room set aside for business)", "B · Share of actual costs (room set aside)", "C · Shared space: area × time used for business (" + pct(HOME.timeShare) + ")"][i]; return "<div class='dw'>" + lab + ": " + homeWorking(k) + " " + (d.home ? "" : db("home-" + k, "Choose " + "ABC"[i], i === 0)) + "</div>" + "<div style='margin-left:1rem'>" + savedLine(p, homeAnnual(k), true) + "</div>"; }).join("") +
-    "<div class='dw'><span class='tag simp'>Not confirmed</span> IRD hasn't published the 2026–27 square-metre rate yet, so the game uses the 2025–26 rate $57.30. With the square-metre rate, the $57.30 covers power, heating, insurance and similar costs, so you don't claim those separately; rent (or mortgage interest and rates) is still claimed by area share.</div>";
-  h += dedCard("home", "🏠 Home office", hb, "", d.home ? "Method " + { sqm: "A", actual: "B", shared: "C" }[d.home.method] : "");
-  h += dedCard("car", "🚗 Car – business share", "<div class='dw'>Running costs " + money(CAR.running) + "/year. With a 90-day logbook (valid 3 years) you showed " + pct(CAR.logbook) + " business use. With no logbook the claim is limited to 25%. Trips home ↔ your job are private.</div>" + savedLine(p, CAR.running * CAR.logbook, true), db("car-logbook", "Logbook 35%", true) + db("car-none", "No logbook 25%"), d.car ? (d.car.method === "logbook" ? "Logbook 35%" : "No logbook 25%") : "");
-  h += dedCard("phone", "📱 Phone & internet", "<div class='dw'>" + money(PHONE.yearly) + "/year × " + pct(PHONE.share) + " business use = " + money(PHONE.yearly * PHONE.share) + ". Must be a fair and reasonable share.</div>" + savedLine(p, PHONE.yearly * PHONE.share, true), db("phone", "Claim", true), d.phone ? "Claimed" : "");
-  var lowBase = reg ? LOW_COST / 1.15 : LOW_COST;
-  h += dedCard("low", "🧰 " + H.low + " – " + money(LOW_COST) + " (low-value asset)", "<div class='dw'>Assets costing $1,000 or less can be written off in full this year. Cost counted " + (reg ? "without GST: " + money(LOW_COST) + " ÷ 1.15 = " + money2(lowBase) : "with GST (not registered): " + money(LOW_COST)) + ". Paid from Everyday now.</div>" + savedLine(p, lowBase), db("low", "Buy it (" + money(LOW_COST) + ")", true), d.low ? "Bought" : "");
-  var lapBase = reg ? LAPTOP_COST / 1.15 : LAPTOP_COST, mLeft = 12 * yearOf(G.t) + 12 - G.t;
-  h += dedCard("laptop", "💻 New laptop – " + money(LAPTOP_COST), "<div class='dw'>Over $1,000, so it is <b>depreciated</b>. New assets get <b>Investment Boost</b>: 20% of the cost up front, then normal depreciation (laptops 50% DV) on the other 80%, counted by months owned.</div><div class='dw'>Year 1: 20% × " + money(lapBase) + " = " + money(lapBase * 0.2) + " + 50% × " + money(lapBase * 0.8) + " × " + mLeft + "/12 = " + money(lapBase * 0.2 + lapBase * 0.8 * 0.5 * mLeft / 12) + "</div>" + savedLine(p, lapBase * 0.2 + lapBase * 0.8 * 0.5 * mLeft / 12), db("laptop", "Buy it (" + money(LAPTOP_COST) + ")", true), d.laptop ? "Bought" : "");
-  var eqBase = reg ? EQUIP_COST / 1.15 : EQUIP_COST, eqY1 = eqBase * 0.2 + eqBase * 0.8 * H.rate * mLeft / 12;
-  h += dedCard("equip", "🏭 " + H.equip + " – " + money(EQUIP_COST) + " with a business loan", "<div class='dw'>Loan " + money(EQUIP_COST) + " at " + pct(LOAN_RATE) + " <span class='tag simp'>game rate</span>, repaid " + money(LOAN_PAY) + "/month. The <b>interest</b> is deductible; the repayments are not. Depreciation rate: " + H.rateTxt + " + Investment Boost 20%. Sales grow 12% from next month.</div><div class='dw'>Year 1: 20% × " + money(eqBase) + " + " + pct(H.rate) + " × " + money(eqBase * 0.8) + " × " + mLeft + "/12 = " + money(eqY1) + "</div>" + savedLine(p, eqY1), db("equip", "Take loan & buy", true), d.equip ? "Bought" : "");
-  h += dedCard("reinvest", "🔁 \"I'll just reinvest my profit\"", "<div class='dw'>Putting profit back into the business is <b>not</b> a deduction by itself. Only real business costs and depreciation count. Spending $1 to save 30c still leaves you 70c poorer.</div>", "", "");
-  var traps = [["groceries", "Can you claim your family's groceries as a business cost?", "No – private and domestic costs are never deductible."], ["receipts", "Is it OK to claim costs without keeping receipts?", "No – keep records for at least 7 years. No proof = no claim."], ["petrol", "Can you claim petrol for driving from home to your job?", "No – home-to-work travel is private."]];
-  h += "<h3 style='margin-top:.6rem'>Traps – Yes or No? (+25 each)</h3>";
-  traps.forEach(function (q) { var a = p.trap[q[0] + "A"]; h += dedCard("trap-" + q[0], q[1], a ? "<div class='dw'>" + (a === "no" ? "<span class='pill-ok'>Correct.</span> " : "<span class='pill-bad'>Careful.</span> ") + q[2] + "</div>" : "", db("trap-" + q[0] + "-yes", "Yes") + db("trap-" + q[0] + "-no", "No"), a ? "Answered" : ""); });
+  var d = p.ded, H = HUSTLES[p.hustle], reg = p.gstReg && G.t >= p.regT, mLeft = 12 * yearOf(G.t) + 12 - G.t, r = topRate(p);
+  var lowBase = reg ? LOW_COST / 1.15 : LOW_COST, lapBase = reg ? LAPTOP_COST / 1.15 : LAPTOP_COST, eqBase = reg ? EQUIP_COST / 1.15 : EQUIP_COST;
+  var lapY1 = lapBase * 0.2 + lapBase * 0.8 * R.laptopDV * mLeft / 12, eqY1 = eqBase * 0.2 + eqBase * 0.8 * H.rate * mLeft / 12;
+  var hm = d.home ? d.home.method : null, h = dedIntroHtml();
+  h += "<h3 style='margin-top:.4rem'>🏠 Home office (pick one)</h3>";
+  [["sqm", "A · Square-metre rate"], ["actual", "B · Share of actual costs"], ["shared", "C · Shared space (area × time)"]].forEach(function (o, i) {
+    h += dline(o[1], saveTxt(p, homeAnnual(o[0]), true), d.home ? "" : db("home-" + o[0], "Choose", i === 0), hm === o[0] ? "Chosen" : "");
+  });
+  h += "<h3 style='margin-top:.5rem'>🚗📱 Running costs</h3>";
+  h += dline("Car, 90-day logbook (35%)", saveTxt(p, CAR.running * CAR.logbook, true), d.car ? "" : db("car-logbook", "Choose", true), d.car && d.car.method === "logbook" ? "Chosen" : "");
+  h += dline("Car, no logbook (25% max)", saveTxt(p, CAR.running * R.carNoLog, true), d.car ? "" : db("car-none", "Choose"), d.car && d.car.method === "none" ? "Chosen" : "");
+  h += dline("Phone & internet (30% business)", saveTxt(p, PHONE.yearly * PHONE.share, true), db("phone", "Claim", true), d.phone ? "Claimed" : "");
+  h += "<h3 style='margin-top:.5rem'>🧰 Tools & equipment</h3>";
+  h += dline(H.low + " " + money(LOW_COST) + " (claim it all)", saveTxt(p, lowBase), db("low", "Buy", true), d.low ? "Bought" : "");
+  h += dline("New laptop " + money(LAPTOP_COST), saveTxt(p, lapY1) + " this year", db("laptop", "Buy", true), d.laptop ? "Bought" : "");
+  h += dline(H.equip + " " + money(EQUIP_COST) + " (loan)", saveTxt(p, eqY1) + " this year", db("equip", "Loan & buy", true), d.equip ? "Bought" : "");
+  h += "<p class='small muted' style='margin-top:.4rem'>Putting profit back into the business is not a deduction by itself.</p>";
+  h += sw("<div class='dw'><b>Your top tax rate:</b> " + pct(r) + ". Tax saved = claim × " + pct(r) + ".</div>" +
+    "<div class='dw'><b>Home:</b> " + HOME.area + " m² of " + HOME.total + " m². Rent " + money(HOME.rent) + "/month, power " + money(HOME.power) + "/yr, insurance " + money(HOME.insurance) + "/yr.</div>" +
+    "<div class='dw'>A: " + homeWorking("sqm") + "</div><div class='dw'>B: " + homeWorking("actual") + "</div><div class='dw'>C: " + homeWorking("shared") + "</div>" +
+    "<div class='dw'>The square-metre rate ($57.30 per m²) is based on average utility costs, like power and heating. It does <b>not</b> include rent, mortgage interest or rates — claim those separately by floor-area share. If you use it, you can't claim any other home-use costs, such as insurance. <span class='tag simp'>Not confirmed</span> The 2026–27 rate isn't published yet; the game uses the 2025–26 rate.</div>" +
+    "<div class='dw'><b>Car:</b> running costs " + money(CAR.running) + "/yr × 35% (logbook) or × 25% (no logbook). A logbook lasts 3 years. Home ↔ job trips are private.</div>" +
+    "<div class='dw'><b>Phone:</b> " + money(PHONE.yearly) + "/yr × 30%.</div>" +
+    "<div class='dw'><b>" + H.low + ":</b> $1,000 or less → claim it all this year. Cost " + (reg ? "without GST: " + money2(lowBase) : "with GST (not registered): " + money(LOW_COST)) + ".</div>" +
+    "<div class='dw'><b>Laptop:</b> Investment Boost 20% × " + money(lapBase) + " + 50% × " + money(lapBase * 0.8) + " × " + mLeft + "/12 months = " + money(lapY1) + ".</div>" +
+    "<div class='dw'><b>" + H.equip + ":</b> 20% × " + money(eqBase) + " + " + H.rateTxt + " × " + money(eqBase * 0.8) + " × " + mLeft + "/12 = " + money(eqY1) + ". Loan " + pct(LOAN_RATE) + " <span class='tag simp'>game rate</span>, " + money(LOAN_PAY) + "/month: interest can be claimed, repayments can't. Sales +12% <span class='tag simp'>game rule</span>.</div>");
+  var traps = [["groceries", "Claim family groceries?", "No – private costs."], ["receipts", "Claim without receipts?", "No – keep records 7 years."], ["petrol", "Claim petrol from home to your job?", "No – that's private travel."]];
+  h += "<h3 style='margin-top:.5rem'>Quick check: Yes or No? (+25 each)</h3>";
+  traps.forEach(function (q) { var a = p.trap[q[0] + "A"]; h += dline(q[1], a ? (a === "no" ? "✓ " : "✗ ") + q[2] : "", db("trap-" + q[0] + "-yes", "Yes") + " " + db("trap-" + q[0] + "-no", "No"), a ? "Answered" : ""); });
   return h;
 }
 function dedAct(p, a) {
@@ -828,10 +1024,10 @@ function dedAct(p, a) {
 function bindDed(p) {
   var body = $("modal-body");
   Array.prototype.forEach.call(body.querySelectorAll("[data-ded]"), function (b) {
-    b.addEventListener("click", function () { dedAct(p, b.getAttribute("data-ded")); body.innerHTML = dedBody(p); bindDed(p); render(); toast("Saved ✓"); });
+    b.addEventListener("click", function () { var dt = body.querySelector("details.sw"), op = dt && dt.open, sc = $("modal").scrollTop; dedAct(p, b.getAttribute("data-ded")); body.innerHTML = dedBody(p); if (op) body.querySelector("details.sw").open = true; $("modal").scrollTop = sc; bindDed(p); render(); toast("Saved ✓"); });
   });
 }
-function dedModal(p) { return { title: "🧾 Legally lower your tax — " + esc(p.name), html: function () { return dedBody(p); }, onShow: function () { bindDed(p); }, buttons: [{ label: "Close", primary: true }] }; }
+function dedModal(p) { return { title: "🧾 Lower my tax — " + esc(p.name), html: function () { return dedBody(p); }, onShow: function () { bindDed(p); }, buttons: [{ label: "Close", primary: true }] }; }
 /* ===== Confirm / advance ===== */
 function confirmTurn() {
   if (!G || G.ended || modalOpen) return;
@@ -840,7 +1036,7 @@ function confirmTurn() {
   p.every -= g + x; p.gst += g; p.tax += x;
   var dues = duesFor(p, t), res = dues.map(function (d) { return payItem(p, d); });
   p.results.push({ t: t, res: res });
-  if (res.length) pushModal({ title: "🧾 Bills due — " + (isWrap(t) ? "7 May " + calYear(t) : monthLabel(t)), html: res.map(function (r) { return "<div class='dcard " + (r.ok ? "claimed" : "") + "'><div class='dh'><span>" + (r.kind === "gst" ? "🟦 " : "🟪 ") + esc(r.label) + "</span><span>due " + esc(r.due) + " " + (r.refund ? "<span class='pill-ok'>refund</span>" : r.ok ? "<span class='pill-ok'>paid on time ✓</span>" : "<span class='pill-bad'>late ✗</span>") + "</span></div>" + r.w.map(function (l) { return "<div class='dw'>" + l + "</div>"; }).join("") + "</div>"; }).join("") });
+  if (res.length) pushModal({ title: "🧾 Bills due — " + (isWrap(t) ? "7 May " + calYear(t) : monthLabel(t)), html: res.map(function (r) { return "<div class='dcard " + (r.ok ? "claimed" : "") + "'><div class='dh'><span>" + (r.kind === "gst" ? "🟦 " : "🟪 ") + esc(r.label) + "</span><span>due " + esc(r.due) + " " + (r.refund ? "<span class='pill-ok'>refund</span>" : r.ok ? "<span class='pill-ok'>paid ✓</span>" : "<span class='pill-bad'>pot too low ✗</span>") + "</span></div><div class='dw'>" + (r.refund ? "Refund " + money(-r.amount) : money(r.amount)) + (r.ok || r.refund ? "" : " · extra cost " + money2(r.extra)) + "</div>" + sw(r.w.map(function (l) { return "<div class='dw'>" + l + "</div>"; }).join("")) + "</div>"; }).join("") });
   runQueue(advance);
 }
 function advance() {
@@ -873,12 +1069,12 @@ function compareHtml(p) {
   var eTax = taxOn(gross).tax, eAcc = gross * acc, eKs = gross * R.kiwi;
   var esTax = taxOn(gross - D).tax, esAcc = s.wages * acc, esKs = s.wages * R.kiwi;
   var sTax = taxOn(gross - D).tax;
-  var card = function (title, big, rows) { return "<div class='card'><h3>" + title + "</h3><div class='big'>" + money(big) + "</div><div class='small muted'>take-home after tax" + "</div><dl>" + rows.map(function (r) { return "<dt>" + r[0] + "</dt><dd>" + r[1] + "</dd>"; }).join("") + "</dl></div>"; };
-  return "<h2>Same money, three ways (" + taxYearLabel(y) + ")</h2><p>Gross income " + money(gross) + " = wages " + money(s.wages) + " + business profit before deductions " + money(profit) + ". <span class='tag simp'>Simplified</span> No tax credits; ACC on business income left out.</p><div class='cmp'>" +
-    card("E only – all wages (PAYE)", gross - eTax - eAcc - eKs, [["Who pays the tax", "Your boss, every payday (PAYE)"], ["When", "Every payday"], ["Tax", money(eTax) + " on " + money(gross)], ["Deductions", "Almost none for employees"], ["Extra jobs for you", "None. KiwiSaver: you " + money(eKs) + " + boss " + money(eKs)], ["ACC levy", money(eAcc)]]) +
-    card("E + S – job + side hustle", gross - esTax - esAcc - esKs, [["Who pays the tax", "Boss pays PAYE on wages; <b>you</b> pay tax on profit"], ["When", "IR3 by 7 July; tax by 7 Feb; provisional if RIT > $5,000"], ["Tax", money(esTax) + " on " + money(gross - D)], ["Deductions", money(D) + " (home office, car share, assets…)"], ["Extra jobs for you", "Put tax aside, GST returns, records 7 years"], ["KiwiSaver", "On wages only: you " + money(esKs) + " + boss " + money(esKs)], ["ACC levy", money(esAcc) + " on wages; ACC also invoices you for the business part (not shown)"]]) +
-    card("S – self-employed full-time", gross - sTax, [["Who pays the tax", "<b>You</b>, all of it"], ["When", "Provisional instalments + 7 Feb"], ["Tax", money(sTax) + " on " + money(gross - D)], ["Deductions", money(D)], ["Extra jobs for you", "Everything: tax, GST, ACC invoice, records"], ["KiwiSaver", "Only if you pay in yourself – no boss contribution"], ["ACC levy", "ACC invoices you directly (not shown here)"]]) +
-    "</div><p class='small muted'>Take-home = gross − income tax − ACC levy on wages − your KiwiSaver. Deductions are real costs you pay; this shows the tax effect only. S looks higher partly because ACC on business income and KiwiSaver are not taken out — and S has no boss KiwiSaver, no sick pay or holiday pay.</p>";
+  var card = function (title, big, rows) { var dl = function (rs) { return "<dl>" + rs.map(function (r) { return "<dt>" + r[0] + "</dt><dd>" + r[1] + "</dd>"; }).join("") + "</dl>"; }; return "<div class='card'><h3>" + title + "</h3><div class='big'>" + money(big) + "</div><div class='small muted'>take-home after tax</div>" + dl(rows.slice(0, 2)) + sw(dl(rows.slice(2)), "More") + "</div>"; };
+  return "<h2>Same money, three ways</h2><p>" + money(gross) + " a year (" + taxYearLabel(y).replace(/ \(.*\)/, "") + "). <span class='tag simp'>Simplified</span></p><div class='cmp'>" +
+    card("E only – all wages", gross - eTax - eAcc - eKs, [["Who pays the tax", "Your boss (PAYE)"], ["Tax", money(eTax)], ["When", "Every payday"], ["Deductions", "Almost none for employees"], ["Extra jobs for you", "None. KiwiSaver: you " + money(eKs) + " + boss " + money(eKs)], ["ACC levy", money(eAcc)]]) +
+    card("E + S – job + side hustle", gross - esTax - esAcc - esKs, [["Who pays the tax", "Boss on wages, <b>you</b> on profit"], ["Tax", money(esTax)], ["When", "IR3 by 7 July; tax by 7 Feb; provisional if RIT > $5,000"], ["Deductions", money(D) + " (home office, car share, assets…)"], ["Extra jobs for you", "Put tax aside, GST returns, records 7 years"], ["KiwiSaver", "On wages only: you " + money(esKs) + " + boss " + money(esKs)], ["ACC levy", money(esAcc) + " on wages; ACC also invoices you for the business part (not shown)"]]) +
+    card("S – self-employed", gross - sTax, [["Who pays the tax", "<b>You</b>, all of it"], ["Tax", money(sTax)], ["When", "Provisional instalments + 7 Feb"], ["Deductions", money(D)], ["Extra jobs for you", "Everything: tax, GST, ACC invoice, records"], ["KiwiSaver", "Only if you pay in yourself – no boss contribution"], ["ACC levy", "ACC invoices you directly (not shown here)"]]) +
+    "</div>" + sw("<p class='small'>Gross = wages " + money(s.wages) + " + profit before deductions " + money(profit) + ". Take-home = gross − income tax − ACC on wages − your KiwiSaver. No tax credits. S looks higher partly because ACC on business income is left out — and S has no boss KiwiSaver, sick pay or holiday pay.</p>");
 }
 function endGame() {
   G.ended = true; closeModal(); showScreen("screen-end"); renderEnd(0);
@@ -887,11 +1083,15 @@ function renderEnd(i) {
   var p = G.players[i], sc = score(p), gl = goals(p), win = gl[0].ok && gl[2].ok && gl[3].ok && gl[6].ok;
   var h = "";
   if (G.players.length > 1) h += "<div class='seg' style='margin-bottom:.6rem'>" + G.players.map(function (q, k) { var s2 = score(q).total; return "<button data-endp='" + k + "' class='" + (k === i ? "on" : "") + "'>" + esc(q.name) + ": " + s2 + "</button>"; }).join("") + "</div>";
-  h += "<div class='play'><div class='panel'>" + quadHtml([p], { cur: p }) + "<div class='bigscore'>" + sc.total + " pts</div><p class='" + (win ? "pill-ok" : "pill-bad") + "'>" + (win ? "🏆 Success: you moved from E to " + stage(p) + " with your tax sorted!" : "Not quite — check the goals below and try again.") + "</p><table class='calc'>" + sc.lines.map(function (l) { return "<tr><td>" + l[0] + "</td><td class='amt'>" + l[1] + "</td></tr>"; }).join("") + "</table>";
+  h += "<div class='play'><div class='panel'>" + quadHtml([p], { cur: p }) + "<div class='bigscore'>" + sc.total + " pts</div><p class='" + (win ? "pill-ok" : "pill-bad") + "'>" + (win ? "🏆 You moved from E to " + stage(p) + " with your tax sorted!" : "Not quite — check the goals and try again.") + "</p>" + sw("<table class='calc'>" + sc.lines.map(function (l) { return "<tr><td>" + l[0] + "</td><td class='amt'>" + l[1] + "</td></tr>"; }).join("") + "</table>", "Score details");
   h += "<ul class='goals'>" + gl.map(function (g) { return "<li><span>" + g.txt + "</span><span class='" + (g.ok ? "ok" : "no") + "'>" + (g.ok ? "✓" : "✗") + "</span></li>"; }).join("") + "</ul>";
   h += "<table class='calc'><tr><td>Everyday</td><td class='amt'>" + money(p.every) + "</td></tr><tr><td>GST pot</td><td class='amt'>" + money(p.gst) + "</td></tr><tr><td>Tax pot</td><td class='amt'>" + money(p.tax) + "</td></tr><tr><td>KiwiSaver</td><td class='amt'>" + money(p.kiwi) + "</td></tr><tr><td>End-of-year tax still to pay after the game</td><td class='amt'>" + money(futureTerminal(p)) + "</td></tr><tr><td>Penalties + interest paid</td><td class='amt'>" + money(p.stats.penalties + p.stats.interest) + "</td></tr></table>";
   h += "<div class='actions'>" + p.ir3.map(function (r, y) { return r ? "<button class='btn-secondary btn-sm' data-ir3='" + y + "'>📄 IR3 " + taxYearLabel(y) + "</button>" : ""; }).join("") + "<button class='btn-primary' id='btn-again'>▶ Play again <kbd>Enter</kbd></button></div></div>";
-  h += "<div class='panel'>" + compareHtml(p) + "<p class='small muted' style='margin-top:.6rem'>Educational game only — simplified, not tax advice. Check ird.govt.nz or talk to a tax agent.</p></div></div>";
+  var ap = p.tipLog.filter(function (x) { return x.status === "applied"; }), sk = p.tipLog.filter(function (x) { return x.status === "skipped"; });
+  var th = "";
+  th += "<h3 style='margin-top:.5rem'>💡 Tips: " + ap.length + " applied (saved " + money(p.tipsSaved) + "), " + sk.length + " skipped</h3>";
+  th += sw("<ul class='goals' id='tiplog'>" + (p.tipLog.length ? p.tipLog.map(function (x) { return "<li><span>" + (x.status === "applied" ? "✓ " : "✗ ") + esc(x.text) + (x.effect ? "<br><span class='small muted'>" + esc(x.effect) + "</span>" : "") + "</span><span class='" + (x.status === "applied" ? "ok" : "no") + "'>" + (x.status === "applied" ? (x.saved > 0.5 ? "saved " + money(x.saved) : "applied") : "skipped") + "</span></li>"; }).join("") : "<li class='muted'>No action tips used.</li>") + "</ul>", "Show tips used");
+  h += "<div><div class='panel'>" + th + "</div><div class='panel' style='margin-top:.6rem'>" + compareHtml(p) + "<p class='small muted' style='margin-top:.6rem'>Learning game — simplified, not tax advice. Check ird.govt.nz or a tax agent.</p></div></div></div>";
   $("end-content").innerHTML = h;
   Array.prototype.forEach.call(document.querySelectorAll("[data-endp]"), function (b) { b.addEventListener("click", function () { renderEnd(Number(b.getAttribute("data-endp"))); }); });
   Array.prototype.forEach.call(document.querySelectorAll("[data-ir3]"), function (b) { b.addEventListener("click", function () { var y = Number(b.getAttribute("data-ir3")); pushModal({ title: "📄 IR3 " + taxYearLabel(y) + " — " + esc(p.name), html: ir3Html(p, p.ir3[y]) }); runQueue(function () {}); }); });
@@ -900,11 +1100,11 @@ function renderEnd(i) {
 }
 /* ===== Tutorial, facts, theme, keyboard, setup ===== */
 var TUT = [
-  ["Welcome 👋", "<p>This game follows one journey: from a <b>job</b> (E, employee) to a <b>side hustle</b> (E + S) and maybe your own full-time business (S).</p>" + "<p>It's built on Robert Kiyosaki's CASHFLOW Quadrant. Only E and S are open in this version.</p>"],
-  ["Each month", "<p>Each turn is one month. You see your pay, your business sales and costs, and your living costs.</p><p>Your money sits in 3 places: <b>Everyday</b> (spending), the <b>GST pot</b> 🟦 and the <b>Tax pot</b> 🟪.</p>"],
-  ["Put money aside", "<p>Your boss takes PAYE out of your wages. But <b>nobody</b> takes tax out of your side-hustle money — you must move it into your pots.</p><p>Type an amount in each pot, or press <kbd>H</kbd> (hint) to see the working and fill it in. Then press <kbd>Enter</kbd> (Done).</p>"],
-  ["Bills come later", "<p>GST is paid after each GST period. Income tax is worked out on your IR3 after 31 March and is due on <b>7 February</b>. Later you may pay <b>provisional tax</b> in instalments.</p><p>If a pot is short when a bill is due, you pay <b>late payment penalties</b> and interest.</p>"],
-  ["Lower your tax — legally", "<p>Press <kbd>D</kbd> to claim real business costs: home office, car share, phone, tools and equipment. Each card shows the tax saved.</p><p>Win by paying every bill on time and having tax ready at the end. Keys: <kbd>H</kbd> hint, <kbd>G</kbd> GST, <kbd>X</kbd> tax, <kbd>D</kbd> deductions, <kbd>P</kbd> payslip, <kbd>T</kbd> day/night, <kbd>F</kbd> facts, <kbd>?</kbd> help.</p><p class='small muted'>Educational and simplified — not tax advice.</p>"]
+  ["Welcome 👋", "<p>Go from a <b>job</b> (E) to a <b>side hustle</b> (E + S), and maybe your own business (S).</p><p class='small muted'>Based on Robert Kiyosaki's CASHFLOW Quadrant.</p>"],
+  ["Each month", "<p>You see <b>money in</b>, <b>money out</b>, and your <b>GST pot</b> 🟦 and <b>Tax pot</b> 🟪.</p>"],
+  ["Put money aside", "<p>Nobody takes tax out of side income. Type an amount for each pot, or press <b>💡 Hint</b>. Then press <b>Done</b>.</p>"],
+  ["Tips", "<p>Read the 💡 tips. Some have <b>Apply to my business</b> — try them and see the tax you save.</p>"],
+  ["Bills", "<p>Bills are paid from your pots. Pot too low? You pay <b>penalties</b>.</p><p>Win: pay on time and have tax ready at the end.</p><p class='small muted'>Learning game — simplified, not tax advice.</p>"]
 ];
 function showTutorial(step) {
   step = step || 0;
@@ -951,7 +1151,7 @@ function openPayslip() {
 }
 function applyTheme(th) {
   document.documentElement.setAttribute("data-theme", th);
-  $("btn-theme").innerHTML = (th === "day" ? "🌙 Night" : "☀️ Day") + " <kbd>T</kbd>";
+  $("btn-theme").innerHTML = (th === "day" ? "🌙<span class='bl'> Night</span>" : "☀️<span class='bl'> Day</span>") + " <kbd>T</kbd>";
   try { localStorage.setItem("smarter-dollar-theme", th); } catch (e) {}
 }
 function toggleTheme() { applyTheme(document.documentElement.getAttribute("data-theme") === "day" ? "night" : "day"); }
@@ -1023,9 +1223,10 @@ function onKey(e) {
   else if (onPlay && lk === "x") { e.preventDefault(); $("in-tax").focus(); $("in-tax").select(); }
   else if (onPlay && lk === "d") openDeduct();
   else if (onPlay && lk === "p") openPayslip();
+  else if (onPlay && (lk === "a" || lk === "n")) { var id = firstOpenTip(curP()); if (id) tipDo(curP(), id, lk === "a" ? "apply" : "skip"); }
 }
 window.__G = function () { return G; };
-window.__api = { confirmTurn: confirmTurn, useHint: useHint, hints: function () { return hints(curP()); }, taxOn: taxOn, ir3: ir3 };
+window.__api = { dues: function () { return G && !G.ended ? duesFor(curP(), G.t).map(function (d) { return d.kind; }) : []; }, tips: function () { return G && !G.ended && curP().month ? curP().month.tips : []; }, confirmTurn: confirmTurn, useHint: useHint, hints: function () { return hints(curP()); }, taxOn: taxOn, ir3: ir3 };
 init();
 })();
 </script>
