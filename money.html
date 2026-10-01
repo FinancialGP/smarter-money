@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SMARTER $ — NZ Financial Literacy Game (v5.13)</title>
+<title>SMARTER $ — NZ Financial Literacy Game (v5.14)</title>
 <script>/* v5.13 colour theme (Day default, remembered) */ (function () { var t = "day"; try { if (localStorage.getItem("smarter-dollar-theme") === "night") t = "night"; } catch (e) {} document.documentElement.setAttribute("data-theme", t); })();</script>
 <style>
 :root {
@@ -727,6 +727,75 @@ html[data-theme="day"] #summary-reason { color: #991b1b !important; }
 html[data-theme="day"] a.edition-link { color: #0369a1 !important; border-bottom-color: #0369a1 !important; }
 /* the celebration keeps its dark backdrop in both modes (gold banner + confetti need it) */
 .btn-theme { min-width: 2.4rem; }
+/* ===== v5.14 beginner tour ("How to play") — spotlight + tip card. Big text for a projected TV, works on a phone. ===== */
+.sd-help-btn { position: fixed; right: 14px; bottom: 14px; z-index: 150; width: 52px; height: 52px; border-radius: 50%; padding: 0;
+  font-size: 1.65rem; font-weight: 800; line-height: 1; background: #0369a1; color: #fff; border: 3px solid #fff;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; }
+.sd-help-btn:hover:not(:disabled) { background: #075985; }
+.sd-help-btn.sd-pulse { animation: sdHelpPulse 0.9s ease-in-out 4; }
+@keyframes sdHelpPulse { 0%, 100% { transform: scale(1); box-shadow: 0 4px 16px rgba(0,0,0,0.4); } 50% { transform: scale(1.18); box-shadow: 0 0 0 10px rgba(56,189,248,0.35); } }
+@media (max-width: 600px) { .sd-help-btn { width: 46px; height: 46px; font-size: 1.45rem; right: 10px; bottom: 10px; } }
+.sd-tour[hidden] { display: none !important; }
+.sd-tour { position: fixed; inset: 0; z-index: 460; }   /* above pop-ups (≤ 400) and messages (450) */
+.sd-tour-block { position: absolute; inset: 0; background: transparent; }
+.sd-tour.sd-nospot .sd-tour-block { background: rgba(2,6,23,0.66); }
+.sd-tour.sd-nospot .sd-tour-spot { display: none; }
+.sd-tour-spot { position: fixed; border-radius: 12px; pointer-events: none;
+  box-shadow: 0 0 0 4px #fde047, 0 0 22px 6px rgba(253,224,71,0.55), 0 0 0 200vmax rgba(2,6,23,0.66);
+  transition: left 0.22s ease, top 0.22s ease, width 0.22s ease, height 0.22s ease; }
+.sd-tour.sd-noanim .sd-tour-spot { transition: none; }
+.sd-tour-spot::after { content: ""; position: absolute; inset: -4px; border-radius: 14px; border: 4px solid #fde047; animation: sdSpotPulse 1.6s ease-out infinite; }
+@keyframes sdSpotPulse { 0% { opacity: 0.9; transform: scale(1); } 100% { opacity: 0; transform: scale(1.06); } }
+.sd-tour-card { position: fixed; left: 12px; top: 12px; width: min(580px, calc(100vw - 24px)); max-height: calc(100vh - 24px); overflow-y: auto;
+  background: var(--surface); color: var(--text); border: 3px solid #fde047; border-radius: 16px; padding: 1rem 1.25rem 0.9rem;
+  box-shadow: 0 18px 50px rgba(0,0,0,0.55); font-size: clamp(1.05rem, 1.6vw, 1.35rem); line-height: 1.4; text-align: left; }
+.sd-tour-card.sd-wide { width: min(940px, calc(100vw - 24px)); }
+.sd-tour-count { display: inline-block; font-size: 0.78em; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;
+  background: #fde047; color: #1a1a1a; border-radius: 999px; padding: 0.12em 0.7em; }
+.sd-tour-card h3 { font-size: 1.32em; line-height: 1.2; color: var(--text); margin: 0.45rem 0 0.45rem; font-weight: 800; }
+.sd-tour-body p { margin: 0 0 0.45em; }
+.sd-tour-body ul { margin: 0 0 0.45em 0; padding: 0; list-style: none; }
+.sd-tour-body li { margin: 0 0 0.25em; padding-left: 1.05em; position: relative; }
+.sd-tour-body li::before { content: "\2022"; position: absolute; left: 0.15em; color: #fbbf24; font-weight: 800; }
+.sd-tour-body b { color: #fbbf24; }
+.sd-tour-body .sd-key { display: inline-block; min-width: 1.6em; padding: 0 0.35em; border: 2px solid var(--surface2); border-bottom-width: 3px; border-radius: 6px; font-weight: 800; font-size: 0.85em; text-align: center; line-height: 1.35; }
+.sd-tour-body .sd-red { color: #f87171; font-weight: 800; }
+html[data-theme="day"] .sd-tour-body .sd-red { color: #b91c1c; }
+.sd-help-btn.sd-help-raise { z-index: 465; pointer-events: none; animation: sdHelpPulse 0.9s ease-in-out infinite; }
+.sd-tour-ex { border: 2px dashed var(--surface2); border-radius: 12px; padding: 0.45em 0.7em; margin: 0.3em 0 0.5em; font-size: 0.9em; }
+.sd-tour-ex .sd-ex-tag { font-size: 0.72em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }
+.sd-tour-ex .sd-ex-title { font-weight: 800; }
+.sd-tour-ex .sd-ex-money { color: #fbbf24; font-weight: 700; }
+.sd-tour-ex .sd-ex-good { color: #4ade80; font-weight: 800; }
+.sd-tour-ex .sd-ex-btns { display: flex; gap: 0.5em; margin-top: 0.3em; }
+.sd-tour-ex .sd-ex-btn { border-radius: 8px; padding: 0.15em 0.9em; font-weight: 800; background: #22c55e; color: #052e16; }
+.sd-tour-ex .sd-ex-btn.skip { background: var(--surface2); color: var(--text); }
+.sd-tour-dots { display: flex; gap: 0.35em; margin: 0.55em 0 0; }
+.sd-tour-dots span { width: 0.6em; height: 0.6em; border-radius: 50%; background: var(--surface2); }
+.sd-tour-dots span.on { background: #fde047; }
+.sd-tour-actions { display: flex; gap: 0.55rem; align-items: center; margin-top: 0.65rem; flex-wrap: wrap; }
+.sd-tour-actions button { font-size: 1em; padding: 0.5em 1.05em; min-height: 46px; }
+.sd-tour-actions .sd-grow { flex: 1 1 auto; }
+.sd-tour-actions .sd-tour-next { min-width: 7.5em; }
+.sd-tour-keys { font-size: 0.7em; color: var(--muted); margin-top: 0.45rem; }
+@media (hover: none) and (pointer: coarse) { .sd-tour-keys, .sd-kbd { display: none; } }
+@media (max-width: 600px) {
+  .sd-tour-card { padding: 0.8rem 0.9rem 0.75rem; border-radius: 14px; }
+  .sd-tour-actions button { padding: 0.45em 0.8em; }
+}
+@media (prefers-reduced-motion: reduce) { .sd-tour-spot { transition: none; } .sd-tour-spot::after, .sd-help-btn.sd-pulse { animation: none; } }
+html[data-theme="day"] .sd-tour-spot { box-shadow: 0 0 0 4px #f59e0b, 0 0 22px 6px rgba(245,158,11,0.55), 0 0 0 200vmax rgba(15,23,42,0.6); }
+html[data-theme="day"] .sd-tour-spot::after { border-color: #f59e0b; }
+html[data-theme="day"] .sd-tour.sd-nospot .sd-tour-block { background: rgba(15,23,42,0.6); }
+html[data-theme="day"] .sd-tour-card { border-color: #d97706; box-shadow: 0 18px 50px rgba(15,23,42,0.4); }
+html[data-theme="day"] .sd-tour-count { background: #d97706; color: #fff; }
+html[data-theme="day"] .sd-tour-body b, html[data-theme="day"] .sd-tour-ex .sd-ex-money { color: #92400e; }
+html[data-theme="day"] .sd-tour-body li::before { color: #d97706; }
+html[data-theme="day"] .sd-tour-ex .sd-ex-good { color: #166534; }
+html[data-theme="day"] .sd-tour-ex .sd-ex-btn { background: #15803d; color: #fff; }
+html[data-theme="day"] .sd-tour-ex .sd-ex-btn.skip { background: #e2e8f0; color: #0b1220; }
+html[data-theme="day"] .sd-tour-dots span.on { background: #d97706; }
+@media print { .sd-help-btn, .sd-tour { display: none !important; } }
 </style>
 </head>
 <body>
@@ -756,6 +825,7 @@ html[data-theme="day"] a.edition-link { color: #0369a1 !important; border-bottom
       <button type="button" class="btn-secondary" id="btn-continue" data-tip="Resume the latest auto-save" hidden>Continue</button>
       <button type="button" class="btn-secondary" id="btn-load-title" data-tip="Choose a save slot (1–5) or the Auto save">Load game</button>
       <button type="button" class="btn-ghost" id="btn-load-file" data-tip="Import a save you exported (a .json file or pasted text) to carry on">Import save</button>
+      <button type="button" class="btn-secondary" id="btn-howto-title" data-tip="A short step-by-step guide to the game (hotkey H)">❓ How to play</button>
       <button type="button" class="btn-ghost btn-sound" id="btn-sound-title" data-tip="Sound on/off (hotkey M)" aria-label="Sound on/off">🔊</button>
       <button type="button" class="btn-ghost btn-theme" id="btn-theme-title" data-tip="Day / Night colours (hotkey T)" aria-label="Colours: Day or Night">☀️ Day</button>
     </div>
@@ -763,7 +833,7 @@ html[data-theme="day"] a.edition-link { color: #0369a1 !important; border-bottom
     <p id="storage-note" class="subtitle" style="margin-top:0.5rem;display:none">On OneDrive preview, use Save to download a file — or download this HTML and open in Chrome for auto-save.</p>
     <p style="margin-top:0.85rem"><a href="index-debt.html" class="edition-link" style="color:#38bdf8;font-size:0.9rem;text-decoration:none;border-bottom:1px dotted #38bdf8">Debt Paydown edition →</a></p>
   </div>
-  <p class="footer-note">NZD · PAYE + ACC simplified · Offline Cashflow-style demo · v5 · 4 events a month · 5 save slots + auto-save · Space = next step</p>
+  <p class="footer-note">NZD · PAYE + ACC simplified · Offline Cashflow-style demo · v5.14 · 4 events a month · 5 save slots + auto-save · Space = next step</p>
 </section>
 
 <section id="screen-difficulty" class="screen" aria-label="Choose difficulty">
@@ -4495,6 +4565,7 @@ html[data-theme="day"] a.edition-link { color: #0369a1 !important; border-bottom
     updateUndoBtn();
     autoSave();
     SFX.play("click");
+    if (window.SMARTER_TOUR) window.SMARTER_TOUR.autoStart();   /* v5.14 */
   }
   function mpEndTurn(note) {
     if (!mp) return;
@@ -5424,6 +5495,7 @@ html[data-theme="day"] a.edition-link { color: #0369a1 !important; border-bottom
     beginMonth();
     autoSave();
     updateUndoBtn();
+    if (window.SMARTER_TOUR) window.SMARTER_TOUR.autoStart();   /* v5.14: beginner tour, first game on this device */
   }
 
   function restartToTitle() {
@@ -5830,6 +5902,7 @@ html[data-theme="day"] a.edition-link { color: #0369a1 !important; border-bottom
   if (legacyMigratedNow) setTimeout(function () { showToast("Your previous save was copied to Slot 1 (Load game).", "ok"); }, 300);
 
   window.SMARTER_DOLLAR = {
+    isAnyModalOpen: isAnyModalOpen, isWinModalOpen: isWinModalOpen,   /* v5.14 tour */
     currentTheme: currentTheme, setTheme: setTheme, toggleTheme: toggleTheme, shareSave: shareSave, mailtoHref: mailtoHref, SHARE_SUBJECT: SHARE_SUBJECT,
     CAREERS: CAREERS, OPPORTUNITY: OPPORTUNITY, SPENDING: SPENDING, LIFE: LIFE, MARKET: MARKET,
     DECKS: DECKS, DIFFICULTIES: DIFFICULTIES,
@@ -5854,6 +5927,357 @@ html[data-theme="day"] a.edition-link { color: #0369a1 !important; border-bottom
     applyMarket: applyMarket, growthValue: growthValue,
     EVENTS_PER_MONTH: EVENTS_PER_MONTH, drawMonthEvents: drawMonthEvents, canHaveChild: canHaveChild,
     undoDepth: function () { return undoStack.length; }
+  };
+})();
+</script>
+<!-- v5.14 beginner tour -->
+<button type="button" class="sd-help-btn" id="sd-help-btn" aria-label="How to play: open the help guide (hotkey H)" aria-controls="sd-tour" aria-expanded="false" title="How to play (H)">?</button>
+<div class="sd-tour" id="sd-tour" role="dialog" aria-modal="true" aria-labelledby="sd-tour-title" aria-describedby="sd-tour-body" hidden>
+  <div class="sd-tour-block"></div>
+  <div class="sd-tour-spot" aria-hidden="true"></div>
+  <div class="sd-tour-card">
+    <span class="sd-tour-count" id="sd-tour-count">Step 1 / 1</span>
+    <h3 id="sd-tour-title">How to play</h3>
+    <div class="sd-tour-body" id="sd-tour-body" aria-live="polite"></div>
+    <div class="sd-tour-dots" id="sd-tour-dots" aria-hidden="true"></div>
+    <div class="sd-tour-actions">
+      <button type="button" class="btn-ghost" id="sd-tour-skip">Skip tour</button>
+      <span class="sd-grow"></span>
+      <button type="button" class="btn-secondary" id="sd-tour-back">&larr; Back</button>
+      <button type="button" class="btn-primary" id="sd-tour-next">Next &rarr;</button>
+    </div>
+    <div class="sd-tour-keys">Keys: Space = Next &middot; &larr; = Back &middot; Esc = Skip &middot; H = open this help again</div>
+  </div>
+</div>
+<script>
+/* v5.14 tour steps — Money game. Plain, short English for adult ESOL learners. */
+window.SD_TOUR_CONFIG = (function () {
+  var D = function () { return window.SMARTER_DOLLAR || {}; };
+  function onPlay() { var s = D().state; return !!(s && s.screen === "play" && document.getElementById("screen-play").classList.contains("active")); }
+  /* The money boxes use short names on a laptop / TV (Paycheck, Tot Exp, P÷E) and long names on a big screen: read the real one. */
+  function lbl(key, fallback) {
+    var el = document.querySelector("#hud .hud-" + key + " .label");
+    var t = el && el.textContent ? el.textContent.trim() : "";
+    return t || fallback;
+  }
+  function key(k) { return '<span class="sd-key">' + k + "</span>"; }
+  function kb(html) { return '<span class="sd-kbd">' + html + "</span>"; }   /* keyboard tips: hidden on touch screens */
+  return {
+    storageKey: "smarter-dollar-tour-seen-v1",
+    extraOpeners: ["btn-howto-title"],
+    passKeys: ["t", "T"],
+    onPlay: onPlay,
+    blocked: function () {
+      var d = D();
+      try { return !!((d.isAnyModalOpen && d.isAnyModalOpen()) || (d.isWinModalOpen && d.isWinModalOpen()) || (d.isCelebrating && d.isCelebrating()) || (d.isReviewOpen && d.isReviewOpen())); } catch (e) { return false; }
+    },
+    beforeOpen: function () { var d = D(); if (d.hideTip) d.hideTip(); },
+    steps: function () {
+      return [
+        { target: "#hud .hud-ratio", title: "Welcome! Your goal",
+          html: function () {
+            return "<p>Your goal is <b>Financial Freedom</b>.</p>" +
+              "<p>That means your <b>passive income</b> pays for all your <b>expenses</b> (bills).</p>" +
+              "<p>Passive income = money from your investments. You do not need to work for it.</p>" +
+              "<p>Watch the <b>" + lbl("ratio", "P\u00f7E") + "</b> box" + (lbl("ratio", "P\u00f7E") === "P\u00f7E" ? " (passive \u00f7 expenses)" : "") + ". When it reaches <b>100%</b>, you win!</p>";
+          } },
+        { target: "#hud", title: "Your money",
+          html: function () {
+            return "<p>These boxes show your money:</p><ul>" +
+              "<li><b>Cash</b> = money you have now.</li>" +
+              "<li><b>" + lbl("pay", "Paycheck") + "</b> = money from your job every month.</li>" +
+              "<li><b>" + lbl("passive", "Passive") + "</b> = money from your investments every month.</li>" +
+              "<li><b>" + lbl("totexp", "Tot Exp") + "</b>" + (lbl("totexp", "Tot Exp") === "Tot Exp" ? " (total expenses)" : "") + " = all your bills every month.</li>" +
+              "<li><b>Cashflow</b> = the money left over every month.</li></ul>";
+          } },
+        { target: ["#event-area", "#event-actions"], title: "Every month: 4 cards",
+          html: function () {
+            return "<p>Every month you get <b>4 cards</b>, one at a time:</p>" +
+              "<p><b>1</b> Market news &nbsp;\u00b7&nbsp; <b>2</b> A deal &nbsp;\u00b7&nbsp; <b>3</b> Life or spending &nbsp;\u00b7&nbsp; <b>4</b> Wildcard (a surprise)</p>" +
+              "<p>Read the card. Then press the button with the <b>bright border</b>." + kb(" On a keyboard, press " + key("Space") + ".") + "</p>";
+          } },
+        { target: ["#event-area", "#event-actions"], title: "Deals: Buy or Skip",
+          html: function () {
+            return "<p>A deal is something you can buy: a house, a business, shares or gold.</p>" +
+              '<div class="sd-tour-ex" aria-label="Example deal card"><div class="sd-ex-tag">Example</div>' +
+              '<div class="sd-ex-title">Rental House</div>' +
+              '<div>Price <span class="sd-ex-money">$300,000</span> &nbsp;|&nbsp; Down payment <span class="sd-ex-money">$30,000</span></div>' +
+              '<div class="sd-ex-good">+$250/mo</div>' +
+              '<div class="sd-ex-btns"><span class="sd-ex-btn">Buy</span><span class="sd-ex-btn skip">Skip</span></div></div>' +
+              "<ul><li><b>Down payment</b> = the cash you pay now. The bank lends you the rest.</li>" +
+              "<li><b>+$/mo</b> = money it gives you every month. A <span class=\"sd-red\">red</span> number means it costs you money.</li>" +
+              "<li>Prices can go down. No cash? You borrow at high interest. Think, then <b>Buy</b> or <b>Skip</b>.</li></ul>";
+          } },
+        { target: "#btn-next", title: "Payday: Next Month",
+          html: function () {
+            var many = !!(D().mp && D().mp());
+            return "<p>After the 4 cards, press <b>Next Month</b>. This is <b>payday</b>.</p>" +
+              "<ul><li>You get your pay and your passive income.</li><li>You pay your bills.</li><li>Then a new month starts. The game is 120 months (10 years).</li></ul>" +
+              (many ? "<p>2\u20134 players: after payday, give the device to the next player.</p>" : "") +
+              '<p class="sd-kbd">Keyboard: ' + key("N") + "</p>";
+          } },
+        { target: "#btn-exchange", title: "Exchange: buy and sell ETFs", place: "below",
+          html: function () {
+            return "<p>Press <b>Exchange</b> any time in your turn.</p>" +
+              "<p>You can buy or sell <b>ETFs</b>: Gold/Silver, Bitcoin and US Index.</p>" +
+              "<p>Their prices go up and down every month. You can make money \u2014 or lose money.</p>" +
+              '<p class="sd-kbd">Keyboard: ' + key("X") + "</p>";
+          } },
+        { target: ["#btn-prev-month", "#btn-save", "#btn-load", "#btn-load-file-play"], title: "Go back, save, and get help", place: "below",
+          html: function () {
+            return "<ul><li><b>Previous Month</b> = go back one month and try again." + kb(" Keyboard: " + key("B")) + "</li>" +
+              "<li><b>Save</b> and <b>Load</b> = keep your game and play it later. The game also saves by itself.</li>" +
+              "<li><b>Export / Import</b> = move your game to another device, or send it by email.</li></ul>" +
+              "<p>Need help again? Press the round <b>?</b> button (bottom right)" + kb(" or " + key("H")) + ".</p>";
+          } }
+      ];
+    }
+  };
+})();
+/* ================= v5.14 beginner tour ("How to play") =================
+   A step-by-step guide: a spotlight on the real part of the screen + a short card with Back / Next / Skip.
+   Shows by itself the first time a new game starts on this device (localStorage flag); the round "?"
+   button (bottom right), the title-screen "How to play" button, or the H key opens it again any time.
+   Keys while it is open: Space / Enter / → = Next, ← = Back, Esc = Skip. All other game keys wait. */
+(function () {
+  "use strict";
+  var CFG = window.SD_TOUR_CONFIG;
+  if (!CFG) return;
+  var memSeen = false, open = false, steps = [], idx = 0, swallowKeyUp = false, rafQ = false, autoTimer = null;
+  var root, spot, card, elCount, elTitle, elBody, elDots, bBack, bNext, bSkip, helpBtn;
+  function $(id) { return document.getElementById(id); }
+  function hasSeen() {
+    if (memSeen) return true;
+    try { return localStorage.getItem(CFG.storageKey) === "1"; } catch (e) { return false; }
+  }
+  function markSeen() {
+    memSeen = true;
+    try { localStorage.setItem(CFG.storageKey, "1"); } catch (e) { /* storage blocked: remember for this visit only */ }
+  }
+  function isTyping(t) {
+    var tag = (t && t.tagName) ? t.tagName.toLowerCase() : "";
+    return tag === "input" || tag === "textarea" || tag === "select" || !!(t && t.isContentEditable);
+  }
+  function isSpace(e) { return e.key === " " || e.key === "Spacebar" || e.code === "Space"; }
+
+  function build() {
+    root = $("sd-tour"); spot = root.querySelector(".sd-tour-spot"); card = root.querySelector(".sd-tour-card");
+    elCount = $("sd-tour-count"); elTitle = $("sd-tour-title"); elBody = $("sd-tour-body"); elDots = $("sd-tour-dots");
+    bBack = $("sd-tour-back"); bNext = $("sd-tour-next"); bSkip = $("sd-tour-skip"); helpBtn = $("sd-help-btn");
+    bBack.addEventListener("click", function () { back(); });
+    bNext.addEventListener("click", function () { next(); });
+    bSkip.addEventListener("click", function () { close("skip"); });
+    if (helpBtn) helpBtn.addEventListener("click", function () { helpBtn.blur(); start(); });
+    (CFG.extraOpeners || []).forEach(function (id) {
+      var b = $(id);
+      if (b) b.addEventListener("click", function () { b.blur(); start(); });
+    });
+  }
+
+  function visibleEl(el) {
+    if (!el || el.hidden) return false;
+    var r = el.getBoundingClientRect();
+    return r.width > 0 && r.height > 0 && el.getClientRects().length > 0;
+  }
+  function targetRect(step) {
+    var sels = step && step.target ? [].concat(step.target) : [];
+    var L = Infinity, T = Infinity, R = -Infinity, B = -Infinity, any = false;
+    sels.forEach(function (s) {
+      var el = document.querySelector(s);
+      if (!visibleEl(el)) return;
+      var r = el.getBoundingClientRect();
+      any = true; L = Math.min(L, r.left); T = Math.min(T, r.top); R = Math.max(R, r.right); B = Math.max(B, r.bottom);
+    });
+    if (!any) return null;
+    var pad = step.pad == null ? 6 : step.pad;
+    return { left: L - pad, top: T - pad, right: R + pad, bottom: B + pad, width: R - L + 2 * pad, height: B - T + 2 * pad };
+  }
+  function phone() { return window.innerWidth <= 600; }
+
+  /* Scroll the page (only when needed) so the spotlight is on screen, leaving room for the card. */
+  function scrollForStep(step) {
+    var r = targetRect(step);
+    if (!r) return;
+    var vh = window.innerHeight, ch = card.offsetHeight || 260, m = 10, y = window.pageYOffset;
+    if (phone()) {
+      /* card docks at the bottom: put the spotlight near the top */
+      if (r.top < m || r.bottom > vh - ch - 2 * m) window.scrollTo(0, Math.max(0, y + r.top - m));
+    } else {
+      if (r.top < m || r.bottom > vh - m) {
+        window.scrollTo(0, Math.max(0, y + r.top - Math.max(m, (vh - r.height) / 2)));
+        r = targetRect(step); y = window.pageYOffset;
+      }
+      if (!r || sideFits(r)) return;
+      /* no free side: if the page can scroll, stack spotlight + card (card below, or above) so nothing is hidden */
+      var gap = 16, maxY = Math.max(0, document.documentElement.scrollHeight - vh);
+      if (r.height + gap + ch + 2 * m <= vh) {
+        var yBelow = y + r.top - m, yAbove = y + r.bottom + gap + ch + m - vh;
+        var tryY = [yBelow, yAbove, Math.min(maxY, Math.max(0, yBelow)), Math.min(maxY, Math.max(0, yAbove))];
+        for (var i = 0; i < tryY.length; i++) {
+          if (tryY[i] < 0 || tryY[i] > maxY) continue;
+          window.scrollTo(0, tryY[i]);
+          var r2 = targetRect(step);
+          if (r2 && sideFits(r2)) return;
+        }
+      }
+      /* still no room: bring the top of the spotlight up; the card then covers only its lower part */
+      window.scrollTo(0, Math.min(maxY, Math.max(0, y + r.top - m)));
+    }
+  }
+  function sideFits(r) {
+    var vw = window.innerWidth, vh = window.innerHeight, m = 12, gap = 16, cw = card.offsetWidth, ch = card.offsetHeight;
+    return r.bottom + gap + ch <= vh - m || r.top - gap - ch >= m || r.right + gap + cw <= vw - m || r.left - gap - cw >= m;
+  }
+
+  function place() {
+    if (!open) return;
+    var step = steps[idx], r = targetRect(step);
+    var vw = window.innerWidth, vh = window.innerHeight, m = 12, gap = 16;
+    root.classList.toggle("sd-nospot", !r);
+    card.style.maxHeight = (vh - 2 * m) + "px";
+    var cw = card.offsetWidth, ch = card.offsetHeight;
+    if (!r) {
+      card.style.left = Math.max(m, (vw - cw) / 2) + "px";
+      card.style.top = Math.max(m, (vh - ch) / 2) + "px";
+      return;
+    }
+    spot.style.left = r.left + "px"; spot.style.top = r.top + "px";
+    spot.style.width = r.width + "px"; spot.style.height = r.height + "px";
+    var left, top;
+    var res = (helpBtn && helpBtn.classList.contains("sd-help-raise")) ? helpBtn.offsetHeight + 14 : 0;   /* room for the glowing "?" */
+    if (phone()) {
+      left = (vw - cw) / 2;
+      var below = vh - r.bottom, above = r.top;
+      if (below >= ch + m || below >= above) top = vh - ch - m - res;   /* dock bottom */
+      else top = m;                                                 /* dock top */
+    } else {
+      var cx = r.left + r.width / 2, cy = r.top + r.height / 2;
+      var order = step.place ? [step.place, "below", "above", "right", "left"] : ["below", "above", "right", "left"];
+      for (var i = 0; i < order.length && left == null; i++) {
+        var p = order[i];
+        if (p === "below" && r.bottom + gap + ch <= vh - m) { top = r.bottom + gap; left = cx - cw / 2; }
+        else if (p === "above" && r.top - gap - ch >= m) { top = r.top - gap - ch; left = cx - cw / 2; }
+        else if (p === "right" && r.right + gap + cw <= vw - m) { left = r.right + gap; top = cy - ch / 2; }
+        else if (p === "left" && r.left - gap - cw >= m) { left = r.left - gap - cw; top = cy - ch / 2; }
+      }
+      if (left == null) {   /* no free side: sit at the bottom (or top) of the screen, over the less important part */
+        left = cx - cw / 2;
+        top = r.top < vh / 2 ? vh - ch - m : m;   /* keep the top of the spotlight (headings) visible */
+      }
+    }
+    card.style.left = Math.round(Math.min(Math.max(m, left), vw - cw - m)) + "px";
+    card.style.top = Math.round(Math.min(Math.max(m, top), vh - ch - m)) + "px";
+  }
+  function queuePlace() {
+    if (!open || rafQ) return;
+    rafQ = true;
+    requestAnimationFrame(function () { rafQ = false; place(); });
+  }
+
+  function render() {
+    var step = steps[idx], n = steps.length, last = idx === n - 1;
+    elCount.textContent = "Step " + (idx + 1) + " / " + n;
+    elTitle.textContent = step.title;
+    elBody.innerHTML = typeof step.html === "function" ? step.html() : step.html;
+    var dots = "";
+    for (var i = 0; i < n; i++) dots += '<span class="' + (i === idx ? "on" : "") + '"></span>';
+    elDots.innerHTML = dots;
+    bBack.disabled = idx === 0;
+    bNext.textContent = last ? (CFG.finishLabel || "Start playing \u2714") : "Next \u2192";
+    bSkip.hidden = last;
+    card.classList.toggle("sd-wide", !!step.wide && !phone());
+    if (helpBtn) helpBtn.classList.toggle("sd-help-raise", last);   /* last step: the "?" button glows above the dark layer */
+    root.setAttribute("data-step", String(idx + 1));
+    card.scrollTop = 0;
+    place();            /* measure the card with the new text */
+    scrollForStep(step);
+    place();
+    try { bNext.focus({ preventScroll: true }); } catch (e) { bNext.focus(); }
+  }
+
+  function start(opts) {
+    opts = opts || {};
+    if (open) return false;
+    if (CFG.blocked && CFG.blocked()) return false;
+    clearTimeout(autoTimer);
+    steps = (CFG.steps() || []).filter(function (s) { return !s.when || s.when(); });
+    if (!steps.length) return false;
+    if (CFG.beforeOpen) { try { CFG.beforeOpen(); } catch (e) {} }
+    idx = Math.max(0, Math.min(steps.length - 1, opts.step || 0));
+    open = true;
+    root.hidden = false;
+    root.classList.remove("sd-nospot");
+    root.classList.add("sd-noanim");   /* the spotlight jumps straight to step 1, then glides between steps */
+    if (helpBtn) helpBtn.setAttribute("aria-expanded", "true");
+    render();
+    setTimeout(function () { root.classList.remove("sd-noanim"); }, 50);
+    return true;
+  }
+  function close(how) {
+    if (!open) return;
+    open = false;
+    root.hidden = true;
+    if (helpBtn) { helpBtn.setAttribute("aria-expanded", "false"); helpBtn.classList.remove("sd-help-raise"); }
+    if (CFG.onPlay && CFG.onPlay()) markSeen();   /* only a tour seen over a real game counts as "seen" */
+    try { if (document.activeElement && root.contains(document.activeElement)) document.activeElement.blur(); } catch (e) {}
+    if (helpBtn && how !== "silent") {
+      helpBtn.classList.remove("sd-pulse"); void helpBtn.offsetWidth; helpBtn.classList.add("sd-pulse");
+      setTimeout(function () { helpBtn.classList.remove("sd-pulse"); }, 3800);
+    }
+    if (CFG.afterClose) { try { CFG.afterClose(how); } catch (e) {} }
+  }
+  function next() { if (!open) return; if (idx >= steps.length - 1) { close("done"); return; } idx++; render(); }
+  function back() { if (!open || idx === 0) return; idx--; render(); }
+  function autoStart() {
+    if (hasSeen()) return false;
+    clearTimeout(autoTimer);
+    autoTimer = setTimeout(function () {
+      if (!open && !hasSeen() && (!CFG.onPlay || CFG.onPlay())) start();
+    }, CFG.autoDelay == null ? 450 : CFG.autoDelay);
+    return true;
+  }
+
+  /* Keys: this listener runs first (window, capture), so the game never sees a key while the tour is open. */
+  window.addEventListener("keydown", function (e) {
+    if (!open) {
+      if ((e.key === "h" || e.key === "H" || e.key === "?") && !e.ctrlKey && !e.metaKey && !e.altKey && !isTyping(e.target) && !(CFG.blocked && CFG.blocked())) {
+        e.preventDefault(); e.stopPropagation();
+        if (!e.repeat) start();
+      }
+      return;
+    }
+    if (e.key === "Tab") {   /* keep focus inside the card */
+      var f = [bSkip, bBack, bNext].filter(function (b) { return !b.disabled && !b.hidden; });
+      var i = f.indexOf(document.activeElement);
+      e.preventDefault(); e.stopPropagation();
+      var j = i < 0 ? 0 : (i + (e.shiftKey ? -1 : 1) + f.length) % f.length;
+      if (f[j]) f[j].focus();
+      return;
+    }
+    if ((CFG.passKeys || []).indexOf(e.key) >= 0 && !e.ctrlKey && !e.metaKey && !e.altKey) { setTimeout(queuePlace, 0); return; }   /* e.g. T = Day / Night */
+    e.preventDefault(); e.stopPropagation();
+    if (isSpace(e) || e.key === "Enter") swallowKeyUp = true;
+    if (e.repeat) return;
+    if (e.key === "Enter" && (document.activeElement === bBack || document.activeElement === bSkip)) { document.activeElement.click(); return; }
+    if (isSpace(e) || e.key === "Enter" || e.key === "ArrowRight" || e.key === "PageDown") next();
+    else if (e.key === "ArrowLeft" || e.key === "PageUp" || e.key === "Backspace") back();
+    else if (e.key === "Escape") close("skip");
+  }, true);
+  window.addEventListener("keyup", function (e) {
+    if (open || swallowKeyUp) {
+      if (isSpace(e) || e.key === "Enter") { e.preventDefault(); e.stopPropagation(); swallowKeyUp = false; }
+      else if (open && (CFG.passKeys || []).indexOf(e.key) < 0) e.stopPropagation();
+    }
+  }, true);
+  window.addEventListener("resize", queuePlace);
+  window.addEventListener("scroll", queuePlace, { passive: true });
+
+  build();
+  window.SMARTER_TOUR = {
+    start: start, autoStart: autoStart, next: next, back: back, skip: function () { close("skip"); }, close: close,
+    isOpen: function () { return open; }, step: function () { return open ? idx + 1 : 0; }, count: function () { return steps.length; },
+    hasSeen: hasSeen, resetSeen: function () { memSeen = false; try { localStorage.removeItem(CFG.storageKey); } catch (e) {} },
+    stepTitles: function () { return (CFG.steps() || []).filter(function (s) { return !s.when || s.when(); }).map(function (s) { return s.title; }); }
   };
 })();
 </script>
