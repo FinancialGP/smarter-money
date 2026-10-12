@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SMARTER $ — NZ Financial Literacy Game (v5.14)</title>
+<title>SMARTER $ — NZ Financial Literacy Game (v5.15)</title>
 <script>/* v5.13 colour theme (Day default, remembered) */ (function () { var t = "day"; try { if (localStorage.getItem("smarter-dollar-theme") === "night") t = "night"; } catch (e) {} document.documentElement.setAttribute("data-theme", t); })();</script>
 <style>
 :root {
@@ -796,6 +796,46 @@ html[data-theme="day"] .sd-tour-ex .sd-ex-btn { background: #15803d; color: #fff
 html[data-theme="day"] .sd-tour-ex .sd-ex-btn.skip { background: #e2e8f0; color: #0b1220; }
 html[data-theme="day"] .sd-tour-dots span.on { background: #d97706; }
 @media print { .sd-help-btn, .sd-tour { display: none !important; } }
+
+/* ===== v5.15: top money strip removed (all values now in Income & Expenses / Balance Sheet) ===== */
+#screen-play #hud { display: none !important; }
+#expense-breakdown li.row-cf { font-weight: 700; border-top: 2px solid var(--surface2); }
+#expense-breakdown li.row-cf.pos, #expense-breakdown li.row-cf.pos span { color: #22c55e !important; }
+#expense-breakdown li.row-cf.neg, #expense-breakdown li.row-cf.neg span { color: #f472b6 !important; }
+html[data-theme="day"] #expense-breakdown li.row-cf.pos, html[data-theme="day"] #expense-breakdown li.row-cf.pos span { color: #15803d !important; }
+html[data-theme="day"] #expense-breakdown li.row-cf.neg, html[data-theme="day"] #expense-breakdown li.row-cf.neg span { color: #db2777 !important; }
+#expense-breakdown li.row-ratio, #expense-breakdown li.row-ratio span { color: var(--text) !important; font-weight: 700; }
+#expense-breakdown li.row-ratio small { color: var(--muted); font-weight: 500; }
+/* one colour per kind: income = gold, expenses = red, assets = black, liabilities = purple */
+html #expense-breakdown li.row-inc, html #expense-breakdown li.row-inc span { color: #fbbf24 !important; }
+html #expense-breakdown li.row-exp, html #expense-breakdown li.row-exp span { color: #f87171 !important; }
+html[data-theme="day"] #expense-breakdown li.row-inc, html[data-theme="day"] #expense-breakdown li.row-inc span { color: #a15c07 !important; }
+html[data-theme="day"] #expense-breakdown li.row-exp, html[data-theme="day"] #expense-breakdown li.row-exp span { color: #c81e1e !important; }
+html #bs-assets li, html #bs-assets li span, html #summary-bs-assets li, html #summary-bs-assets li span, html #assets-list li > span { color: #f1f5f9 !important; }
+html[data-theme="day"] #bs-assets li, html[data-theme="day"] #bs-assets li span, html[data-theme="day"] #summary-bs-assets li, html[data-theme="day"] #summary-bs-assets li span, html[data-theme="day"] #assets-list li > span { color: #000 !important; }
+html #assets-list li > span .pill { color: inherit; }
+html #assets-list li > span .pill.cashflow, html #assets-list li > span .pill.property, html #assets-list li > span .pill.business { color: #fbbf24 !important; }
+html[data-theme="day"] #assets-list li > span .pill.cashflow, html[data-theme="day"] #assets-list li > span .pill.property, html[data-theme="day"] #assets-list li > span .pill.business { color: #a15c07 !important; background: #fef3c7; }
+html #bs-liabilities li, html #bs-liabilities li span, html #summary-bs-liab li, html #summary-bs-liab li span { color: #c4b5fd !important; }
+html[data-theme="day"] #bs-liabilities li, html[data-theme="day"] #bs-liabilities li span, html[data-theme="day"] #summary-bs-liab li, html[data-theme="day"] #summary-bs-liab li span { color: #6d28d9 !important; }
+
+/* v5.15 dice roll */
+#sd-dice { position: fixed; inset: 0; z-index: 9000; display: flex; align-items: center; justify-content: center; background: rgba(15,23,42,0.45); cursor: pointer; }
+#sd-dice[hidden] { display: none; }
+#sd-dice .dice-box { background: var(--surface); border: 2px solid #9333ea; border-radius: 16px; padding: 1.1rem 1.6rem; text-align: center; box-shadow: 0 12px 40px rgba(0,0,0,0.35); min-width: 260px; }
+#sd-dice .dice-title { font-weight: 700; color: var(--text); margin-bottom: 0.6rem; }
+#sd-dice .die { width: 96px; height: 96px; margin: 0 auto; }
+#sd-dice .die svg { width: 100%; height: 100%; display: block; }
+#sd-dice.rolling .die { animation: sdTumble 0.25s linear infinite; }
+#sd-dice.landed .die { animation: sdLand 0.3s ease-out; }
+#sd-dice .dice-result { margin-top: 0.6rem; font-size: 1.15rem; font-weight: 700; color: #9333ea; min-height: 1.5em; visibility: hidden; }
+#sd-dice.landed .dice-result { visibility: visible; }
+#sd-dice .dice-hint { font-size: 0.78rem; color: var(--muted); margin-top: 0.3rem; visibility: hidden; }
+#sd-dice.landed .dice-hint { visibility: visible; }
+@keyframes sdTumble { 0% { transform: rotate(0deg) scale(1); } 50% { transform: rotate(180deg) scale(0.88); } 100% { transform: rotate(360deg) scale(1); } }
+@keyframes sdLand { 0% { transform: scale(1.25); } 100% { transform: scale(1); } }
+@media (prefers-reduced-motion: reduce) { #sd-dice .die { animation: none !important; } }
+.ex-ico { width: 1.15em; height: 1.15em; vertical-align: -0.2em; margin-right: 0.25em; flex: none; }
 </style>
 </head>
 <body>
@@ -833,7 +873,7 @@ html[data-theme="day"] .sd-tour-dots span.on { background: #d97706; }
     <p id="storage-note" class="subtitle" style="margin-top:0.5rem;display:none">On OneDrive preview, use Save to download a file — or download this HTML and open in Chrome for auto-save.</p>
     <p style="margin-top:0.85rem"><a href="index-debt.html" class="edition-link" style="color:#38bdf8;font-size:0.9rem;text-decoration:none;border-bottom:1px dotted #38bdf8">Debt Paydown edition →</a></p>
   </div>
-  <p class="footer-note">NZD · PAYE + ACC simplified · Offline Cashflow-style demo · v5.14 · 4 events a month · 5 save slots + auto-save · Space = next step</p>
+  <p class="footer-note">NZD · PAYE + ACC simplified · Offline Cashflow-style demo · v5.15 · 4 events a month · 5 save slots + auto-save · Space = next step</p>
 </section>
 
 <section id="screen-difficulty" class="screen" aria-label="Choose difficulty">
@@ -906,6 +946,7 @@ html[data-theme="day"] .sd-tour-dots span.on { background: #d97706; }
   </div>
 </section>
 
+<div id="sd-dice" hidden role="status" aria-live="polite"><div class="dice-box"><div class="dice-title" id="sd-dice-title">Rolling…</div><div class="die" id="sd-die"></div><div class="dice-result" id="sd-dice-result"></div><div class="dice-hint">Press Space or tap to continue</div></div></div>
 <section id="screen-play" class="screen" aria-label="Play">
   <div class="play-top">
     <div>
@@ -913,7 +954,7 @@ html[data-theme="day"] .sd-tour-dots span.on { background: #d97706; }
       <h3 id="play-month-label">Month 1 of 120 · Year 1 · Month 1</h3>
     </div>
     <div class="controls">
-      <button type="button" class="btn-market btn-sm" id="btn-exchange" data-tip="Buy or sell ETFs (Gold/Silver, Bitcoin, US Index) any time in your turn. Hotkey X.">Exchange (X)</button>
+      <button type="button" class="btn-market btn-sm" id="btn-exchange" data-tip="Buy or sell ETFs (Gold/Silver, Bitcoin, US Index) any time in your turn. Hotkey X."><svg class="ex-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="11" width="3" height="7" rx="0.5" fill="#22c55e"/><line x1="4.5" y1="9" x2="4.5" y2="20" stroke="#22c55e" stroke-width="1.2"/><rect x="9" y="7" width="3" height="8" rx="0.5" fill="#ef4444"/><line x1="10.5" y1="5" x2="10.5" y2="17" stroke="#ef4444" stroke-width="1.2"/><polyline points="14,16 17,12 19,13.5 22,8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><polyline points="19.2,8 22,8 22,10.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Exchange (X)</button>
       <button type="button" class="btn-secondary btn-sm" id="btn-pay-bank" data-tip="Repay bank loan in $1,000 steps">Pay Bank</button>
       <button type="button" class="btn-warn btn-sm" id="btn-pay-hi" data-tip="Repay high-interest loan (120%) in $1,000 steps">Pay HI</button>
       <button type="button" class="btn-secondary btn-sm" id="btn-pay-cc" data-tip="Repay credit card (24% p.a.) in $1,000 steps">Pay CC</button>
@@ -1085,7 +1126,7 @@ html[data-theme="day"] .sd-tour-dots span.on { background: #d97706; }
 </div>
 <div class="modal-overlay" id="exchange-modal" role="dialog" aria-modal="true" aria-labelledby="ex-title" hidden>
   <div class="modal-panel ex-panel">
-    <h3 id="ex-title">Exchange — buy or sell ETFs</h3>
+    <h3 id="ex-title"><svg class="ex-ico" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="11" width="3" height="7" rx="0.5" fill="#22c55e"/><line x1="4.5" y1="9" x2="4.5" y2="20" stroke="#22c55e" stroke-width="1.2"/><rect x="9" y="7" width="3" height="8" rx="0.5" fill="#ef4444"/><line x1="10.5" y1="5" x2="10.5" y2="17" stroke="#ef4444" stroke-width="1.2"/><polyline points="14,16 17,12 19,13.5 22,8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><polyline points="19.2,8 22,8 22,10.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>Exchange — buy or sell ETFs</h3>
     <div class="ex-top"><span id="ex-sub"></span><span class="ex-cash">Cash <b id="ex-cash">$0</b></span><span>ETFs worth <b id="ex-total">$0</b></span></div>
     <table class="ex-table" id="ex-table" aria-label="ETF prices and your holdings"></table>
     <div class="ex-trade">
@@ -1500,9 +1541,9 @@ html[data-theme="day"] .sd-tour-dots span.on { background: #d97706; }
     {"id": "l62", "type": "life", "title": "Specialist Bill", "copy": "A private specialist visit.", "cashDelta": -350, "label": "−$350"},
     {"id": "l63", "type": "life", "title": "Storm Damage", "copy": "Wind broke the fence. You share the cost.", "cashDelta": -160, "label": "−$160"},
     {"id": "l64", "type": "life", "title": "Library Fine", "copy": "Late library books.", "cashDelta": -25, "label": "−$25"},
-    {"id": "li1", "type": "life", "title": "Workplace Injury", "copy": "ACC vibe: you need rest. Duration rolled 1–3 months. First month may use your yearly paid leave.", "offWork": true, "label": "Off work 1–3 mo"},
-    {"id": "li2", "type": "life", "title": "Serious Illness", "copy": "Doctor orders rest. Duration 1–3 months. Paid leave (1 mo/year) covers the first month if still available.", "offWork": true, "label": "Off work 1–3 mo"},
-    {"id": "li3", "type": "life", "title": "Accident Recovery", "copy": "Crash / fall — recovery time. Rest 1–3 months; expenses continue.", "offWork": true, "label": "Off work 1–3 mo"},
+    {"id": "li1", "type": "life", "title": "Workplace Injury", "copy": "ACC vibe: you need rest. Duration rolled 1–4 months. First month may use your yearly paid leave.", "offWork": true, "label": "Off work 1–4 mo"},
+    {"id": "li2", "type": "life", "title": "Serious Illness", "copy": "Doctor orders rest. Duration 1–4 months. Paid leave (1 mo/year) covers the first month if still available.", "offWork": true, "label": "Off work 1–4 mo"},
+    {"id": "li3", "type": "life", "title": "Accident Recovery", "copy": "Crash / fall — recovery time. Rest 1–4 months; expenses continue.", "offWork": true, "label": "Off work 1–4 mo"},
     {"id": "lc1", "type": "life", "title": "Having a Child", "copy": "New family member! Permanent living increase per child, based on your income ($40/week + 3% of weekly pay, $80–$180/week).", "birth": true, "label": "New child"}
   ];
 
@@ -2910,6 +2951,62 @@ html[data-theme="day"] .sd-tour-dots span.on { background: #d97706; }
       state.offWorkPaid = false;
     }
   }
+  /* v5.15: illness / injury rest = 1, 2, 3 or 4 months, each 25% */
+  var ILLNESS_MIN_MONTHS = 1, ILLNESS_MAX_MONTHS = 4;
+  function rollIllnessMonths() { return ILLNESS_MIN_MONTHS + Math.floor(Math.random() * (ILLNESS_MAX_MONTHS - ILLNESS_MIN_MONTHS + 1)); }
+
+  /* v5.15: dice-roll animation. The result is already applied + saved; this only reveals it.
+     Tumbles ~1s through faces, lands on n, then shows the text. Space / Enter / click closes it after landing.
+     prefers-reduced-motion: lands instantly. */
+  var PIPS = { 1: [[50,50]], 2: [[28,28],[72,72]], 3: [[26,26],[50,50],[74,74]], 4: [[28,28],[72,28],[28,72],[72,72]], 5: [[26,26],[74,26],[50,50],[26,74],[74,74]], 6: [[28,24],[72,24],[28,50],[72,50],[28,76],[72,76]] };
+  function dieSvg(n) {
+    return '<svg viewBox="0 0 100 100" aria-label="Die showing ' + n + '"><rect x="4" y="4" width="92" height="92" rx="18" fill="#ffffff" stroke="#9333ea" stroke-width="5"/>' +
+      PIPS[n].map(function (p) { return '<circle cx="' + p[0] + '" cy="' + p[1] + '" r="9" fill="#1e1b4b"/>'; }).join("") + "</svg>";
+  }
+  var diceState = null;
+  function isDiceOpen() { return !!diceState; }
+  function showDiceRoll(n, maxFace, title, resultText, done) {
+    var box = $("sd-dice"), die = $("sd-die");
+    var reduce = false; try { reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches; } catch (e) {}
+    if (diceState) closeDice();
+    diceState = { landed: false, done: done, timer: null };
+    $("sd-dice-title").textContent = title;
+    $("sd-dice-result").textContent = resultText;
+    box.hidden = false;
+    function land() {
+      if (!diceState) return;
+      clearInterval(diceState.timer);
+      die.innerHTML = dieSvg(n);
+      box.classList.remove("rolling"); box.classList.add("landed");
+      diceState.landed = true;
+    }
+    if (reduce) { box.classList.remove("rolling"); land(); return; }
+    box.classList.remove("landed"); box.classList.add("rolling");
+    var f = 1, t0 = Date.now();
+    die.innerHTML = dieSvg(f);
+    diceState.timer = setInterval(function () {
+      if (Date.now() - t0 >= 1000) { land(); return; }
+      var nf; do { nf = 1 + Math.floor(Math.random() * maxFace); } while (nf === f && maxFace > 1);
+      f = nf; die.innerHTML = dieSvg(f);
+    }, 90);
+  }
+  function closeDice() {
+    if (!diceState) return;
+    var d = diceState; diceState = null;
+    clearInterval(d.timer);
+    var box = $("sd-dice"); box.hidden = true; box.classList.remove("rolling", "landed");
+    if (d.done) d.done();
+  }
+  $("sd-dice").addEventListener("click", function () { if (diceState && diceState.landed) closeDice(); });
+  window.addEventListener("keydown", function (e) {
+    if (!diceState) return;
+    e.stopPropagation();
+    if (e.key === " " || e.code === "Space" || e.key === "Enter" || e.key === "Escape") {
+      e.preventDefault();
+      if (!e.repeat && diceState.landed) closeDice();
+    }
+  }, true);
+  window.addEventListener("keyup", function (e) { if (diceState && (e.code === "Space" || e.key === "Enter")) { e.preventDefault(); e.stopPropagation(); } }, true);
   function startRest(duration) {
     var queue = [];
     for (var i = 0; i < duration; i++) {
@@ -3069,11 +3166,13 @@ html[data-theme="day"] .sd-tour-dots span.on { background: #d97706; }
       "<li class='row-inc'><span>Passive Income</span><span class='val-cash'>" + fmt(state.passiveIncome) + "</span></li>" +
       "<li class='row-exp'><span>Tax (PAYE+ACC)</span><span>" + fmt(state.tax) + "</span></li>" +
       "<li class='row-exp'><span>Living (base + kids)</span><span class='val-cost'>" + fmt(state.livingExpenses) + "</span></li>" +
-      "<li class='row-exp'><span>Kid costs alone</span><span class='val-cost'>" + fmt(state.childMonthlyTotal) + "</span></li>" +
-      "<li class='row-exp'><span>Bank loan interest</span><span>" + fmt(state.bankInterestThisMonth) + "</span></li>" +
+      "<li class='row-exp'><span>Kid costs alone (" + state.children + (state.children === 1 ? " kid" : " kids") + ")</span><span class='val-cost'>" + fmt(state.childMonthlyTotal) + "</span></li>" +
+      "<li class='row-exp'><span>Bank loan interest (" + Math.round(state.bankApr * 100) + "% p.a.)</span><span>" + fmt(state.bankInterestThisMonth) + "</span></li>" +
       "<li class='row-exp'><span>Credit card 24% p.a.</span><span>" + fmt(state.ccInterestThisMonth) + "</span></li>" +
       "<li class='row-exp'><span>High-interest 120% p.a.</span><span>" + fmt(state.hiInterestThisMonth) + "</span></li>" +
-      "<li class='row-exp'><span>Total expenses</span><span>" + fmt(te) + "</span></li>";
+      "<li class='row-exp'><span>Total expenses</span><span>" + fmt(te) + "</span></li>" +
+      "<li class='row-cf " + (cf < 0 ? "neg" : "pos") + "' id='ie-cashflow'><span>Cashflow (income − expenses)</span><span>" + (cf < 0 ? "−" + fmt(-cf) : fmt(cf)) + "</span></li>" +
+      "<li class='row-ratio' id='ie-ratio'><span>Passive ÷ Expenses <small>(100% = Freedom)</small></span><span>" + (r * 100).toFixed(1) + "%</span></li>";   /* v5.15 */
 
     $("bs-assets").innerHTML =
       "<li><span>Cash</span><span class='val-cash'>" + fmt(state.cash) + "</span></li>" +
@@ -3643,14 +3742,16 @@ html[data-theme="day"] .sd-tour-dots span.on { background: #d97706; }
 
     if (ev.offWork) {
       SFX.play("illness");
-      var dur = 1 + Math.floor(Math.random() * 3);
+      var dur = rollIllnessMonths();
       startRest(dur);
       var paidBits = state.restQueue.map(function (m, i) {
         return "M" + (i + 1) + ":" + (m.paid ? "paid" : "unpaid");
       }).join(", ");
       state.marketNote = "Rest " + dur + " month(s) — " + paidBits + ". Leave left this year: " + (state.paidLeaveAvailable ? "yes" : "no") + ".";
-      showToast(state.marketNote, "ok");
       completeStep(state.marketNote, true);
+      var note = state.marketNote;
+      showDiceRoll(dur, ILLNESS_MAX_MONTHS, "Rolling: how long are you off work?", dur + (dur === 1 ? " month" : " months") + " off work",
+        function () { showToast(note, "ok"); });   /* v5.15: die lands, then the result shows */
       return;
     }
 
@@ -4154,7 +4255,7 @@ html[data-theme="day"] .sd-tour-dots span.on { background: #d97706; }
       applyMarket(ev);
       state.tradePending = false;
     } else if (ev.offWork && !state.offWork) {
-      startRest(1 + Math.floor(Math.random() * 3));
+      startRest(rollIllnessMonths());
     } else if (ev.birth && canHaveChild()) {
       doBirth();
     } else {
@@ -4885,7 +4986,7 @@ html[data-theme="day"] .sd-tour-dots span.on { background: #d97706; }
   function renderExchange() {
     ensureCostBasis();
     var who = mp ? mp.players[mp.cur].name + " \u2014 " : "";
-    $("ex-title").textContent = who + "Exchange: buy or sell ETFs";
+    $("ex-title").innerHTML = "<svg class=\"ex-ico\" viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\"><rect x=\"3\" y=\"11\" width=\"3\" height=\"7\" rx=\"0.5\" fill=\"#22c55e\"/><line x1=\"4.5\" y1=\"9\" x2=\"4.5\" y2=\"20\" stroke=\"#22c55e\" stroke-width=\"1.2\"/><rect x=\"9\" y=\"7\" width=\"3\" height=\"8\" rx=\"0.5\" fill=\"#ef4444\"/><line x1=\"10.5\" y1=\"5\" x2=\"10.5\" y2=\"17\" stroke=\"#ef4444\" stroke-width=\"1.2\"/><polyline points=\"14,16 17,12 19,13.5 22,8\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><polyline points=\"19.2,8 22,8 22,10.8\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>" + esc(who) + "Exchange: buy or sell ETFs";
     $("ex-sub").textContent = "Month " + state.month + " prices \u00b7 whole units \u00b7 cash only";
     $("ex-cash").textContent = fmt(state.cash);
     $("ex-total").textContent = fmt(totalGrowthValue());
@@ -5916,7 +6017,7 @@ html[data-theme="day"] .sd-tour-dots span.on { background: #d97706; }
     effectiveTaxRate: effectiveTaxRate, round10: round10, state: state,
     TOTAL_MONTHS: TOTAL_MONTHS, HOURS: HOURS, HI_APR: HI_APR,
     MIN_MONTHS_BETWEEN_ILLNESS: MIN_MONTHS_BETWEEN_ILLNESS,
-    canDrawIllness: canDrawIllness, annualizedRoiPct: annualizedRoiPct,
+    canDrawIllness: canDrawIllness, rollIllnessMonths: rollIllnessMonths, isDiceOpen: isDiceOpen, closeDice: closeDice, showDiceRoll: showDiceRoll, ILLNESS_MAX_MONTHS: ILLNESS_MAX_MONTHS, annualizedRoiPct: annualizedRoiPct,
     BANK_APR_DEFAULT: BANK_APR_DEFAULT, STEP: STEP, BASE_UNIT: BASE_UNIT,
     floor1000: floor1000, ceil1000: ceil1000,
     startRest: startRest, applyPayStatus: applyPayStatus, totalExpenses: totalExpenses,
@@ -5974,21 +6075,21 @@ window.SD_TOUR_CONFIG = (function () {
     beforeOpen: function () { var d = D(); if (d.hideTip) d.hideTip(); },
     steps: function () {
       return [
-        { target: "#hud .hud-ratio", title: "Welcome! Your goal",
+        { target: "#ie-ratio", title: "Welcome! Your goal",
           html: function () {
             return "<p>Your goal is <b>Financial Freedom</b>.</p>" +
               "<p>That means your <b>passive income</b> pays for all your <b>expenses</b> (bills).</p>" +
               "<p>Passive income = money from your investments. You do not need to work for it.</p>" +
-              "<p>Watch the <b>" + lbl("ratio", "P\u00f7E") + "</b> box" + (lbl("ratio", "P\u00f7E") === "P\u00f7E" ? " (passive \u00f7 expenses)" : "") + ". When it reaches <b>100%</b>, you win!</p>";
+              "<p>Watch the <b>" + lbl("ratio", "P\u00f7E") + "</b> line" + (lbl("ratio", "P\u00f7E") === "P\u00f7E" ? " (passive \u00f7 expenses)" : "") + " at the bottom of Income &amp; Expenses. When it reaches <b>100%</b>, you win!</p>";
           } },
-        { target: "#hud", title: "Your money",
+        { target: ".play-ie-panel", title: "Your money",
           html: function () {
-            return "<p>These boxes show your money:</p><ul>" +
-              "<li><b>Cash</b> = money you have now.</li>" +
+            return "<p>This panel shows your money every month:</p><ul>" +
+              "<li><b>Cash</b> (in the Balance Sheet) = money you have now.</li>" +
               "<li><b>" + lbl("pay", "Paycheck") + "</b> = money from your job every month.</li>" +
               "<li><b>" + lbl("passive", "Passive") + "</b> = money from your investments every month.</li>" +
               "<li><b>" + lbl("totexp", "Tot Exp") + "</b>" + (lbl("totexp", "Tot Exp") === "Tot Exp" ? " (total expenses)" : "") + " = all your bills every month.</li>" +
-              "<li><b>Cashflow</b> = the money left over every month.</li></ul>";
+              "<li><b>Cashflow</b> = the money left over every month (green = more money, pink = losing money).</li></ul>";
           } },
         { target: ["#event-area", "#event-actions"], title: "Every month: 4 cards",
           html: function () {
@@ -6018,7 +6119,7 @@ window.SD_TOUR_CONFIG = (function () {
           } },
         { target: "#btn-exchange", title: "Exchange: buy and sell ETFs", place: "below",
           html: function () {
-            return "<p>Press <b>Exchange</b> any time in your turn.</p>" +
+            return "<p>Press <b><svg class=\"ex-ico\" viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\"><rect x=\"3\" y=\"11\" width=\"3\" height=\"7\" rx=\"0.5\" fill=\"#22c55e\"/><line x1=\"4.5\" y1=\"9\" x2=\"4.5\" y2=\"20\" stroke=\"#22c55e\" stroke-width=\"1.2\"/><rect x=\"9\" y=\"7\" width=\"3\" height=\"8\" rx=\"0.5\" fill=\"#ef4444\"/><line x1=\"10.5\" y1=\"5\" x2=\"10.5\" y2=\"17\" stroke=\"#ef4444\" stroke-width=\"1.2\"/><polyline points=\"14,16 17,12 19,13.5 22,8\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/><polyline points=\"19.2,8 22,8 22,10.8\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>Exchange</b> any time in your turn.</p>" +
               "<p>You can buy or sell <b>ETFs</b>: Gold/Silver, Bitcoin and US Index.</p>" +
               "<p>Their prices go up and down every month. You can make money \u2014 or lose money.</p>" +
               '<p class="sd-kbd">Keyboard: ' + key("X") + "</p>";
