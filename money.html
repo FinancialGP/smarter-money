@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SMARTER $ — NZ Financial Literacy Game (v5.15)</title>
+<title>SMARTER $ — NZ Financial Literacy Game (v5.16)</title>
 <script>/* v5.13 colour theme (Day default, remembered) */ (function () { var t = "day"; try { if (localStorage.getItem("smarter-dollar-theme") === "night") t = "night"; } catch (e) {} document.documentElement.setAttribute("data-theme", t); })();</script>
 <style>
 :root {
@@ -844,8 +844,8 @@ html[data-theme="day"] #bs-liabilities li, html[data-theme="day"] #bs-liabilitie
   <div class="title-hero">
     <h1>SMARTER <span class="logo-dollar">$</span></h1>
     <p>A New Zealand classroom game about income, tax, expenses, markets, debt, and building passive income — over <strong>10 years</strong> (120 months).</p>
-    <p><strong>Win goal:</strong> Financial Freedom — passive income ≥ total expenses (P÷E ≥ 100%) at a payday. The sooner, the better. Then see your summary or keep playing to month 120.</p>
-    <p class="subtitle" style="margin-top:0.25rem"><strong>Each month:</strong> monthly index update (Gold/Silver, Bitcoin and US Index ETF prices move), then 4 events in order — 1 Market news · 2 Opportunity · 3 Life / spending · 4 Wildcard — then <strong>Next Month = payday</strong>. Get sick? No other events that month.</p>
+    <p><strong>Win goal:</strong> Financial Freedom — passive income &gt; total expenses excluding wage tax (P÷E above 100%) at a payday — once free you don't need to work, so tax on wages doesn't count. The sooner, the better. Then see your summary, keep playing to month 120, or take the <strong>2× Challenge</strong>: keep playing until passive income &gt; 2 × expenses excluding tax (200% = 2× Freedom) for a second win.</p>
+    <p class="subtitle" style="margin-top:0.25rem"><strong>Each month:</strong> monthly index update (Gold/Silver, Bitcoin and US Index ETF prices move), then 4 events in order — 1 Market news · 2 Opportunity · 3 Life / spending · 4 Wildcard — then <strong>Next Month = payday</strong>. Get sick? No other events that month, and while you rest only market news happens.</p>
     <div class="mp-setup" id="mp-setup">
       <div class="mp-count" role="group" aria-label="Number of players"><span class="mp-lbl">Players:</span>
         <button type="button" class="mp-n selected" data-n="1" aria-pressed="true" data-tip="One player (normal game)">1</button>
@@ -873,7 +873,7 @@ html[data-theme="day"] #bs-liabilities li, html[data-theme="day"] #bs-liabilitie
     <p id="storage-note" class="subtitle" style="margin-top:0.5rem;display:none">On OneDrive preview, use Save to download a file — or download this HTML and open in Chrome for auto-save.</p>
     <p style="margin-top:0.85rem"><a href="index-debt.html" class="edition-link" style="color:#38bdf8;font-size:0.9rem;text-decoration:none;border-bottom:1px dotted #38bdf8">Debt Paydown edition →</a></p>
   </div>
-  <p class="footer-note">NZD · PAYE + ACC simplified · Offline Cashflow-style demo · v5.15 · 4 events a month · 5 save slots + auto-save · Space = next step</p>
+  <p class="footer-note">NZD · PAYE + ACC simplified · Offline Cashflow-style demo · v5.16 · 4 events a month · 5 save slots + auto-save · Space = next step</p>
 </section>
 
 <section id="screen-difficulty" class="screen" aria-label="Choose difficulty">
@@ -1108,6 +1108,7 @@ html[data-theme="day"] #bs-liabilities li, html[data-theme="day"] #bs-liabilitie
     <p class="modal-hint" id="win-message" style="color:var(--text);font-size:0.95rem;margin:0.4rem 0 0"></p>
     <div class="modal-actions">
       <button type="button" class="btn-secondary" id="win-summary">See Summary</button>
+      <button type="button" class="btn-market" id="win-2x" data-tip="Keep playing with a new goal: passive income above 2 × expenses (excl. tax).">2× Challenge</button>
       <button type="button" class="btn-primary" id="win-keep">Keep Playing</button>
     </div>
   </div>
@@ -1645,7 +1646,7 @@ html[data-theme="day"] #bs-liabilities li, html[data-theme="day"] #bs-liabilitie
     pendingEvent: null, eventResolved: true, tradePending: false,
     monthEvents: [], eventStep: 0, monthLog: [], sickMonth: false, stepNote: "",
     marketNote: "", history: [], bankrupt: false, endReason: "", usedOnce: [], decks: null,
-    wonMonth: null, winStats: null, winModalPending: false, endedEarlyMonth: null
+    wonMonth: null, winStats: null, winModalPending: false, endedEarlyMonth: null, challenge2x: false, won2xMonth: null, win2xStats: null
   };
 
   function $(id) { return document.getElementById(id); }
@@ -1953,8 +1954,10 @@ html[data-theme="day"] #bs-liabilities li, html[data-theme="day"] #bs-liabilitie
     return state.tax + state.livingExpenses + state.bankInterestThisMonth + state.hiInterestThisMonth + state.ccInterestThisMonth;
   }
   function cashflow() { return state.jobIncome + state.passiveIncome - totalExpenses(); }
+  /* v5.16: freedom ignores wage tax (PAYE+ACC on job pay) — once free you need not work. Cashflow still pays it. */
+  function freedomExpenses() { return Math.max(0, totalExpenses() - state.tax); }
   function ratio() {
-    var te = totalExpenses();
+    var te = freedomExpenses();
     return te <= 0 ? 0 : state.passiveIncome / te;
   }
   function showToast(msg, kind) {
@@ -2894,6 +2897,9 @@ html[data-theme="day"] #bs-liabilities li, html[data-theme="day"] #bs-liabilitie
     var lk = linkedMovesFor(mk);
     if (lk.length && Math.random() < LINKED_MOVE_CHANCE) mk.linked = lk;
     add(mk, 0);
+    /* v5.16 (Yao): while off work ill (rest months), Market News is the only event; all others are skipped. */
+    state.illMarketOnly = !!state.offWork;
+    if (state.illMarketOnly) return out;
     add(drawFromDeck("opportunity", used), 1);
     if (canHaveChild() && !state.offWork && Math.random() < birthChance(w)) {
       add(Object.assign({}, LIFE.find(function (c) { return c.birth; })), 2);
@@ -3172,7 +3178,7 @@ html[data-theme="day"] #bs-liabilities li, html[data-theme="day"] #bs-liabilitie
       "<li class='row-exp'><span>High-interest 120% p.a.</span><span>" + fmt(state.hiInterestThisMonth) + "</span></li>" +
       "<li class='row-exp'><span>Total expenses</span><span>" + fmt(te) + "</span></li>" +
       "<li class='row-cf " + (cf < 0 ? "neg" : "pos") + "' id='ie-cashflow'><span>Cashflow (income − expenses)</span><span>" + (cf < 0 ? "−" + fmt(-cf) : fmt(cf)) + "</span></li>" +
-      "<li class='row-ratio' id='ie-ratio'><span>Passive ÷ Expenses <small>(100% = Freedom)</small></span><span>" + (r * 100).toFixed(1) + "%</span></li>";   /* v5.15 */
+      "<li class='row-ratio' id='ie-ratio'><span>Passive ÷ Expenses excl. tax <small>(" + (state.challenge2x ? (state.won2xMonth ? "200% = 2\u00d7 Freedom \u2714" : "200% = 2\u00d7 Freedom") : "100% = Freedom") + ")</small></span><span>" + (r * 100).toFixed(1) + "%</span></li>";   /* v5.15 */
 
     $("bs-assets").innerHTML =
       "<li><span>Cash</span><span class='val-cash'>" + fmt(state.cash) + "</span></li>" +
@@ -4082,15 +4088,27 @@ html[data-theme="day"] #bs-liabilities li, html[data-theme="day"] #bs-liabilitie
      See Summary (end now) or Keep Playing (to month 120; never shown again this game).
      wonMonth is part of the month snapshots, so undo to before the winning payday clears it. */
   function freedomLabel(m) { return "Month " + m + " — Year " + yearOf(m); }
+  function freedomTarget() { return state.challenge2x ? 2 : 1; }   /* v5.16 */
   function checkWin() {
-    if (state.wonMonth || state.bankrupt) return false;
+    if (state.bankrupt) return false;
+    if (state.wonMonth) {   /* v5.16: 2x challenge — second win when passive > 2 x non-tax expenses */
+      if (!state.challenge2x || state.won2xMonth) return false;
+      recomputePassive();
+      var t2 = freedomExpenses();
+      if (!(t2 > 0 && state.passiveIncome > 2 * t2)) return false;
+      state.won2xMonth = state.month;
+      state.win2xStats = { passive: state.passiveIncome, expenses: t2, netWorth: netWorth() };
+      state.winModalPending = state.month < TOTAL_MONTHS;
+      logDecision("freedom", "2\u00d7 Freedom!", "Passive income " + fmt(state.passiveIncome) + "/mo is more than 2 \u00d7 expenses excl. wage tax " + fmt(t2) + "/mo.", { nw: netWorth() });
+      return true;
+    }
     recomputePassive();
-    var te = totalExpenses();
-    if (!(te > 0 && state.passiveIncome >= te)) return false;
+    var te = freedomExpenses();   /* v5.16: excl. wage tax */
+    if (!(te > 0 && state.passiveIncome > te)) return false;   /* v5.16: strictly greater */
     state.wonMonth = state.month;
     state.winStats = { passive: state.passiveIncome, expenses: te, netWorth: netWorth() };
     state.winModalPending = state.month < TOTAL_MONTHS;
-    logDecision("freedom", "Financial Freedom!", "Passive income " + fmt(state.passiveIncome) + "/mo now pays all expenses " + fmt(te) + "/mo.", { nw: netWorth() });
+    logDecision("freedom", "Financial Freedom!", "Passive income " + fmt(state.passiveIncome) + "/mo now pays all expenses excl. wage tax " + fmt(te) + "/mo.", { nw: netWorth() });
     return true;
   }
   function isWinModalOpen() {
@@ -4101,13 +4119,25 @@ html[data-theme="day"] #bs-liabilities li, html[data-theme="day"] #bs-liabilitie
     var m = $("win-modal");
     if (!m || !state.wonMonth) return;
     var w = state.winStats || {};
+    var is2x = !!state.won2xMonth;   /* v5.16 */
+    $("win-2x").hidden = is2x || state.challenge2x;
+    if (is2x) {
+      w = state.win2xStats || {};
+      $("win-when").textContent = freedomLabel(state.won2xMonth);
+      $("win-title").textContent = (mp ? mp.players[mp.cur].name + ": " : "") + "2\u00d7 Freedom!";
+      $("win-summary").hidden = !!mp;
+      $("win-keep").textContent = mp ? "Continue \u2192" : "Keep Playing";
+      $("win-message").textContent = "Challenge complete! Passive income " + fmt(w.passive || 0) + "/mo is more than 2 \u00d7 your expenses excl. tax " + fmt(w.expenses || 0) +
+        "/mo (P\u00f7E " + ((w.expenses ? w.passive / w.expenses : 0) * 100).toFixed(1) + "%). Net worth " + fmt(w.netWorth || 0) + "." + (mp ? " " + mp.players[mp.cur].name + " has finished \u2014 the others keep playing." : "");
+    } else {
+    $("win-summary").hidden = !!mp;
     $("win-when").textContent = freedomLabel(state.wonMonth);
     $("win-title").textContent = mp ? mp.players[mp.cur].name + ": Financial Freedom!" : "Financial Freedom!";
-    $("win-summary").hidden = !!mp;
-    $("win-keep").textContent = mp ? "Continue \u2192" : "Keep Playing";
+    $("win-keep").textContent = mp ? "Finish \u2192" : "Keep Playing";
     $("win-message").textContent = "Your passive income " + fmt(w.passive || 0) + "/mo now pays all your expenses " + fmt(w.expenses || 0) +
       "/mo (P÷E " + ((w.expenses ? w.passive / w.expenses : 0) * 100).toFixed(1) + "%). Net worth " + fmt(w.netWorth || 0) +
-      ". You don’t need your job to pay the bills any more!" + (mp ? " " + mp.players[mp.cur].name + " has finished \u2014 the others keep playing." : "");
+      ". You don’t need your job to pay the bills any more!" + (mp ? " Finish now, or take the 2\u00d7 Challenge (passive > 2 \u00d7 expenses excl. tax)." : " Or take the 2\u00d7 Challenge: keep playing until passive > 2 \u00d7 expenses excl. tax.");
+    }
     hideTip();
     m.hidden = false;
     m.classList.add("show");
@@ -4192,9 +4222,19 @@ html[data-theme="day"] #bs-liabilities li, html[data-theme="day"] #bs-liabilitie
     autoSave();
     showToast("Keep going! Freedom reached in " + freedomLabel(state.wonMonth) + ".", "ok");
   }
+  function winTake2x() {   /* v5.16 */
+    state.challenge2x = true;
+    state.winModalPending = false;
+    if (monthStartSnap) monthStartSnap.winModalPending = false;
+    closeWinModal();
+    if (mp) { mpEndTurn(mp.players[mp.cur].name + " reached Financial Freedom and took the 2\u00d7 Challenge!"); return; }
+    renderHud();
+    autoSave();
+    showToast("2\u00d7 Challenge! New goal: passive income above 2 \u00d7 expenses excl. tax (200% = 2\u00d7 Freedom).", "ok");
+  }
   function winSeeSummary() {
     state.winModalPending = false;
-    state.endedEarlyMonth = state.wonMonth;   /* the payday that was just settled */
+    state.endedEarlyMonth = state.won2xMonth || state.wonMonth;   /* the payday that was just settled */
     closeWinModal();
     endGame();
   }
@@ -4219,7 +4259,7 @@ html[data-theme="day"] #bs-liabilities li, html[data-theme="day"] #bs-liabilitie
     autoSave();
     updateUndoBtn();
     if (!mp) showToast("Payday \u2014 " + fmt(paid) + " in, expenses out. " + (indexUpdateText(true) ? "Index update: " + indexUpdateText(true) + ". " : "") + "Month " + state.month +
-      (state.sickMonth ? ": you are sick (no other events)." : ": event 1 of " + state.monthEvents.length + "."), "ok");
+      (state.sickMonth ? ": you are sick (no other events)." : state.illMarketOnly ? ": ill \u2014 only market news this month." : ": event 1 of " + state.monthEvents.length + "."), "ok");
     if (justWon) openWinModal(true);
     else SFX.play("payday");
     if (mp && !justWon) mpEndTurn(mp.players[mp.cur].name + " finished month " + (state.month - 1) + " \u2014 payday " + fmt(paid) + " in.");
@@ -4458,7 +4498,8 @@ html[data-theme="day"] #bs-liabilities li, html[data-theme="day"] #bs-liabilitie
     $("summary-career").textContent =
       ((state.career && state.career.name) || "—") + " · " + capitalize(state.difficulty || "normal") + " · " + (state.bankrupt ? ("Bankrupt at month " + state.month + " · ") : state.endedEarlyMonth ? ("Ended after month " + state.endedEarlyMonth + " (Year " + yearOf(state.endedEarlyMonth) + ") · ") : "120 months (10 years) complete · ") + "Children: " + state.children;
     var freeHtml = state.wonMonth
-      ? '<span class="win-badge gold">🏆 Financial Freedom in month ' + state.wonMonth + " (Year " + yearOf(state.wonMonth) + ")</span> "
+      ? '<span class="win-badge gold">🏆 Financial Freedom in month ' + state.wonMonth + " (Year " + yearOf(state.wonMonth) + ")</span> " +
+        (state.won2xMonth ? '<span class="win-badge gold">🏆🏆 2× Freedom in month ' + state.won2xMonth + " (Year " + yearOf(state.won2xMonth) + ")</span> " : state.challenge2x ? '<span class="win-badge pass">2× Challenge not reached</span> ' : "")
       : "";
     $("summary-badge").innerHTML = state.bankrupt
       ? freeHtml + '<span class="win-badge fail">' + esc(BANKRUPT_REASON) + " · Passive ÷ Expenses = " + pct + "%</span>" +
@@ -4473,6 +4514,7 @@ html[data-theme="day"] #bs-liabilities li, html[data-theme="day"] #bs-liabilitie
       sumStat(fmt(totalExpenses()) + "/mo", "Total expenses") +
       sumStat(pct + "%", "P÷E (win at 100%)") +
       (state.wonMonth ? sumStat("Month " + state.wonMonth, "Financial Freedom") : "") +
+      (state.won2xMonth ? sumStat("Month " + state.won2xMonth, "2× Freedom") : "") +
       sumStat(fmt(netWorth()), "Net worth") +
       sumStat(String(state.children), "Children") +
       sumStat(fmt(state.bankLoan), "Bank loan") +
@@ -5559,7 +5601,7 @@ html[data-theme="day"] #bs-liabilities li, html[data-theme="day"] #bs-liabilitie
     state.lastIllnessMonth = null;
     state.bankrupt = false;
     state.endReason = "";
-    state.wonMonth = null; state.winStats = null; state.winModalPending = false; state.endedEarlyMonth = null;   /* v5.6 */
+    state.wonMonth = null; state.winStats = null; state.winModalPending = false; state.endedEarlyMonth = null; state.challenge2x = false; state.won2xMonth = null; state.win2xStats = null;   /* v5.6 */
     state.settleBorrowed = false;
     state.ccInterestThisMonth = 0;
     state.growthCost = { metals: 0, bitcoin: 0, usindex: 0 };   /* v5.13: cost basis for the Exchange (average cost) */
@@ -5745,6 +5787,7 @@ html[data-theme="day"] #bs-liabilities li, html[data-theme="day"] #bs-liabilitie
   $("btn-skip3").addEventListener("click", skipThreeMonths);
   $("btn-prev-month").addEventListener("click", previousMonth);
   $("win-keep").addEventListener("click", winKeepPlaying);
+  $("win-2x").addEventListener("click", winTake2x);
   $("risk-cancel").addEventListener("click", function () { closeRiskModal(false); });
   $("risk-buy").addEventListener("click", function () { closeRiskModal(true); });
   $("celebrate").addEventListener("click", function () { stopCelebration(); });
@@ -6017,7 +6060,7 @@ html[data-theme="day"] #bs-liabilities li, html[data-theme="day"] #bs-liabilitie
     effectiveTaxRate: effectiveTaxRate, round10: round10, state: state,
     TOTAL_MONTHS: TOTAL_MONTHS, HOURS: HOURS, HI_APR: HI_APR,
     MIN_MONTHS_BETWEEN_ILLNESS: MIN_MONTHS_BETWEEN_ILLNESS,
-    canDrawIllness: canDrawIllness, rollIllnessMonths: rollIllnessMonths, isDiceOpen: isDiceOpen, closeDice: closeDice, showDiceRoll: showDiceRoll, ILLNESS_MAX_MONTHS: ILLNESS_MAX_MONTHS, annualizedRoiPct: annualizedRoiPct,
+    freedomExpenses: freedomExpenses, freedomTarget: freedomTarget, winTake2x: winTake2x, openWinModal: openWinModal, ratio: ratio, checkWin: checkWin, canDrawIllness: canDrawIllness, rollIllnessMonths: rollIllnessMonths, isDiceOpen: isDiceOpen, closeDice: closeDice, showDiceRoll: showDiceRoll, ILLNESS_MAX_MONTHS: ILLNESS_MAX_MONTHS, annualizedRoiPct: annualizedRoiPct,
     BANK_APR_DEFAULT: BANK_APR_DEFAULT, STEP: STEP, BASE_UNIT: BASE_UNIT,
     floor1000: floor1000, ceil1000: ceil1000,
     startRest: startRest, applyPayStatus: applyPayStatus, totalExpenses: totalExpenses,
