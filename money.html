@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SMARTER $ — NZ Financial Literacy Game (v5.16)</title>
+<title>SMARTER $ — NZ Financial Literacy Game (v5.17)</title>
 <script>/* v5.13 colour theme (Day default, remembered) */ (function () { var t = "day"; try { if (localStorage.getItem("smarter-dollar-theme") === "night") t = "night"; } catch (e) {} document.documentElement.setAttribute("data-theme", t); })();</script>
 <style>
 :root {
@@ -873,7 +873,7 @@ html[data-theme="day"] #bs-liabilities li, html[data-theme="day"] #bs-liabilitie
     <p id="storage-note" class="subtitle" style="margin-top:0.5rem;display:none">On OneDrive preview, use Save to download a file — or download this HTML and open in Chrome for auto-save.</p>
     <p style="margin-top:0.85rem"><a href="index-debt.html" class="edition-link" style="color:#38bdf8;font-size:0.9rem;text-decoration:none;border-bottom:1px dotted #38bdf8">Debt Paydown edition →</a></p>
   </div>
-  <p class="footer-note">NZD · PAYE + ACC simplified · Offline Cashflow-style demo · v5.16 · 4 events a month · 5 save slots + auto-save · Space = next step</p>
+  <p class="footer-note">NZD · PAYE + ACC simplified · Offline Cashflow-style demo · v5.17 · 4 events a month · 5 save slots + auto-save · Space = next step</p>
 </section>
 
 <section id="screen-difficulty" class="screen" aria-label="Choose difficulty">
@@ -1806,7 +1806,8 @@ html[data-theme="day"] #bs-liabilities li, html[data-theme="day"] #bs-liabilitie
     state.assets.forEach(function (a) { p += a.passive; });
     state.properties.forEach(function (a) { p += scaledPropertyPassive(a); });
     state.businesses.forEach(function (a) { p += scaledBusinessPassive(a); });
-    state.passiveIncome = p;
+    /* v5.17 (Yao): passive is NET — property/business cashflow is after bank-loan interest. */
+    state.passiveIncome = p - bankInterest();
   }
   function recomputeLiving() { state.livingExpenses = state.livingBase + state.childMonthlyTotal; }
   /* ---- v5.2 income scaling ---- */
@@ -1946,12 +1947,13 @@ html[data-theme="day"] #bs-liabilities li, html[data-theme="day"] #bs-liabilitie
   }
   function refreshInterestPreview() {
     state.bankInterestThisMonth = bankInterest();
+    recomputePassive();   /* v5.17: keep net passive in step with bank loan / rate */
     state.hiInterestThisMonth = hiInterest();
     state.ccInterestThisMonth = ccInterest();
   }
   function totalExpenses() {
     refreshInterestPreview();
-    return state.tax + state.livingExpenses + state.bankInterestThisMonth + state.hiInterestThisMonth + state.ccInterestThisMonth;
+    return state.tax + state.livingExpenses + state.hiInterestThisMonth + state.ccInterestThisMonth;
   }
   function cashflow() { return state.jobIncome + state.passiveIncome - totalExpenses(); }
   /* v5.16: freedom ignores wage tax (PAYE+ACC on job pay) — once free you need not work. Cashflow still pays it. */
@@ -3115,7 +3117,7 @@ html[data-theme="day"] #bs-liabilities li, html[data-theme="day"] #bs-liabilitie
   function structuralCashflow(st) {
     st = st || state;
     var g = st.baseGross || 0;
-    return g + st.passiveIncome - (monthlyTaxFromGross(g) + st.livingExpenses + bankInterest() + hiInterest() + ccInterest());
+    return g + st.passiveIncome - (monthlyTaxFromGross(g) + st.livingExpenses + hiInterest() + ccInterest());
   }
   function outOfCash() { return state.cash <= 0 || !!state.settleBorrowed; }
   function bankruptcyStatus() {
@@ -3157,23 +3159,21 @@ html[data-theme="day"] #bs-liabilities li, html[data-theme="day"] #bs-liabilitie
       hudItem("Tax", fmt(state.tax) + "/mo", "") +
       hudItem(compactHud ? "Living" : "Living (+kids)", fmt(state.livingExpenses) + "/mo", "cost-red") +
       hudItem(compactHud ? "Kids" : "Children", String(state.children), "") +
-      hudItem("Bank int (" + Math.round(state.bankApr * 100) + "%)", fmt(state.bankInterestThisMonth) + "/mo", state.bankInterestThisMonth ? "warn" : "") +
       hudItem("CC int (24%)", fmt(state.ccInterestThisMonth) + "/mo", state.ccInterestThisMonth ? "warn" : "") +
       hudItem("HI int (120%)", fmt(state.hiInterestThisMonth) + "/mo", state.hiInterestThisMonth ? "bad" : "") +
       hudItem(compactHud ? "Tot Exp" : "Total Expenses", fmt(te) + "/mo", "") +
       hudItem("Cashflow", fmt(cf) + "/mo", cfClass) +
       hudItem(compactHud ? "P÷E" : "Passive ÷ Exp", (r * 100).toFixed(1) + "%", "highlight") +
       hudItem(compactHud ? "Net Worth" : "Net Worth", fmt(netWorth()), "nw-blue");
-    var hudKeys = ["cash", "pay", "passive", "tax", "living", "kids", "bankint", "ccint", "hiint", "totexp", "cashflow", "ratio", "networth"];
+    var hudKeys = ["cash", "pay", "passive", "tax", "living", "kids", "ccint", "hiint", "totexp", "cashflow", "ratio", "networth"];
     [].forEach.call($("hud").children, function (el, i) { if (hudKeys[i]) el.classList.add("hud-" + hudKeys[i]); });
 
     $("expense-breakdown").innerHTML =
       "<li class='row-inc'><span>Active Income (Paycheck)</span><span class='val-cash'>" + fmt(state.jobIncome) + "</span></li>" +
-      "<li class='row-inc'><span>Passive Income</span><span class='val-cash'>" + fmt(state.passiveIncome) + "</span></li>" +
+      "<li class='row-inc'><span>Passive Income (net of bank interest)</span><span class='val-cash'>" + fmt(state.passiveIncome) + "</span></li>" +
       "<li class='row-exp'><span>Tax (PAYE+ACC)</span><span>" + fmt(state.tax) + "</span></li>" +
       "<li class='row-exp'><span>Living (base + kids)</span><span class='val-cost'>" + fmt(state.livingExpenses) + "</span></li>" +
       "<li class='row-exp'><span>Kid costs alone (" + state.children + (state.children === 1 ? " kid" : " kids") + ")</span><span class='val-cost'>" + fmt(state.childMonthlyTotal) + "</span></li>" +
-      "<li class='row-exp'><span>Bank loan interest (" + Math.round(state.bankApr * 100) + "% p.a.)</span><span>" + fmt(state.bankInterestThisMonth) + "</span></li>" +
       "<li class='row-exp'><span>Credit card 24% p.a.</span><span>" + fmt(state.ccInterestThisMonth) + "</span></li>" +
       "<li class='row-exp'><span>High-interest 120% p.a.</span><span>" + fmt(state.hiInterestThisMonth) + "</span></li>" +
       "<li class='row-exp'><span>Total expenses</span><span>" + fmt(te) + "</span></li>" +
@@ -3190,6 +3190,7 @@ html[data-theme="day"] #bs-liabilities li, html[data-theme="day"] #bs-liabilitie
 
     $("bs-liabilities").innerHTML =
       "<li><span>Bank loan</span><span>" + fmt(state.bankLoan) + "</span></li>" +
+      (state.bankLoan > 0 ? "<li class='row-info'><small>Bank interest " + Math.round(state.bankApr * 100) + "% p.a. = " + fmt(state.bankInterestThisMonth) + "/mo (already netted in passive)</small></li>" : "") +
       "<li><span>Credit card</span><span>" + fmt(state.ccBalance) + " / " + fmt(CC_LIMIT) + "</span></li>" +
       "<li><span>High-interest loan</span><span>" + fmt(state.hiLoan) + "</span></li>" +
       "<li><span>Total liabilities</span><span>" + fmt(totalLiabilities()) + "</span></li>";
