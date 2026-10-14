@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>SMARTER $ — NZ Financial Literacy Game (v5.17)</title>
+<title>SMARTER $ — NZ Financial Literacy Game (v5.18)</title>
 <script>/* v5.13 colour theme (Day default, remembered) */ (function () { var t = "day"; try { if (localStorage.getItem("smarter-dollar-theme") === "night") t = "night"; } catch (e) {} document.documentElement.setAttribute("data-theme", t); })();</script>
 <style>
 :root {
@@ -434,6 +434,12 @@ select.modal-select {
 .event-prev { font-size: 0.76rem; color: var(--muted); border-top: 1px dashed var(--surface2); padding-top: 0.2rem; }
 .btn-sound { min-width: 2.4rem; }
 .btn-sound.muted { opacity: 0.55; }
+.deal-toggle { margin-left: 0.4rem; font-size: 0.8em; padding: 0.05rem 0.45rem; border-radius: 6px; border: 1px solid currentColor; background: transparent; color: inherit; cursor: pointer; opacity: 0.85; }
+.deal-details { font-size: 0.85rem; margin: 0.3rem 0; padding: 0.35rem 0.5rem; border-left: 3px solid var(--opp); background: rgba(127,127,127,0.08); border-radius: 4px; }
+.deal-details span { opacity: 0.8; }
+.down-pick { margin-top: 0.3rem; display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; }
+.down-pick input[type=range] { flex: 1 1 140px; min-width: 120px; }
+.btn-mini { padding: 0.1rem 0.45rem !important; font-size: 0.78rem !important; min-height: 0 !important; }
 .deal-note { display: block; font-size: 0.8em; color: #cbd5e1; opacity: 0.85; margin-top: 0.15rem; }
 .linked-note { display: inline-block; font-size: 0.8em; color: #a5f3fc; background: rgba(34,211,238,0.12); border-radius: 6px; padding: 0 0.35rem; }
 .scaled-note { display: inline-block; font-size: 0.78em; color: #fde68a; background: rgba(251,191,36,0.12); border-radius: 6px; padding: 0 0.35rem; }
@@ -873,7 +879,7 @@ html[data-theme="day"] #bs-liabilities li, html[data-theme="day"] #bs-liabilitie
     <p id="storage-note" class="subtitle" style="margin-top:0.5rem;display:none">On OneDrive preview, use Save to download a file — or download this HTML and open in Chrome for auto-save.</p>
     <p style="margin-top:0.85rem"><a href="index-debt.html" class="edition-link" style="color:#38bdf8;font-size:0.9rem;text-decoration:none;border-bottom:1px dotted #38bdf8">Debt Paydown edition →</a></p>
   </div>
-  <p class="footer-note">NZD · PAYE + ACC simplified · Offline Cashflow-style demo · v5.17 · 4 events a month · 5 save slots + auto-save · Space = next step</p>
+  <p class="footer-note">NZD · PAYE + ACC simplified · Offline Cashflow-style demo · v5.18 · 4 events a month · 5 save slots + auto-save · Space = next step</p>
 </section>
 
 <section id="screen-difficulty" class="screen" aria-label="Choose difficulty">
@@ -1929,11 +1935,60 @@ html[data-theme="day"] #bs-liabilities li, html[data-theme="day"] #bs-liabilitie
     var idx = state.priceIndex[ev.kind] || 1;
     return Math.round(dealGross(ev) / idx);
   }
+  /* v5.18 (Yao): player chooses the down payment (card deposit .. full price). Rent / draw (gross)
+     stays the same; only the bank loan changes, so net = card net + interest saved. */
+  function dealCanChooseDown(ev) {
+    return !!(ev && ev.type === "opportunity" && (ev.kind === "property" || ev.kind === "business") && ev.price > 0);
+  }
+  function dealCardDown(ev) { return ev.cardDown != null ? ev.cardDown : (ev.downPayment || 0); }
+  function dealMaxDown(ev) {
+    var cd = dealCardDown(ev), price = ev.price;
+    if (state.cash >= price) return price;
+    return Math.max(cd, Math.min(price, Math.floor(state.cash / 1000) * 1000));
+  }
+  function setDealDown(ev, d) {
+    if (!dealCanChooseDown(ev)) return;
+    if (ev.cardDown == null) { ev.cardDown = ev.downPayment || 0; ev.cardNetMo = ev.netMo; }
+    var cd = ev.cardDown, mx = dealMaxDown(ev);
+    d = Math.round(+d || 0);
+    if (d >= mx - 999) d = mx;
+    d = Math.max(cd, Math.min(mx, d));
+    ev.downPayment = d;
+    if (ev.dealRolled) ev.netMo = ev.cardNetMo + Math.round((d - cd) * state.bankApr / 12);
+    ev.zeroDown = d === 0;
+  }
+  var dealDetailsOpen = false;
+  function dealDetailsHtml(ev) {
+    var dv = dealView(ev), apr = state.bankApr, intr = Math.round(dv.loan * apr / 12);
+    var gross = ev.kind === "growth" ? 0 : (ev.dealRolled ? dealGross(ev) : dv.net + intr);
+    var h = '<div class="deal-details" id="deal-details">';
+    if (ev.kind === "property" || ev.kind === "business") {
+      h += '<div><span>Bank loan</span> <b id="dd-loan">' + fmt(dv.loan) + '</b> at ' + (apr * 100).toFixed(1) + '% p.a. (interest-only)</div>' +
+        '<div><span>Monthly interest</span> <b id="dd-int" class="val-cost">' + fmt(intr) + '</b>/mo</div>' +
+        '<div><span>' + (ev.kind === "property" ? "Rent" : "Business draw") + ' (gross)</span> <b>' + fmt(gross) + '</b>/mo</div>' +
+        '<div><span>Net cashflow after interest</span> <b id="dd-net">' + signedFmt(dv.net) + '</b>/mo &nbsp;\u00b7&nbsp; ROI <b id="dd-roi">' + (dv.roi == null ? "n/a (no deposit)" : fmtRoi(dv.roi)) + '</b></div>' +
+        '<div class="deal-note">If the bank rate goes up 1%, interest on this loan rises by ' + fmt(Math.round(dv.loan * 0.01 / 12)) + '/mo and net cashflow falls by the same. Bigger down payment = smaller loan = less rate risk.</div>';
+      if (!state.eventResolved && dealCanChooseDown(ev)) {
+        var cd = dealCardDown(ev), mx = dealMaxDown(ev);
+        h += '<div class="down-pick"><label for="down-range">Choose your down payment</label> ' +
+          '<input type="range" id="down-range" min="' + cd + '" max="' + mx + '" step="1000" value="' + ev.downPayment + '"' + (mx <= cd ? " disabled" : "") + '> ' +
+          '<b id="dd-down">' + fmt(ev.downPayment) + '</b> ' +
+          '<button type="button" class="btn-secondary btn-mini" id="down-card">Card ' + fmt(cd) + '</button>' +
+          (mx >= ev.price ? '<button type="button" class="btn-secondary btn-mini" id="down-full">Full cash</button>' : '<span class="deal-note">Max ' + fmt(mx) + ' (your cash)</span>') + '</div>';
+      }
+    } else if (ev.kind === "cashflow") {
+      h += '<div>All cash, no bank loan. Net cashflow <b>' + signedFmt(dv.net) + '</b>/mo.</div>';
+    } else {
+      h += '<div>No cashflow; value moves with the market.</div>';
+    }
+    return h + "</div>";
+  }
   function dealKeep(c) {
     if (c && c.effect === "buyout") return c.premium != null ? { premium: c.premium } : {};   /* v5.6: keep rolled premium on load */
     if (!c || !c.dealRolled) return {};
     var k = { dealRolled: true, roi: c.roi, netMo: c.netMo, passive: c.passive, label: c.label };
-    if (c.kind !== "cashflow") { k.downPayment = c.downPayment; k.notionalDown = c.notionalDown; k.zeroDown = c.zeroDown; }
+    if (c.kind !== "cashflow") { k.downPayment = c.downPayment; k.notionalDown = c.notionalDown; k.zeroDown = c.zeroDown;
+      if (c.cardDown != null) { k.cardDown = c.cardDown; k.cardNetMo = c.cardNetMo; } }
     return k;
   }
   function applyPayStatus() {
@@ -3475,6 +3530,37 @@ html[data-theme="day"] #bs-liabilities li, html[data-theme="day"] #bs-liabilitie
     }
   }
 
+  function toggleDealDetails() {
+    var ev = state.pendingEvent;
+    if (!ev || ev.type !== "opportunity") return;
+    dealDetailsOpen = !dealDetailsOpen;
+    renderEvent();
+  }
+  function bindDealDetails(ev) {
+    var t = $("deal-toggle"); if (t) t.addEventListener("click", toggleDealDetails);
+    var r = $("down-range");
+    function live() {
+      var dv = dealView(ev), intr = Math.round(dv.loan * state.bankApr / 12);
+      if ($("dd-down")) $("dd-down").textContent = fmt(ev.downPayment);
+      if ($("dd-down2")) $("dd-down2").textContent = fmt(dv.down) + (dv.loan <= 0 ? " (full price, no loan)" : "");
+      if ($("dd-loan")) $("dd-loan").textContent = fmt(dv.loan);
+      if ($("dd-int")) $("dd-int").textContent = fmt(intr);
+      if ($("dd-net")) $("dd-net").textContent = signedFmt(dv.net);
+      if ($("dd-roi")) $("dd-roi").textContent = dv.roi == null ? "n/a (no deposit)" : fmtRoi(dv.roi);
+      var am = $("event-amount-main");
+      if (am) {
+        am.textContent = dv.roi == null ? "No deposit \u2014 cashflow " + signedFmt(dv.net) + "/mo" : signedFmt(dv.net) + "/mo \u00b7 ROI " + fmtRoi(dv.roi) + (dv.loan > 0 ? " on deposit" : "");
+        am.classList.toggle("cost-red", dv.net < 0);
+      }
+    }
+    if (r) {
+      r.addEventListener("input", function () { setDealDown(ev, +r.value); live(); });
+      r.addEventListener("change", function () { setDealDown(ev, +r.value); renderEvent(); var r2 = $("down-range"); if (r2) try { r2.focus({ preventScroll: true }); } catch (e) {} });
+    }
+    var bc = $("down-card"), bf = $("down-full");
+    if (bc) bc.addEventListener("click", function () { setDealDown(ev, dealCardDown(ev)); renderEvent(); });
+    if (bf) bf.addEventListener("click", function () { setDealDown(ev, ev.price); renderEvent(); });
+  }
   function buyOpportunity(mode, confirmed) {
     var ev = state.pendingEvent;
     if (!ev || ev.type !== "opportunity" || state.eventResolved) return;
@@ -3882,7 +3968,9 @@ html[data-theme="day"] #bs-liabilities li, html[data-theme="day"] #bs-liabilitie
       var dv = dealView(ev);
       var downTxt = fmt(dv.down) + (dv.loan <= 0 ? " (full price, no loan)" : "");
       financeHtml = '<div class="event-finance"><span>Price</span> ' + fmt(dv.price) +
-        ' &nbsp;|&nbsp; <span>Down payment</span> ' + downTxt + "</div>";
+        ' &nbsp;|&nbsp; <span>Down payment</span> <span id="dd-down2">' + downTxt + "</span>" +
+        ' <button type="button" class="deal-toggle" id="deal-toggle" aria-expanded="' + dealDetailsOpen + '" data-tip="Show loan, interest and choose your down payment (key D)">' + (dealDetailsOpen ? "Details \u25be" : "Details \u25b8") + "</button></div>" +
+        (dealDetailsOpen ? dealDetailsHtml(ev) : "");
       copy = ev.copy || "";
       if (ev.kind === "growth") {
         amountText = "No cashflow · price risk";
@@ -3955,7 +4043,7 @@ html[data-theme="day"] #bs-liabilities li, html[data-theme="day"] #bs-liabilitie
           if (down === 0) {
             actions += '<button type="button" class="btn-primary" id="btn-buy" data-tip="No deposit: the bank lends the full price (interest-only, ' + (state.bankApr * 100).toFixed(1) + '% p.a.).">Buy (no deposit)</button>';
           } else if (state.cash >= down) {
-            actions += '<button type="button" class="btn-primary" id="btn-buy" data-tip="' + esc("Pay the " + fmt(down) + " deposit from cash. " + bankTip) + '">Buy</button>';
+            actions += '<button type="button" class="btn-primary" id="btn-buy" data-tip="' + esc("Pay the " + fmt(down) + " deposit from cash. " + (down >= ev.price ? "No bank loan." : bankTip)) + '">' + (down >= ev.price ? "Buy (full cash)" : "Buy") + '</button>';
           } else {
             actions += '<button type="button" class="btn-warn" id="btn-buy-hi" data-tip="' + esc("Not enough cash for the deposit: the " + fmt(sf) + " gap is borrowed (credit card first, then the 120% HI loan). " + bankTip) + '">Buy · uses credit</button>';
           }
@@ -4014,7 +4102,7 @@ html[data-theme="day"] #bs-liabilities li, html[data-theme="day"] #bs-liabilitie
       header +
       '<div class="event-title">' + ev.title + "</div>" +
       sickBanner +
-      '<div class="event-amount' + amountClass + '"' + (amountTip ? ' data-tip="' + esc(amountTip) + '"' : "") + ">" + amountText + "</div>" +
+      '<div class="event-amount' + amountClass + '" id="event-amount-main"' + (amountTip ? ' data-tip="' + esc(amountTip) + '"' : "") + ">" + amountText + "</div>" +
 
       financeHtml +
       '<div class="event-copy">' + copy + "</div>" + prevHtml;
@@ -4026,6 +4114,7 @@ html[data-theme="day"] #bs-liabilities li, html[data-theme="day"] #bs-liabilitie
         if (buy) buy.addEventListener("click", function () { buyOpportunity("cash"); });
         if (buyHI) buyHI.addEventListener("click", function () { buyOpportunity("hi"); });
         if (skip) skip.addEventListener("click", skipOpportunity);
+        bindDealDetails(ev);
       } else if (ev.effect === "buyout") {
         var bs = $("btn-buyout-sell"), bk = $("btn-buyout-keep"), bo = $("btn-buyout-ok");
         if (bs) bs.addEventListener("click", acceptBuyout);
@@ -6018,6 +6107,11 @@ html[data-theme="day"] #bs-liabilities li, html[data-theme="day"] #bs-liabilitie
     if (e.key === "b" || e.key === "B") {
       e.preventDefault();
       if (!e.repeat) previousMonth();
+      return;
+    }
+    if ((e.key === "d" || e.key === "D") && !isTypingTarget(e.target) && state.pendingEvent && state.pendingEvent.type === "opportunity") {
+      e.preventDefault();
+      if (!e.repeat) toggleDealDetails();
       return;
     }
     if (e.key === "x" || e.key === "X") {
